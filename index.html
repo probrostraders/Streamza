@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Streamza — Go Live Anywhere. Record Anything.</title>
-  <meta name="description" content="Streamza is a professional live streaming and screen recording app for Android. Stream to YouTube, Facebook, Twitch, Kick and more, or record your screen in high quality." />
-  <meta name="theme-color" content="#0b0b0e" />
-  <meta property="og:title" content="Streamza — Go Live Anywhere" />
-  <meta property="og:description" content="Professional live streaming & screen recorder for Android. Stream to YouTube, Twitch, Facebook, Kick & more." />
+  <title>Streamza — Live Streaming &amp; Screen Recorder for Android</title>
+  <meta name="description" content="Streamza turns your Android phone into a broadcast studio. Stream to YouTube, Facebook, Twitch, Kick and more, or record your screen and camera in HD. No account needed." />
+  <meta name="theme-color" content="#000000" />
+  <link rel="icon" type="image/svg+xml" href="logo.svg" />
+  <meta property="og:title" content="Streamza — Live Streaming & Screen Recorder" />
+  <meta property="og:description" content="Stream to YouTube, Twitch, Facebook, Kick & more, or record your screen in HD. Built for Android." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://streamza.live/" />
   <link rel="canonical" href="https://streamza.live/" />
@@ -19,9 +20,7 @@
   <header class="site-header">
     <div class="container nav">
       <a class="brand" href="index.html">
-        <span class="logo">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M5 12a7 7 0 0 1 7-7"/><path d="M5 12a7 7 0 0 0 7 7"/><circle cx="12" cy="12" r="2.4" fill="#fff" stroke="none"/><path d="M19 12a7 7 0 0 0-3-5.7"/><path d="M19 12a7 7 0 0 1-3 5.7"/></svg>
-        </span>
+        <img class="logo-img" src="logo.svg" alt="Streamza logo" width="34" height="34" />
         <span>Stream<b>za</b></span>
       </a>
       <nav class="nav-links">
@@ -31,134 +30,172 @@
         <a href="#faq">FAQ</a>
         <a href="support.html">Support</a>
       </nav>
-      <a class="btn btn-primary" href="#download">Get the app</a>
+      <a class="btn btn-primary btn-sm" href="#download">Get the app</a>
     </div>
   </header>
 
   <!-- HERO -->
   <section class="hero">
-    <div class="container">
-      <span class="eyebrow">Live streaming &amp; screen recorder</span>
-      <h1>Go live <span class="grad">anywhere</span>.<br />Record <span class="grad">anything</span>.</h1>
-      <p class="lead">Streamza turns your phone into a professional broadcast studio — stream to YouTube, Twitch, Facebook, Kick and more, or capture your screen and camera in stunning quality.</p>
-      <div class="hero-cta" id="download">
-        <a class="btn btn-primary" href="#download">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5V3.5c0-.5.5-.8.9-.6l14.7 8.5c.4.2.4.8 0 1l-14.7 8.7c-.4.2-.9-.1-.9-.6z"/></svg>
-          Get it on Google Play
-        </a>
-        <a class="btn btn-ghost" href="#features">See features</a>
+    <div class="container hero-grid">
+      <div>
+        <span class="eyebrow"><span class="live"></span> Live streaming &amp; screen recorder</span>
+        <h1>Go live to any platform, <span class="red">straight from your phone.</span></h1>
+        <p class="lead">Streamza turns your Android into a broadcast studio — stream to YouTube, Facebook, Twitch, Kick and more, or record your screen and camera in HD.</p>
+        <div class="hero-cta" id="download">
+          <a class="btn btn-primary" href="#download">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5V3.5c0-.5.5-.8.9-.6l14.7 8.5c.4.2.4.8 0 1l-14.7 8.7c-.4.2-.9-.1-.9-.6z"/></svg>
+            Get it on Google Play
+          </a>
+          <a class="btn btn-ghost" href="#features">See features</a>
+        </div>
+        <div class="hero-meta">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 13 4 4L19 7"/></svg> No account needed</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 13 4 4L19 7"/></svg> Free to start</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 13 4 4L19 7"/></svg> Any RTMP server</span>
+        </div>
       </div>
-      <p class="hero-note">Coming soon to Google Play · No account required · Free to start</p>
+
+      <!-- App mockup (mirrors the real home screen) -->
+      <div class="device-wrap">
+        <div class="device">
+          <div class="device-screen">
+            <span class="scr-notch"></span>
+            <div class="scr">
+              <div class="scr-top">
+                <img class="logo-img" src="logo.svg" alt="" />
+                <span class="wm">Stream<b>za</b></span>
+                <span class="crown"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 7l4.5 4L12 5l4.5 6L21 7l-1.5 11h-15z"/></svg></span>
+              </div>
+              <div class="scr-banner">
+                <h4>Go Live Anywhere</h4>
+                <p>Stream to YouTube, Twitch &amp; more</p>
+                <span class="wave"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M5 12a7 7 0 0 1 7-7"/><path d="M19 12a7 7 0 0 0-3-5.7"/><circle cx="12" cy="12" r="2"/></svg></span>
+              </div>
+              <p class="scr-label">Choose Platform</p>
+              <div class="scr-grid">
+                <div class="scr-card"><span class="ic" style="background:var(--c-youtube)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8,5v14l11,-7z"/></svg></span><span>YouTube</span></div>
+                <div class="scr-card"><span class="ic" style="background:var(--c-facebook)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 22v-8h3l1-4h-4V8c0-1 .3-1.7 1.8-1.7H17V2.8C16.5 2.7 15.3 2.6 14 2.6 11.2 2.6 9.3 4.3 9.3 7.5V10H6v4h3.3v8z"/></svg></span><span>Facebook</span></div>
+                <div class="scr-card"><span class="ic" style="background:var(--c-twitch)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 3 3 6v13h4v2h2l2-2h3l5-5V3zm14 9-3 3h-3l-2 2v-2H6V5h12z"/><path d="M11 8h1.5v4H11zm4 0h1.5v4H15z" fill="#bf5af2"/></svg></span><span>Twitch</span></div>
+                <div class="scr-card"><span class="ic" style="background:var(--c-kick)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 21h-1l1-7H7.5c-.6 0-.6-.3-.4-.7L13 3h1l-1 7h3.5c.5 0 .6.3.5.5z"/></svg></span><span>Kick</span></div>
+                <div class="scr-card"><span class="ic" style="background:var(--c-restream)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 16a3 3 0 0 0-2 .8L9 12.7q.1-.35 0-1.4l7-4.1a3 3 0 1 0-1-2.2q0 .3.1.7L8 9.8A3 3 0 1 0 8 15l7.1 4.2q-.1.3-.1.6a3 3 0 1 0 3-3.8z"/></svg></span><span>Restream</span></div>
+                <div class="scr-card"><span class="ic" style="background:var(--c-rtmp)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20m-1 17.9A8 8 0 0 1 4.3 14L9 15v1a2 2 0 0 0 2 2zm6.9-2.5A2 2 0 0 0 16 16h-1v-3a1 1 0 0 0-1-1H8v-2h2a1 1 0 0 0 1-1V7h2a2 2 0 0 0 2-2v-.4A8 8 0 0 1 17.9 17.4"/></svg></span><span>Custom RTMP</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
+
+  <!-- PLATFORM STRIP -->
+  <div class="logos" id="platforms">
+    <div class="container">
+      <div class="row">
+        <span class="pl"><span class="dot" style="background:var(--c-youtube)"></span> YouTube</span>
+        <span class="pl"><span class="dot" style="background:var(--c-facebook)"></span> Facebook</span>
+        <span class="pl"><span class="dot" style="background:var(--c-twitch)"></span> Twitch</span>
+        <span class="pl"><span class="dot" style="background:var(--c-kick)"></span> Kick</span>
+        <span class="pl"><span class="dot" style="background:var(--c-restream)"></span> Restream</span>
+        <span class="pl"><span class="dot" style="background:var(--c-rtmp)"></span> Custom RTMP</span>
+      </div>
+    </div>
+  </div>
 
   <!-- FEATURES -->
   <section id="features">
     <div class="container">
       <div class="section-head">
-        <h2>Everything you need to broadcast like a pro</h2>
-        <p>One app for live streaming and high-quality screen recording — built for creators, gamers and IRL streamers.</p>
+        <p class="kicker">Features</p>
+        <h2>Built to broadcast</h2>
+        <p>One app for live streaming and high-quality screen recording — made for creators, gamers and IRL streamers.</p>
       </div>
       <div class="grid grid-3">
 
-        <div class="card">
+        <div class="feature">
           <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12a7 7 0 0 1 14 0"/><circle cx="12" cy="12" r="2.5"/><path d="M2 12a10 10 0 0 1 20 0"/></svg></div>
           <h3>Multi-platform streaming</h3>
-          <p>Go live on YouTube, Facebook, Twitch, Kick, Restream or any Custom RTMP server — just paste your stream key and you're on air.</p>
+          <p>Go live on YouTube, Facebook, Twitch, Kick, Restream or any Custom RTMP server. Paste your stream key and you're on air.</p>
         </div>
 
-        <div class="card">
+        <div class="feature">
           <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="14" height="12" rx="2"/><path d="m17 10 4-2v8l-4-2"/></svg></div>
           <h3>Camera, screen &amp; video</h3>
-          <p>Stream live from your camera, share your screen, or broadcast a pre-recorded video file — switch sources in a tap.</p>
+          <p>Stream from your camera, share your screen, or broadcast a pre-recorded video file — and switch sources in a tap.</p>
         </div>
 
-        <div class="card">
+        <div class="feature">
           <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="14" rx="2"/><circle cx="12" cy="11" r="3"/><path d="M9 22h6"/></svg></div>
-          <h3>Pro screen recorder</h3>
-          <p>Record your screen in HD with internal audio, a front-camera facecam, on-screen drawing, and a one-tap Game Mode for smooth gameplay capture.</p>
+          <h3>HD screen recorder</h3>
+          <p>Record your screen with internal audio, a front-camera facecam, on-screen drawing, and a one-tap Game Mode for smooth gameplay.</p>
         </div>
 
-        <div class="card">
-          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v4"/><path d="M5.6 5.6 8.4 8.4"/><path d="M3 12h4"/><path d="M12 12 16 8"/><circle cx="12" cy="12" r="9"/></svg></div>
+        <div class="feature">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20a8 8 0 1 0-8-8"/><path d="M12 12 8 8"/><path d="M12 4V2"/></svg></div>
           <h3>Adaptive bitrate</h3>
-          <p>Your stream stays smooth even on weak mobile connections — the bitrate adjusts automatically to keep you live without dropped frames.</p>
+          <p>Your stream stays smooth on weak mobile connections — the bitrate adjusts automatically so you stay live without dropped frames.</p>
         </div>
 
-        <div class="card">
-          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20a8 8 0 1 0-8-8"/><path d="M12 12 8 8"/><path d="M4 12H2"/><path d="M12 4V2"/></svg></div>
+        <div class="feature">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg></div>
           <h3>Upload speed test</h3>
-          <p>Built-in network test measures your real upload speed and recommends the best resolution and bitrate for a stable broadcast.</p>
+          <p>Measure your real upload speed and get the ideal resolution and bitrate for a stable broadcast — applied with one tap.</p>
         </div>
 
-        <div class="card">
+        <div class="feature">
           <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 6v6c0 5 3.4 7.7 8 10 4.6-2.3 8-5 8-10V6z"/><path d="m9 12 2 2 4-4"/></svg></div>
           <h3>Private by design</h3>
-          <p>No account, no sign-up. Your stream goes straight to your platform and your keys stay on your device — we never see your content.</p>
+          <p>No account, no sign-up. Your stream goes straight to your platform and your keys never leave your device.</p>
         </div>
 
-      </div>
-    </div>
-  </section>
-
-  <!-- PLATFORMS -->
-  <section id="platforms" class="alt">
-    <div class="container">
-      <div class="section-head">
-        <h2>Stream to the platforms you love</h2>
-        <p>Connect with a stream key in seconds — the server URL is pre-filled for popular platforms.</p>
-      </div>
-      <div class="platforms">
-        <span class="chip"><span class="dot" style="background:#ff3b30"></span> YouTube</span>
-        <span class="chip"><span class="dot" style="background:#1877f2"></span> Facebook</span>
-        <span class="chip"><span class="dot" style="background:#9146ff"></span> Twitch</span>
-        <span class="chip"><span class="dot" style="background:#22c55e"></span> Kick</span>
-        <span class="chip"><span class="dot" style="background:#14b8a6"></span> Restream</span>
-        <span class="chip"><span class="dot" style="background:#ff9500"></span> Custom RTMP</span>
       </div>
     </div>
   </section>
 
   <!-- HOW IT WORKS -->
-  <section id="how">
+  <section id="how" style="padding-top:0">
     <div class="container">
       <div class="section-head">
+        <p class="kicker">How it works</p>
         <h2>Live in three steps</h2>
-        <p>No complicated setup. Pick, paste, go live.</p>
       </div>
       <div class="steps">
         <div class="step">
+          <div class="n">1</div>
           <h3>Choose a platform</h3>
           <p>Tap YouTube, Twitch, Facebook, Kick or Custom RTMP on the home screen.</p>
         </div>
         <div class="step">
+          <div class="n">2</div>
           <h3>Paste your stream key</h3>
-          <p>Copy your key from the platform's live dashboard — the server URL is filled in for you.</p>
+          <p>Copy it from the platform's dashboard — the server URL is filled in for you.</p>
         </div>
         <div class="step">
+          <div class="n">3</div>
           <h3>Go live</h3>
-          <p>Pick your camera, screen or a video file, then tap Go Live. You're broadcasting.</p>
+          <p>Pick your camera, screen or a video file, then tap Go Live.</p>
         </div>
       </div>
     </div>
   </section>
 
   <!-- CTA -->
-  <section>
+  <section class="cta-band">
     <div class="container">
-      <div class="callout">
+      <div class="cta-inner">
+        <img src="logo.svg" alt="Streamza" />
         <h2>Ready to go live?</h2>
-        <p>Download Streamza and start broadcasting in minutes — free to start, with PRO quality available as a subscription.</p>
+        <p>Download Streamza and start broadcasting in minutes. Free to start, with PRO quality available as a subscription.</p>
         <a class="btn btn-primary" href="#download">Get it on Google Play</a>
       </div>
     </div>
   </section>
 
   <!-- FAQ -->
-  <section id="faq" class="alt">
+  <section id="faq" style="border-top:1px solid var(--hairline)">
     <div class="container">
       <div class="section-head">
-        <h2>Frequently asked questions</h2>
+        <p class="kicker">FAQ</p>
+        <h2>Questions, answered</h2>
       </div>
       <div class="faq">
         <details open>
@@ -167,15 +204,15 @@
         </details>
         <details>
           <summary>Which platforms can I stream to?</summary>
-          <p>YouTube, Facebook, Twitch, Kick, Restream, and any service that accepts a Custom RTMP/RTMPS stream key.</p>
+          <p>YouTube, Facebook, Twitch, Kick, Restream, and any service that accepts a Custom RTMP / RTMPS stream key.</p>
         </details>
         <details>
           <summary>Where do I find my stream key?</summary>
-          <p>In your platform's live dashboard — for example, YouTube Studio → Go Live → Stream, or your Twitch Creator Dashboard → Settings → Stream. See our <a href="support.html">Support page</a> for per-platform steps.</p>
+          <p>In your platform's live dashboard — for example, YouTube Studio → Go Live → Stream, or your Twitch Creator Dashboard → Settings → Stream. See the <a href="support.html">Support page</a> for per-platform steps.</p>
         </details>
         <details>
           <summary>Is Streamza free?</summary>
-          <p>Yes — core streaming and screen recording are free. A PRO subscription (coming soon) unlocks higher quality options such as 60&nbsp;fps, 1440p screen recording, higher bitrate and studio audio.</p>
+          <p>Yes — core streaming and screen recording are free. A PRO subscription unlocks higher-quality options such as 60&nbsp;fps, 1440p screen recording, higher bitrate and studio audio.</p>
         </details>
         <details>
           <summary>Does Streamza collect my data?</summary>
@@ -190,7 +227,7 @@
     <div class="container">
       <div class="footer-grid">
         <div class="col" style="max-width:300px">
-          <a class="brand" href="index.html" style="margin-bottom:12px"><span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M5 12a7 7 0 0 1 7-7"/><path d="M5 12a7 7 0 0 0 7 7"/><circle cx="12" cy="12" r="2.4" fill="#fff" stroke="none"/><path d="M19 12a7 7 0 0 0-3-5.7"/><path d="M19 12a7 7 0 0 1-3 5.7"/></svg></span><span>Stream<b>za</b></span></a>
+          <a class="brand" href="index.html" style="margin-bottom:14px"><img class="logo-img" src="logo.svg" alt="" width="34" height="34" /><span>Stream<b>za</b></span></a>
           <p style="color:var(--muted);font-size:15px;margin:0">Professional live streaming &amp; screen recording for Android.</p>
         </div>
         <div class="col">
@@ -213,8 +250,8 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <span>© 2026 Streamza. All rights reserved.</span>
-        <span>Streamza is an independent app and is not affiliated with or endorsed by YouTube, Twitch, Facebook, Kick or any third-party platform.</span>
+        <span>© 2026 Streamza · Probros</span>
+        <span>Not affiliated with or endorsed by YouTube, Twitch, Facebook, Kick or any third-party platform.</span>
       </div>
     </div>
   </footer>
