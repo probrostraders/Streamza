@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Support — Streamza</title>
+  <meta name="description" content="Help, FAQ and contact for the Streamza app — how to find stream keys, go live, record and manage subscriptions." />
+  <meta name="theme-color" content="#0b0b0e" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="index.html">
+        <span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M5 12a7 7 0 0 1 7-7"/><path d="M5 12a7 7 0 0 0 7 7"/><circle cx="12" cy="12" r="2.4" fill="#fff" stroke="none"/><path d="M19 12a7 7 0 0 0-3-5.7"/><path d="M19 12a7 7 0 0 1-3 5.7"/></svg></span>
+        <span>Stream<b>za</b></span>
+      </a>
+      <nav class="nav-links">
+        <a href="index.html#features">Features</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+        <a href="data-deletion.html">Data Deletion</a>
+      </nav>
+      <a class="btn btn-primary" href="index.html#download">Get the app</a>
+    </div>
+  </header>
+
+  <main class="doc">
+    <div class="container doc-wrap">
+      <h1>Support</h1>
+      <p class="updated">We're here to help you go live.</p>
+
+      <div class="tldr">
+        <p class="mt-0"><strong>Contact us:</strong> email <a href="mailto:probrostraders@gmail.com">probrostraders@gmail.com</a> and we'll typically reply within 1–2 business days. Please include your device model, Android version, and a description of the issue.</p>
+      </div>
+
+      <h2>Getting started</h2>
+      <ol>
+        <li>On the home screen, choose your platform (YouTube, Facebook, Twitch, Kick, Restream, or Custom RTMP).</li>
+        <li>Paste your <strong>stream key</strong> — the server URL is pre-filled for popular platforms.</li>
+        <li>Choose your source: <strong>Camera</strong>, <strong>Screen</strong>, or a <strong>Video file</strong>.</li>
+        <li>Tap <strong>Go Live</strong>. To record locally instead, use <strong>Screen Record</strong> from the bottom bar.</li>
+      </ol>
+
+      <h2>Where to find your stream key</h2>
+      <table>
+        <thead><tr><th>Platform</th><th>Where to get the key</th></tr></thead>
+        <tbody>
+          <tr><td>YouTube</td><td>YouTube Studio → <em>Go Live</em> → <em>Stream</em> → copy the Stream key.</td></tr>
+          <tr><td>Twitch</td><td>Creator Dashboard → Settings → Stream → <em>Primary Stream key</em>.</td></tr>
+          <tr><td>Facebook</td><td>Live Producer → <em>Streaming software</em> → copy Stream key.</td></tr>
+          <tr><td>Kick</td><td>kick.com → Settings → Stream → copy the Stream URL and Stream key.</td></tr>
+          <tr><td>Restream</td><td>Restream dashboard → copy your Restream stream key (it forwards to every platform you've connected).</td></tr>
+          <tr><td>Custom RTMP</td><td>Paste the full server URL and key from your provider.</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Troubleshooting</h2>
+      <div class="faq" style="max-width:none">
+        <details open>
+          <summary>“Stream key rejected” or it won't connect</summary>
+          <p>Copy a fresh key from your platform, make sure your live event is actually started on the platform, and confirm the server URL is correct. Some networks block standard RTMP — try a different network if needed.</p>
+        </details>
+        <details>
+          <summary>The picture looks soft or keeps buffering</summary>
+          <p>Your upload speed may be too low. Use <strong>Tools → Upload Speed Test</strong> to measure it and apply the recommended settings, or lower the resolution/bitrate in Settings. Keep <strong>Adaptive Bitrate</strong> on.</p>
+        </details>
+        <details>
+          <summary>A video file won't stream</summary>
+          <p>The file must be H.264 video + AAC audio (most MP4s are). Try another file or convert it first.</p>
+        </details>
+        <details>
+          <summary>How do I record my screen instead of streaming?</summary>
+          <p>Tap <strong>Screen Record</strong> on the bottom navigation. You can add a facecam, draw on screen, and use Game Mode for smooth gameplay capture. Recordings save to your device gallery.</p>
+        </details>
+        <details>
+          <summary>Subscription &amp; billing questions</summary>
+          <p>Manage or cancel anytime in <strong>Google Play → Subscriptions</strong>. To restore a purchase on a new device, use the “Restore Purchases” option in the app. See <a href="terms.html#subscriptions">subscription terms</a>.</p>
+        </details>
+        <details>
+          <summary>How do I delete my data?</summary>
+          <p>Streamza has no account; all data is on your device. Clear it via Android Settings → Apps → Streamza → Storage → Clear data, or uninstall the app. See the <a href="data-deletion.html">Data Deletion page</a>.</p>
+        </details>
+      </div>
+
+      <h2>Still need help?</h2>
+      <p>Email <a href="mailto:probrostraders@gmail.com">probrostraders@gmail.com</a> with your device model, Android version and a short description (a screenshot helps). We'll get back to you.</p>
+
+      <a class="back-home" href="index.html">← Back to home</a>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-bottom" style="border:0;padding-top:0">
+        <span>© 2026 Streamza. All rights reserved.</span>
+        <span><a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · <a href="data-deletion.html">Data Deletion</a> · <a href="support.html">Support</a></span>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
