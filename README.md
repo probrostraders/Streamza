@@ -87,7 +87,7 @@ Google's **Data Safety** form must match this Privacy Policy. The current policy
 - sends your stream **directly** to the platform you choose,
 - stores stream keys & settings **locally** on the device,
 - uses **Cloudflare** only for the optional speed test, and
-- uses **Google Play Billing + RevenueCat** for subscriptions.
+- uses **Google Play Billing** (directly, no third-party billing SDK) for subscriptions.
 
 ➡️ **If you later add any SDK that collects data** (Firebase Analytics, Crashlytics, ads, server-based
 push), you **must** update (1) the **Third-party services** + **What we collect** sections in
