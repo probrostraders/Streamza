@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="108" height="108" role="img" aria-label="Streamza">
+  <defs>
+    <linearGradient id="sz" gradientUnits="userSpaceOnUse" x1="4" y1="0" x2="104" y2="108">
+      <stop offset="0" stop-color="#FF6A3D"/>
+      <stop offset="0.5" stop-color="#FF3B30"/>
+      <stop offset="1" stop-color="#FF2D55"/>
+    </linearGradient>
+  </defs>
+  <circle cx="54" cy="54" r="52" fill="url(#sz)"/>
+  <path d="M33,44 Q33,41 36,42.7 L54,52.5 Q57,54 54,55.5 L36,65.3 Q33,67 33,64 Z" fill="#fff"/>
+  <path d="M58,46 A11,11 0 0 1 58,62" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
+  <path d="M64,41 A17,17 0 0 1 64,67" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-opacity="0.6"/>
+  <path d="M70,36 A23,23 0 0 1 70,72" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-opacity="0.35"/>
+</svg>

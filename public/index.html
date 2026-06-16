@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Streamza Studio — Stream any video to YouTube, Twitch &amp; more, 24/7 from your browser</title>
-  <meta name="description" content="Upload a video and live-stream it to YouTube, Twitch, Facebook, Kick or any RTMP server — 24/7 with seamless looping, straight from your browser. No app, no software. Free during beta." />
+  <title>Streamza Studio — Claim a live slot, stream any video to YouTube/Twitch 24/7</title>
+  <meta name="description" content="Claim 1 of 5 live slots and stream any video to YouTube, Twitch, Facebook or any RTMP server for 24 hours — from your browser, with seamless looping. Free during beta." />
   <meta name="theme-color" content="#000000" />
+  <link rel="icon" type="image/svg+xml" href="logo.svg" />
   <style>
     :root{--red:#FF3B30;--red2:#FF2D55;--bg:#000;--card:#141417;--card2:#0c0c0e;--line:#26262c;--txt:#fff;--sub:#9b9ba3;--ok:#10B981;}
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -14,75 +15,94 @@
     a{color:inherit;text-decoration:none;}
     .wrap{max-width:1080px;margin:0 auto;padding:0 20px;}
     .btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:30px;padding:13px 24px;font-size:15px;font-weight:700;cursor:pointer;transition:.15s;}
-    .btn-primary{background:var(--red);color:#fff;}
-    .btn-primary:hover{background:#ff5247;}
+    .btn-primary{background:var(--red);color:#fff;} .btn-primary:hover{background:#ff5247;}
     .btn-ghost{background:transparent;color:#fff;border:1px solid var(--line);}
     .btn-block{width:100%;justify-content:center;}
+    .btn:disabled{opacity:.5;cursor:not-allowed;}
     .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--sub);background:#141417;border:1px solid var(--line);padding:6px 14px;border-radius:30px;margin-bottom:20px;}
     .live-dot{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 4px rgba(255,59,48,.2);}
-    h1{font-size:clamp(30px,5vw,52px);line-height:1.1;letter-spacing:-.02em;}
-    h2{font-size:clamp(24px,3.5vw,34px);letter-spacing:-.01em;}
+    h1{font-size:clamp(30px,5vw,50px);line-height:1.1;letter-spacing:-.02em;}
+    h2{font-size:clamp(24px,3.5vw,32px);letter-spacing:-.01em;}
     .red{color:var(--red);}
-    /* header */
     header{position:sticky;top:0;z-index:50;background:rgba(0,0,0,.8);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);}
     header .wrap{display:flex;align-items:center;justify-content:space-between;height:64px;}
     .brand{display:flex;align-items:center;gap:9px;font-size:20px;font-weight:800;}
-    .brand .mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#FF6A3D,var(--red),var(--red2));display:flex;align-items:center;justify-content:center;}
-    .brand b{color:var(--red);}
-    nav.links{display:flex;gap:26px;font-size:14px;color:var(--sub);}
+    .brand img{width:30px;height:30px;} .brand b{color:var(--red);}
+    nav.links{display:flex;gap:24px;font-size:14px;color:var(--sub);}
     nav.links a:hover{color:#fff;}
     @media(max-width:760px){nav.links{display:none;}}
-    /* hero */
-    .hero{text-align:center;padding:70px 0 50px;}
-    .hero p.lead{font-size:18px;color:var(--sub);max-width:640px;margin:18px auto 28px;}
+    .hero{text-align:center;padding:64px 0 36px;}
+    .hero p.lead{font-size:18px;color:var(--sub);max-width:660px;margin:18px auto 26px;}
     .hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
-    .platforms{display:flex;gap:22px;justify-content:center;flex-wrap:wrap;color:var(--sub);font-size:14px;padding:26px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
-    .platforms span{display:flex;align-items:center;gap:7px;}
-    .pdot{width:9px;height:9px;border-radius:50%;}
-    section{padding:64px 0;}
-    .head{text-align:center;max-width:620px;margin:0 auto 42px;}
+    section{padding:54px 0;}
+    .head{text-align:center;max-width:640px;margin:0 auto 36px;}
     .kicker{color:var(--red);font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;}
     .head p{color:var(--sub);margin-top:10px;}
+    /* slots board */
+    .slotboard{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+    @media(max-width:760px){.slotboard{grid-template-columns:repeat(2,1fr);} }
+    .slot{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 12px;text-align:center;}
+    .slot .sid{font-size:12px;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;}
+    .slot .ring{width:46px;height:46px;border-radius:50%;margin:10px auto;display:flex;align-items:center;justify-content:center;border:2px solid #2c2c33;}
+    .slot.free .ring{border-color:var(--ok);color:var(--ok);}
+    .slot.busy .ring{border-color:var(--red);color:var(--red);}
+    .slot .st{font-size:14px;font-weight:700;}
+    .slot.free .st{color:var(--ok);} .slot.busy .st{color:var(--red);}
+    .slot .left{font-size:11px;color:var(--sub);margin-top:2px;min-height:14px;}
+    .availline{text-align:center;color:var(--sub);font-size:14px;margin-top:16px;}
+    .availline b{color:#fff;}
+    /* steps */
     .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
     @media(max-width:760px){.grid3{grid-template-columns:1fr;}}
-    .step,.feat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;}
+    .step{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;}
     .step .n{width:36px;height:36px;border-radius:50%;background:var(--red);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
-    .step h3,.feat h3{font-size:17px;margin-bottom:6px;}
-    .step p,.feat p{color:var(--sub);font-size:15px;}
+    .step h3{font-size:17px;margin-bottom:6px;} .step p{color:var(--sub);font-size:15px;}
     /* studio */
     #studio{background:linear-gradient(180deg,#0a0a0c,#000);}
-    .studio-card{max-width:560px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px;}
+    .studio-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;}
+    @media(max-width:860px){.studio-grid{grid-template-columns:1fr;}}
+    .panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;}
     .beta{background:#1a1a1f;border:1px solid #2a2a30;border-left:3px solid var(--red);border-radius:10px;padding:11px 13px;margin-bottom:18px;font-size:13px;color:#c9c9d2;}
     label{display:block;font-size:13px;color:var(--sub);margin:14px 0 6px;}
     label:first-of-type{margin-top:0;}
     input[type=text],input[type=email],input[type=file]{width:100%;background:var(--card2);border:1px solid var(--line);color:#fff;border-radius:10px;padding:12px;font-size:15px;}
     .checkrow{display:flex;align-items:flex-start;gap:9px;margin-top:14px;font-size:13px;color:var(--sub);}
     .checkrow input{margin-top:3px;}
-    .status{display:flex;align-items:center;gap:8px;font-size:14px;margin-top:8px;}
-    .dot{width:9px;height:9px;border-radius:50%;background:#555;}
-    .dot.on{background:var(--red);box-shadow:0 0 0 4px rgba(255,59,48,.18);}
-    .logbox{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px;height:130px;overflow:auto;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;color:#cfcfd6;white-space:pre-wrap;margin-top:10px;}
+    .videoframe{position:relative;width:100%;aspect-ratio:16/9;background:#000;border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+    .videoframe video{width:100%;height:100%;object-fit:contain;background:#000;}
+    .videoframe .placeholder{color:#55555e;font-size:14px;text-align:center;padding:20px;}
+    .livebadge{position:absolute;top:10px;left:10px;display:none;align-items:center;gap:6px;background:rgba(255,59,48,.92);color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:20px;}
+    .livebadge.on{display:flex;} .livebadge i{width:7px;height:7px;border-radius:50%;background:#fff;animation:blink 1.2s infinite;}
+    @keyframes blink{50%{opacity:.25;}}
+    .countdown{text-align:center;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:14px;}
+    .countdown .t{font-size:26px;font-weight:800;color:var(--red);} .countdown .l{font-size:12px;color:var(--sub);}
+    .statgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px;}
+    .stat{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-align:center;}
+    .stat .k{font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;}
+    .stat .v{font-size:16px;font-weight:800;margin-top:2px;} .stat .v.green{color:var(--ok);}
+    details.logwrap{margin-top:12px;border:1px solid var(--line);border-radius:10px;background:var(--card2);}
+    details.logwrap summary{padding:10px 14px;cursor:pointer;font-size:13px;color:var(--sub);list-style:none;}
+    details.logwrap summary::-webkit-details-marker{display:none;}
+    .logbox{padding:0 14px 12px;height:110px;overflow:auto;font:11px/1.5 ui-monospace,Menlo,Consolas,monospace;color:#cfcfd6;white-space:pre-wrap;}
     .hint{font-size:12px;color:var(--sub);margin-top:8px;}
     /* pricing */
     .price-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:760px;margin:0 auto;}
     @media(max-width:640px){.price-grid{grid-template-columns:1fr;}}
-    .plan{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px;}
-    .plan.pro{border-color:var(--red);position:relative;}
+    .plan{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px;position:relative;}
+    .plan.feat{border-color:var(--red);}
     .plan .tag{position:absolute;top:-11px;right:18px;background:var(--red);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;}
-    .plan h3{font-size:20px;}
-    .plan .pr{font-size:34px;font-weight:800;margin:8px 0 2px;}
+    .plan h3{font-size:20px;} .plan .pr{font-size:34px;font-weight:800;margin:8px 0 2px;}
     .plan .pr small{font-size:14px;color:var(--sub);font-weight:500;}
     .plan ul{list-style:none;margin:16px 0;}
-    .plan li{padding:7px 0;color:#d0d0d8;font-size:14px;display:flex;gap:9px;}
-    .plan li svg{flex:none;margin-top:3px;}
-    .wait{display:flex;gap:8px;margin-top:6px;}
-    .wait input{flex:1;}
-    details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:0 18px;margin-bottom:10px;max-width:720px;margin-left:auto;margin-right:auto;}
-    summary{padding:16px 0;cursor:pointer;font-weight:600;list-style:none;}
-    summary::-webkit-details-marker{display:none;}
-    details p{color:var(--sub);padding-bottom:16px;font-size:15px;}
+    .plan li{padding:7px 0;color:#d0d0d8;font-size:14px;display:flex;gap:9px;} .plan li svg{flex:none;margin-top:3px;}
+    .wait{display:flex;gap:8px;margin-top:6px;} .wait input{flex:1;}
+    details.faq{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:0 18px;margin-bottom:10px;max-width:720px;margin-left:auto;margin-right:auto;}
+    details.faq summary{padding:16px 0;cursor:pointer;font-weight:600;list-style:none;}
+    details.faq summary::-webkit-details-marker{display:none;}
+    details.faq p{color:var(--sub);padding-bottom:16px;font-size:15px;}
     footer{border-top:1px solid var(--line);padding:30px 0;color:var(--sub);font-size:13px;text-align:center;}
-    .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1c1c22;border:1px solid var(--line);padding:12px 18px;border-radius:12px;font-size:14px;opacity:0;transition:.3s;pointer-events:none;}
+    footer img{width:26px;height:26px;vertical-align:middle;margin-right:6px;}
+    .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1c1c22;border:1px solid var(--line);padding:12px 18px;border-radius:12px;font-size:14px;opacity:0;transition:.3s;pointer-events:none;z-index:99;max-width:90%;text-align:center;}
     .toast.show{opacity:1;}
   </style>
 </head>
@@ -90,50 +110,40 @@
 
   <header>
     <div class="wrap">
-      <a class="brand" href="#"><span class="mark"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></span>Stream<b>za</b> Studio</a>
-      <nav class="links">
-        <a href="#how">How it works</a>
-        <a href="#pricing">Pricing</a>
-        <a href="#faq">FAQ</a>
-      </nav>
-      <a class="btn btn-primary" href="#studio" style="padding:9px 18px;font-size:14px;">Start free</a>
+      <a class="brand" href="#"><img src="logo.svg" alt="Streamza" />Stream<b>za</b> Studio</a>
+      <nav class="links"><a href="#slots">Live slots</a><a href="#how">How it works</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a></nav>
+      <a class="btn btn-primary" href="#studio" style="padding:9px 18px;font-size:14px;">Claim a slot</a>
     </div>
   </header>
 
-  <!-- HERO -->
   <section class="hero">
     <div class="wrap">
-      <span class="eyebrow"><span class="live-dot"></span> Free during beta · no app needed</span>
-      <h1>Stream any video to YouTube, Twitch &amp; more — <span class="red">24/7, from your browser.</span></h1>
-      <p class="lead">Upload a video, paste your stream key, and Streamza broadcasts it to any platform from the cloud — with seamless looping. Close your laptop; your stream keeps running.</p>
+      <span class="eyebrow"><span class="live-dot"></span> <span id="heroAvail">5 live slots</span> · free during beta</span>
+      <h1>Claim a slot, stream any video <span class="red">24 hours non-stop.</span></h1>
+      <p class="lead">Grab one of 5 live slots, upload a video, paste your stream key — and Streamza broadcasts it to YouTube, Twitch, Facebook or any RTMP server for 24 hours, looping non-stop from the cloud.</p>
       <div class="hero-cta">
-        <a class="btn btn-primary" href="#studio">Start streaming free →</a>
-        <a class="btn btn-ghost" href="#how">See how it works</a>
+        <a class="btn btn-primary" href="#studio">Claim a slot →</a>
+        <a class="btn btn-ghost" href="#slots">See live slots</a>
       </div>
     </div>
   </section>
 
-  <div class="platforms wrap" style="border-radius:0;">
-    <span><i class="pdot" style="background:#FF0000"></i>YouTube</span>
-    <span><i class="pdot" style="background:#1877F2"></i>Facebook</span>
-    <span><i class="pdot" style="background:#9146FF"></i>Twitch</span>
-    <span><i class="pdot" style="background:#53FC18"></i>Kick</span>
-    <span><i class="pdot" style="background:#16C8C8"></i>Restream</span>
-    <span><i class="pdot" style="background:#888"></i>Any RTMP</span>
-  </div>
+  <!-- LIVE SLOTS -->
+  <section id="slots" style="padding-top:20px;">
+    <div class="wrap">
+      <div class="head"><p class="kicker">Live now</p><h2>5 streaming slots</h2><p>Each slot streams one video for 24 hours. Grab any free slot below.</p></div>
+      <div class="slotboard" id="slotboard"></div>
+      <p class="availline" id="availLine">Checking availability…</p>
+    </div>
+  </section>
 
-  <!-- HOW IT WORKS -->
   <section id="how">
     <div class="wrap">
-      <div class="head">
-        <p class="kicker">How it works</p>
-        <h2>Live in 3 simple steps</h2>
-        <p>No software to install, nothing to download. It all happens here in your browser.</p>
-      </div>
+      <div class="head"><p class="kicker">How it works</p><h2>Live in 3 steps</h2></div>
       <div class="grid3">
-        <div class="step"><div class="n">1</div><h3>Choose your video</h3><p>Pick an MP4 from your device (H.264 video + AAC audio — most exports already are).</p></div>
-        <div class="step"><div class="n">2</div><h3>Paste your stream key</h3><p>Copy the RTMP URL + stream key from your platform (YouTube Studio, Twitch dashboard, etc.).</p></div>
-        <div class="step"><div class="n">3</div><h3>Go live</h3><p>Turn on Loop for a 24/7 channel, then hit Go Live. We broadcast it from the cloud — non-stop.</p></div>
+        <div class="step"><div class="n">1</div><h3>Grab a free slot</h3><p>One of the 5 slots is yours for 24 hours ($1/day — free during beta).</p></div>
+        <div class="step"><div class="n">2</div><h3>Upload &amp; paste your key</h3><p>Pick an MP4 (H.264+AAC) and your RTMP URL + stream key from your platform.</p></div>
+        <div class="step"><div class="n">3</div><h3>Go live for 24h</h3><p>It loops non-stop from the cloud. At 24h it stops — renew to keep going.</p></div>
       </div>
     </div>
   </section>
@@ -141,34 +151,43 @@
   <!-- STUDIO -->
   <section id="studio">
     <div class="wrap">
-      <div class="head">
-        <p class="kicker">The Studio</p>
-        <h2>Go live now</h2>
-      </div>
-      <div class="studio-card">
-        <div class="beta"><b style="color:#fff;">Free beta · starter capacity.</b> One stream runs at a time right now — bigger capacity is coming. If the server's busy, try again shortly.</div>
+      <div class="head"><p class="kicker">The Studio</p><h2>Claim your slot &amp; go live</h2></div>
+      <div class="studio-grid">
 
-        <label>Your email (for early access &amp; updates)</label>
-        <input type="email" id="email" placeholder="you@example.com" />
+        <div class="panel">
+          <div class="beta"><b style="color:#fff;">Free during beta.</b> Slots will be <b>$1 for 24 hours</b> soon. One video per slot; 24-hour limit, then renew.</div>
+          <label>Your email (for access &amp; renewal reminder)</label>
+          <input type="email" id="email" placeholder="you@example.com" />
+          <label>Video file — MP4 (H.264 + AAC)</label>
+          <input type="file" id="video" accept="video/*" />
+          <label>RTMP server URL</label>
+          <input type="text" id="rtmpUrl" placeholder="rtmp://a.rtmp.youtube.com/live2" />
+          <label>Stream key</label>
+          <input type="text" id="streamKey" placeholder="xxxx-xxxx-xxxx-xxxx" />
+          <div class="checkrow"><input type="checkbox" id="loop" checked /><label style="margin:0;color:#d0d0d8;">Loop the video for the full 24 hours</label></div>
+          <div class="checkrow"><input type="checkbox" id="agree" /><label style="margin:0;">I own or have the rights to stream this content and accept the fair-use terms.</label></div>
+          <button class="btn btn-primary btn-block" id="startBtn" style="margin-top:18px;">Claim a slot &amp; Go Live</button>
+          <button class="btn btn-ghost btn-block" id="stopBtn" style="margin-top:18px;display:none;">Stop my stream</button>
+          <p class="hint">Start the live event on your platform first, then go live here. Stream-copy only (no re-encode) — the file must be H.264 + AAC.</p>
+        </div>
 
-        <label>Video file — MP4 (H.264 + AAC)</label>
-        <input type="file" id="video" accept="video/*" />
+        <div class="panel">
+          <div class="videoframe">
+            <span class="livebadge" id="liveBadge"><i></i>LIVE</span>
+            <video id="preview" controls muted playsinline></video>
+            <div class="placeholder" id="vplaceholder">Your selected video previews here</div>
+          </div>
+          <div class="countdown" id="cd" style="display:none;">
+            <div class="t" id="cdTime">24:00:00</div><div class="l">remaining on your 24-hour slot (Slot <span id="cdSlot">–</span>)</div>
+          </div>
+          <div class="statgrid">
+            <div class="stat"><div class="k">Status</div><div class="v" id="sStatus">Idle</div></div>
+            <div class="stat"><div class="k">Bitrate</div><div class="v" id="sBitrate">—</div></div>
+            <div class="stat"><div class="k">Health</div><div class="v" id="sSpeed">—</div></div>
+          </div>
+          <details class="logwrap"><summary>Technical log</summary><div class="logbox" id="log"></div></details>
+        </div>
 
-        <label>RTMP server URL</label>
-        <input type="text" id="rtmpUrl" placeholder="rtmp://a.rtmp.youtube.com/live2" />
-
-        <label>Stream key</label>
-        <input type="text" id="streamKey" placeholder="xxxx-xxxx-xxxx-xxxx" />
-
-        <div class="checkrow"><input type="checkbox" id="loop" checked /><label style="margin:0;color:#d0d0d8;">Loop the video forever (24/7 channel)</label></div>
-        <div class="checkrow"><input type="checkbox" id="agree" /><label style="margin:0;">I own or have the rights to stream this content and accept the fair-use terms.</label></div>
-
-        <button class="btn btn-primary btn-block" id="startBtn" style="margin-top:18px;">Go Live</button>
-        <button class="btn btn-ghost btn-block" id="stopBtn" style="margin-top:18px;display:none;">Stop Stream</button>
-
-        <div class="status"><span class="dot" id="dot"></span><span id="statusText">Idle</span></div>
-        <div class="logbox" id="log"></div>
-        <p class="hint">Start the live event on your platform first, then Go Live here. Stream-copy only (no re-encode), so the file must already be H.264 + AAC.</p>
       </div>
     </div>
   </section>
@@ -176,57 +195,49 @@
   <!-- PRICING -->
   <section id="pricing" style="background:#08080a;">
     <div class="wrap">
-      <div class="head">
-        <p class="kicker">Pricing</p>
-        <h2>Free while we're in beta</h2>
-        <p>Use everything free today. Pro plans arrive as we add capacity — early users get the best deal.</p>
-      </div>
+      <div class="head"><p class="kicker">Pricing</p><h2>Simple, pay-as-you-go</h2><p>Free while we're in beta. When it launches, a slot is just $1 for 24 hours.</p></div>
       <div class="price-grid">
-        <div class="plan">
-          <h3>Free</h3>
-          <div class="pr">$0 <small>/ during beta</small></div>
+        <div class="plan feat">
+          <span class="tag">FREE IN BETA</span>
+          <h3>24-Hour Slot</h3>
+          <div class="pr">$1 <small>/ 24 hours</small></div>
           <ul>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Stream any video to any RTMP platform</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>24/7 seamless looping</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Runs in the cloud — close your laptop</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>1 stream at a time</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>One of 5 live slots, yours for 24h</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Stream to YouTube, Twitch, any RTMP</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>24/7 seamless looping from the cloud</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Renew anytime to keep going</li>
           </ul>
-          <a class="btn btn-ghost btn-block" href="#studio">Start free</a>
+          <a class="btn btn-primary btn-block" href="#studio">Claim a slot</a>
         </div>
-        <div class="plan pro">
+        <div class="plan">
           <span class="tag">COMING SOON</span>
-          <h3>Pro</h3>
+          <h3>Monthly Pro</h3>
           <div class="pr">$<small>soon</small></div>
           <ul>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Your own always-on slot (no daily renew)</li>
             <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Multiple simultaneous streams</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Priority capacity &amp; higher bitrate</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Longer / always-on guaranteed uptime</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Stream library &amp; scheduling</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Priority capacity &amp; scheduling</li>
           </ul>
-          <div class="wait">
-            <input type="email" id="waitEmail" placeholder="Email me when Pro launches" />
-            <button class="btn btn-primary" id="waitBtn">Notify me</button>
-          </div>
+          <div class="wait"><input type="email" id="waitEmail" placeholder="Email me when Pro launches" /><button class="btn btn-primary" id="waitBtn">Notify me</button></div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- FAQ -->
   <section id="faq">
     <div class="wrap">
       <div class="head"><p class="kicker">FAQ</p><h2>Questions, answered</h2></div>
-      <details open><summary>Do I need to install anything?</summary><p>No. Streamza Studio runs entirely in your browser — upload a video, paste your stream key, and we broadcast it from the cloud.</p></details>
-      <details><summary>Which platforms can I stream to?</summary><p>YouTube, Twitch, Facebook, Kick, Restream, and any service that accepts a Custom RTMP / RTMPS stream key.</p></details>
-      <details><summary>What video format do I need?</summary><p>An MP4 with H.264 video and AAC audio (the default export from most tools). We stream-copy it without re-encoding, so it goes live instantly and stays high quality.</p></details>
-      <details><summary>Can it run 24/7?</summary><p>Yes — turn on "Loop the video forever" and it broadcasts non-stop. During the free beta one stream runs at a time; Pro will add multiple simultaneous streams.</p></details>
-      <details><summary>Is it really free?</summary><p>Yes, free during beta. Pro plans (more streams, priority, scheduling) arrive as we scale — join the waitlist to get early-bird pricing.</p></details>
+      <details class="faq" open><summary>How do the 5 slots work?</summary><p>There are 5 streaming slots. You claim a free one, and it's yours for 24 hours. When all 5 are busy, you wait for one to free up. At 24h your slot stops automatically and you can renew.</p></details>
+      <details class="faq"><summary>What does it cost?</summary><p>Free during beta. At launch, a slot is $1 for 24 hours — pay only for the days you stream.</p></details>
+      <details class="faq"><summary>Which platforms can I stream to?</summary><p>YouTube, Twitch, Facebook, Kick, Restream, and any service with a Custom RTMP / RTMPS key.</p></details>
+      <details class="faq"><summary>What video format do I need?</summary><p>An MP4 with H.264 video + AAC audio (the default export from most tools). We stream-copy it — no re-encode — so it goes live instantly.</p></details>
+      <details class="faq"><summary>What happens after 24 hours?</summary><p>The stream stops and the slot frees for others. You'll be prompted to renew (claim again) to continue.</p></details>
     </div>
   </section>
 
   <footer>
     <div class="wrap">
-      <p style="font-weight:700;color:#fff;font-size:16px;margin-bottom:6px;">Stream<b style="color:#FF3B30;">za</b> Studio</p>
+      <p style="font-weight:700;color:#fff;font-size:16px;margin-bottom:6px;"><img src="logo.svg" alt="" />Stream<b style="color:#FF3B30;">za</b> Studio</p>
       <p>© 2026 Streamza · Probros. Not affiliated with YouTube, Twitch, Facebook, Kick or any third-party platform. You are responsible for the content you stream.</p>
     </div>
   </footer>
@@ -235,29 +246,68 @@
 
   <script>
     const $ = (id) => document.getElementById(id);
-    function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),3200); }
+    const TKEY = "streamza_slot_token";
+    function toast(m){const t=$("toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),3400);}
+    function fmt(sec){sec=Math.max(0,sec);const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");}
+    function fmtShort(sec){const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60);return h>0?h+"h "+m+"m":m+"m";}
 
-    async function refresh(){
+    // video preview
+    let pUrl=null;
+    $("video").addEventListener("change",()=>{const f=$("video").files[0];if(pUrl)URL.revokeObjectURL(pUrl);if(f){pUrl=URL.createObjectURL(f);const v=$("preview");v.src=pUrl;v.style.display="block";$("vplaceholder").style.display="none";v.play().catch(()=>{});}});
+
+    // live slot board
+    async function refreshSlots(){
       try{
-        const s = await (await fetch("/status")).json();
-        $("dot").className = "dot" + (s.running ? " on" : "");
-        if(s.running){
-          const m=String(Math.floor(s.uptime/60)).padStart(2,"0"), sec=String(s.uptime%60).padStart(2,"0");
-          $("statusText").textContent = `LIVE · ${s.file} → ${s.dest} · ${m}:${sec}${s.loop?" · looping":""}`;
-          $("startBtn").style.display="none"; $("stopBtn").style.display="flex";
-        }else{
-          $("statusText").textContent="Idle"; $("startBtn").style.display="flex"; $("stopBtn").style.display="none";
-        }
-        $("log").textContent=(s.log||[]).join("\n"); $("log").scrollTop=$("log").scrollHeight;
+        const d=await (await fetch("/slots")).json();
+        $("slotboard").innerHTML = d.slots.map(s=>`
+          <div class="slot ${s.busy?'busy':'free'}">
+            <div class="sid">Slot ${s.id}</div>
+            <div class="ring">${s.busy?'●':'○'}</div>
+            <div class="st">${s.busy?'In use':'Free'}</div>
+            <div class="left">${s.busy && s.secondsLeft? fmtShort(s.secondsLeft)+' left':''}</div>
+          </div>`).join("");
+        $("availLine").innerHTML = d.free>0 ? `<b>${d.free}</b> of ${d.total} slots free — claim one now` : `All ${d.total} slots are busy — check back soon`;
+        $("heroAvail").textContent = `${d.free}/${d.total} slots free`;
       }catch(_){}
     }
 
-    $("startBtn").onclick = async () => {
+    function parseStats(log){for(let i=log.length-1;i>=0;i--){const l=log[i];if(l.includes("bitrate=")){const br=l.match(/bitrate=\s*([\d.]+)\s*kbits\/s/i);const sp=l.match(/speed=\s*([\d.]+)\s*x/i);return{br:br?+br[1]:null,speed:sp?+sp[1]:null};}}return null;}
+
+    // owner's slot monitor (token)
+    async function refreshMine(){
+      const token=localStorage.getItem(TKEY);
+      if(!token){ setLive(false); return; }
+      try{
+        const s=await (await fetch("/status?token="+token)).json();
+        if(!s.running){ // expired or stopped
+          if(localStorage.getItem(TKEY)){ localStorage.removeItem(TKEY); toast("Your 24-hour slot ended. Claim again to continue."); }
+          setLive(false); return;
+        }
+        setLive(true);
+        $("cdSlot").textContent=s.slot;
+        $("cdTime").textContent=fmt(s.secondsLeft);
+        $("log").textContent=(s.log||[]).join("\n"); $("log").scrollTop=$("log").scrollHeight;
+        const st=parseStats(s.log||[]);
+        $("sBitrate").textContent = st&&st.br!=null ? (st.br/1000).toFixed(2)+" Mbps":"—";
+        $("sSpeed").textContent = st&&st.speed!=null ? (st.speed>=0.95?"Good":"Weak"):"—";
+        $("sSpeed").className = "v"+(st&&st.speed>=0.95?" green":"");
+      }catch(_){}
+    }
+    function setLive(on){
+      $("liveBadge").className="livebadge"+(on?" on":"");
+      $("cd").style.display=on?"block":"none";
+      $("sStatus").textContent=on?"LIVE":"Idle";
+      $("startBtn").style.display=on?"none":"flex";
+      $("stopBtn").style.display=on?"flex":"none";
+      if(!on){ $("sBitrate").textContent="—"; $("sSpeed").textContent="—"; $("sSpeed").className="v"; }
+    }
+
+    $("startBtn").onclick=async()=>{
       const f=$("video").files[0];
-      if(!$("email").value) return toast("Enter your email to go live.");
-      if(!f) return toast("Choose a video file first.");
+      if(!$("email").value) return toast("Enter your email.");
+      if(!f) return toast("Choose a video file.");
       if(!$("rtmpUrl").value) return toast("Enter your RTMP server URL.");
-      if(!$("agree").checked) return toast("Please confirm you have the rights to this content.");
+      if(!$("agree").checked) return toast("Confirm you have the rights to this content.");
       const fd=new FormData();
       fd.append("email",$("email").value); fd.append("video",f);
       fd.append("rtmpUrl",$("rtmpUrl").value); fd.append("streamKey",$("streamKey").value);
@@ -265,23 +315,25 @@
       $("startBtn").disabled=true; $("startBtn").textContent="Uploading…";
       try{
         const r=await fetch("/start",{method:"POST",body:fd}); const j=await r.json();
-        if(!r.ok) toast(j.error||"Couldn't start."); else toast("You're going live!");
+        if(!r.ok){ toast(j.error||"Couldn't start."); }
+        else { localStorage.setItem(TKEY,j.token); toast("Slot "+j.slot+" claimed — you're going live for 24h!"); }
       }catch(e){ toast("Upload failed: "+e.message); }
-      $("startBtn").disabled=false; $("startBtn").textContent="Go Live"; refresh();
+      $("startBtn").disabled=false; $("startBtn").textContent="Claim a slot & Go Live";
+      refreshMine(); refreshSlots();
     };
-    $("stopBtn").onclick = async () => { await fetch("/stop",{method:"POST"}); toast("Stream stopped."); refresh(); };
-
-    $("waitBtn").onclick = async () => {
-      const email=$("waitEmail").value;
-      if(!email) return toast("Enter your email.");
-      try{
-        const r=await fetch("/waitlist",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,source:"pro-waitlist"})});
-        if(r.ok){ toast("You're on the list — we'll email you when Pro launches!"); $("waitEmail").value=""; }
-        else toast("Enter a valid email.");
-      }catch(e){ toast("Something went wrong."); }
+    $("stopBtn").onclick=async()=>{
+      const token=localStorage.getItem(TKEY); if(!token) return;
+      await fetch("/stop",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token})});
+      localStorage.removeItem(TKEY); toast("Stream stopped, slot freed."); setLive(false); refreshSlots();
+    };
+    $("waitBtn").onclick=async()=>{
+      const email=$("waitEmail").value; if(!email) return toast("Enter your email.");
+      try{const r=await fetch("/waitlist",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,source:"pro-waitlist"})});
+        if(r.ok){toast("You're on the list!");$("waitEmail").value="";}else toast("Enter a valid email.");}catch(e){toast("Something went wrong.");}
     };
 
-    setInterval(refresh,2000); refresh();
+    refreshSlots(); refreshMine();
+    setInterval(refreshSlots,4000); setInterval(refreshMine,2000);
   </script>
 </body>
 </html>
