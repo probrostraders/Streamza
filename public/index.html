@@ -4,9 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Streamza Studio — Claim a live slot, stream any video to YouTube/Twitch 24/7</title>
-  <meta name="description" content="Claim 1 of 5 live slots and stream any video to YouTube, Twitch, Facebook or any RTMP server for 24 hours — from your browser, with seamless looping. Free during beta." />
+  <meta name="description" content="Claim 1 of 10 live slots and stream any video to YouTube, Twitch, Facebook or any RTMP server from your browser, with seamless looping. Start with a free 5-minute trial, then $1 / 24 hours." />
   <meta name="theme-color" content="#000000" />
   <link rel="icon" type="image/svg+xml" href="logo.svg" />
+  <link rel="preconnect" href="https://app.lemonsqueezy.com" crossorigin />
+  <link rel="preconnect" href="https://accounts.google.com" crossorigin />
+  <script src="https://app.lemonsqueezy.com/js/lemon.js" defer></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     :root{--red:#FF3B30;--red2:#FF2D55;--bg:#000;--card:#141417;--card2:#0c0c0e;--line:#26262c;--txt:#fff;--sub:#9b9ba3;--ok:#10B981;}
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -31,6 +35,7 @@
     nav.links{display:flex;gap:24px;font-size:14px;color:var(--sub);}
     nav.links a:hover{color:#fff;}
     @media(max-width:760px){nav.links{display:none;}}
+    @media(max-width:560px){.hide-sm{display:none;}}
     .hero{text-align:center;padding:64px 0 36px;}
     .hero p.lead{font-size:18px;color:var(--sub);max-width:660px;margin:18px auto 26px;}
     .hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
@@ -39,8 +44,8 @@
     .kicker{color:var(--red);font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;}
     .head p{color:var(--sub);margin-top:10px;}
     /* slots board */
-    .slotboard{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
-    @media(max-width:760px){.slotboard{grid-template-columns:repeat(2,1fr);} }
+    .slotboard{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:12px;}
+    @media(max-width:760px){.slotboard{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));} }
     .slot{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 12px;text-align:center;}
     .slot .sid{font-size:12px;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;}
     .slot .ring{width:46px;height:46px;border-radius:50%;margin:10px auto;display:flex;align-items:center;justify-content:center;border:2px solid #2c2c33;}
@@ -51,6 +56,12 @@
     .slot .left{font-size:11px;color:var(--sub);margin-top:2px;min-height:14px;}
     .availline{text-align:center;color:var(--sub);font-size:14px;margin-top:16px;}
     .availline b{color:#fff;}
+    .slot.free{cursor:pointer;transition:border-color .15s,transform .15s,box-shadow .15s;}
+    .slot.free:hover{border-color:var(--red);transform:translateY(-2px);}
+    .slot.free .left{color:var(--red);font-weight:700;}
+    .slot.sel{border-color:var(--red);box-shadow:0 0 0 2px rgba(255,59,48,.35);}
+    .selslot{background:rgba(255,59,48,.10);border:1px solid rgba(255,59,48,.4);border-radius:10px;padding:10px 13px;margin-bottom:14px;font-size:13px;color:#f0d0cd;}
+    .selslot b{color:#fff;} .selslot a{color:var(--red);font-weight:700;text-decoration:underline;cursor:pointer;}
     /* steps */
     .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
     @media(max-width:760px){.grid3{grid-template-columns:1fr;}}
@@ -68,6 +79,35 @@
     input[type=text],input[type=email],input[type=file]{width:100%;background:var(--card2);border:1px solid var(--line);color:#fff;border-radius:10px;padding:12px;font-size:15px;}
     .checkrow{display:flex;align-items:flex-start;gap:9px;margin-top:14px;font-size:13px;color:var(--sub);}
     .checkrow input{margin-top:3px;}
+    /* platform presets */
+    .platrow{display:flex;flex-wrap:wrap;gap:8px;}
+    .chip{background:var(--card2);border:1px solid var(--line);color:#cfcfd6;border-radius:20px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;}
+    .chip:hover{border-color:#3a3a44;}
+    .chip.active{background:rgba(255,59,48,.14);border-color:var(--red);color:#fff;}
+    .keyhelp{font-size:12px;color:var(--red);font-weight:600;margin-left:8px;}
+    .keywrap{position:relative;}
+    .keywrap input{padding-right:62px;}
+    .eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:transparent;border:0;color:var(--sub);font-size:12px;font-weight:700;cursor:pointer;padding:7px 9px;text-transform:uppercase;letter-spacing:.03em;}
+    .eye:hover{color:#fff;}
+    /* loop toggle switch */
+    .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:16px;}
+    .toggle-title{font-size:14px;font-weight:700;color:#fff;}
+    .toggle-sub{font-size:12px;color:var(--sub);margin-top:2px;}
+    .switch{position:relative;display:inline-block;width:48px;height:28px;flex:none;}
+    .switch input{opacity:0;width:0;height:0;}
+    .slider{position:absolute;inset:0;background:#3a3a44;border-radius:30px;transition:.2s;cursor:pointer;}
+    .slider:before{content:"";position:absolute;height:22px;width:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;}
+    .switch input:checked + .slider{background:var(--ok);}
+    .switch input:checked + .slider:before{transform:translateX(20px);}
+    /* multistream extra destinations */
+    .dest-extra{display:flex;gap:6px;margin-bottom:8px;align-items:center;}
+    .dest-extra select,.dest-extra input{background:var(--card2);border:1px solid var(--line);color:#fff;border-radius:8px;padding:9px;font-size:13px;min-width:0;}
+    .dest-extra .dPlat{flex:0 0 84px;} .dest-extra .dUrl{flex:1;} .dest-extra .dKey{flex:1;}
+    .dest-extra .dRemove{flex:0 0 auto;background:transparent;border:0;color:var(--sub);cursor:pointer;font-size:18px;padding:2px 6px;}
+    .dest-extra .dRemove:hover{color:var(--red);}
+    #addDest{margin-top:6px;font-size:14px;border-style:dashed;}
+    .price-grid-3{grid-template-columns:repeat(3,1fr);max-width:1000px;}
+    @media(max-width:820px){.price-grid-3{grid-template-columns:1fr;}}
     .videoframe{position:relative;width:100%;aspect-ratio:16/9;background:#000;border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;}
     .videoframe video{width:100%;height:100%;object-fit:contain;background:#000;}
     .videoframe .placeholder{color:#55555e;font-size:14px;text-align:center;padding:20px;}
@@ -76,6 +116,17 @@
     @keyframes blink{50%{opacity:.25;}}
     .countdown{text-align:center;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:14px;}
     .countdown .t{font-size:26px;font-weight:800;color:var(--red);} .countdown .l{font-size:12px;color:var(--sub);}
+    /* manage link + resume */
+    .managebox{background:var(--card2);border:1px solid #3a3a44;border-radius:12px;padding:12px 13px;margin-top:12px;}
+    .ml-label{font-size:12px;color:#d0d0d8;margin-bottom:8px;font-weight:600;}
+    .ml-row{display:flex;gap:8px;}
+    .ml-row input{flex:1;background:#000;border:1px solid var(--line);color:#fff;border-radius:8px;padding:9px 10px;font-size:12px;font-family:ui-monospace,Menlo,Consolas,monospace;}
+    .ml-hint{font-size:11px;color:var(--sub);margin-top:7px;}
+    details.resume{margin-bottom:14px;border:1px solid var(--line);border-radius:10px;background:var(--card2);}
+    details.resume summary{padding:11px 13px;cursor:pointer;font-size:13px;color:var(--sub);list-style:none;font-weight:600;}
+    details.resume summary::-webkit-details-marker{display:none;}
+    .resume-body{display:flex;gap:8px;padding:0 13px 12px;}
+    .resume-body input{flex:1;background:#000;border:1px solid var(--line);color:#fff;border-radius:8px;padding:10px;font-size:14px;}
     .statgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px;}
     .stat{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-align:center;}
     .stat .k{font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;}
@@ -102,28 +153,312 @@
     details.faq p{color:var(--sub);padding-bottom:16px;font-size:15px;}
     footer{border-top:1px solid var(--line);padding:30px 0;color:var(--sub);font-size:13px;text-align:center;}
     footer img{width:26px;height:26px;vertical-align:middle;margin-right:6px;}
-    .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1c1c22;border:1px solid var(--line);padding:12px 18px;border-radius:12px;font-size:14px;opacity:0;transition:.3s;pointer-events:none;z-index:99;max-width:90%;text-align:center;}
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1c1c22;border:1px solid #3a3a44;padding:13px 20px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;transition:.3s;pointer-events:none;z-index:9999;max-width:90%;text-align:center;box-shadow:0 12px 30px rgba(0,0,0,.5);}
     .toast.show{opacity:1;}
+
+    /* ============================================================
+       Refined layer — restrained, credible, fast (no flashy gradients/glows)
+       ============================================================ */
+    body{background:#08080b;-webkit-font-smoothing:antialiased;letter-spacing:-.003em;}
+    .wrap{max-width:1120px;padding:0 24px;}
+    header{background:rgba(8,8,11,.82);border-bottom:1px solid rgba(255,255,255,.07);backdrop-filter:blur(14px);}
+    .brand img{border-radius:8px;}
+    .btn{border-radius:11px;padding:13px 22px;font-weight:600;letter-spacing:-.01em;transition:background .15s ease,border-color .15s ease,opacity .15s ease;}
+    .btn-primary{background:var(--red);} .btn-primary:hover{background:#e5332a;}
+    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,.14);} .btn-ghost:hover{border-color:rgba(255,255,255,.30);}
+    .hero{padding:80px 0 48px;}
+    .hero h1{font-weight:800;letter-spacing:-.03em;line-height:1.05;font-size:clamp(32px,5.5vw,56px);}
+    .hero .red{color:var(--red);}
+    .hero p.lead{font-size:18px;line-height:1.6;color:#a3a3ad;}
+    .eyebrow{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.10);}
+    section{padding:64px 0;}
+    .head h2{font-weight:800;letter-spacing:-.02em;font-size:clamp(26px,4vw,36px);}
+    .head p{font-size:17px;color:#a3a3ad;}
+    .kicker{letter-spacing:.09em;}
+    .plan,.step,.panel,.slot{background:#121216;border:1px solid rgba(255,255,255,.08);}
+    .step,.plan{transition:border-color .15s ease,transform .15s ease;}
+    .step:hover,.plan:hover{border-color:rgba(255,255,255,.16);transform:translateY(-2px);}
+    .step .n{background:var(--red);}
+    .panel{border-radius:18px;padding:24px;}
+    .plan{border-radius:18px;}
+    .plan.feat{border-color:rgba(255,59,48,.5);}
+    .plan .pr{font-size:38px;letter-spacing:-.02em;}
+    .plan .tag{letter-spacing:.05em;}
+    input[type=text],input[type=email],input[type=password],input[type=file],.dest-extra input,.dest-extra select,.resume-body input{background:#24242c;border:1px solid rgba(255,255,255,.16);border-radius:11px;transition:border-color .15s ease,background .15s ease;}
+    input[type=text]:hover,input[type=email]:hover,input[type=password]:hover{background:#2a2a33;}
+    input[type=text]:focus,input[type=email]:focus,input[type=password]:focus,.dest-extra input:focus,.dest-extra select:focus,.resume-body input:focus{outline:none;background:#2a2a33;border-color:rgba(255,59,48,.7);}
+    input::placeholder{color:#85858f;}
+    .slot{border-radius:14px;}
+    .chip{border-radius:10px;}
+    footer{border-top:1px solid rgba(255,255,255,.07);padding:40px 0;}
+
+    /* subscribe modal */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.66);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;z-index:300;padding:20px;}
+    .modal.show{display:flex;}
+    .modal .box{background:#141418;border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:26px;width:100%;max-width:392px;box-shadow:0 24px 60px rgba(0,0,0,.5);}
+    .modal .box img{width:40px;height:40px;border-radius:10px;margin-bottom:13px;}
+    .modal h3{font-size:20px;font-weight:800;letter-spacing:-.01em;}
+    .modal p{color:var(--sub);font-size:14px;margin:6px 0 18px;line-height:1.5;}
+    .modal input{width:100%;background:#24242c;border:1px solid rgba(255,255,255,.16);color:#fff;border-radius:11px;padding:13px;font-size:15px;margin-bottom:14px;}
+    .modal input:focus{outline:none;border-color:rgba(255,59,48,.6);}
+    .modal .mrow{display:flex;gap:10px;} .modal .mrow .btn{flex:1;justify-content:center;}
+    .modal .secure{font-size:11px;color:var(--sub);text-align:center;margin-top:12px;}
+
+    /* studio mode tabs + multistream destination cards */
+    .modetabs{display:flex;gap:6px;background:#0c0c0f;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:5px;margin:0 0 16px;}
+    .modetab{flex:1;border:0;background:transparent;color:var(--sub);font-weight:700;font-size:14px;padding:11px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:background .15s ease,color .15s ease;}
+    .modetab.active{background:var(--red);color:#fff;}
+    .modetab .mtag{font-size:11px;font-weight:700;background:rgba(255,255,255,.16);padding:1px 7px;border-radius:20px;}
+    .modetab.active .mtag{background:rgba(0,0,0,.22);}
+    .modehint{font-size:12.5px;color:var(--sub);margin-bottom:13px;line-height:1.5;}
+    .dcard{background:#0c0c0f;border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:12px;margin-bottom:10px;}
+    .dcard-top{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
+    .dcard .dPlat{flex:1;background:#24242c;border:1px solid rgba(255,255,255,.16);color:#fff;border-radius:9px;padding:9px;font-size:13px;font-weight:600;}
+    .dcard .dRemove{flex:0 0 auto;background:transparent;border:0;color:var(--sub);font-size:19px;line-height:1;cursor:pointer;padding:2px 6px;}
+    .dcard .dRemove:hover{color:var(--red);}
+    .dcard input{width:100%;margin-bottom:8px;} .dcard input:last-child{margin-bottom:0;}
+
+    /* header brand lockup */
+    .brand{gap:10px;}
+    .bname{font-weight:800;font-size:19px;letter-spacing:-.02em;}
+    .bbadge{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--red);border:1px solid rgba(255,59,48,.4);border-radius:6px;padding:2px 7px;}
+    .hcta{display:flex;align-items:center;gap:10px;}
+    .hcta .btn{padding:9px 16px;font-size:14px;}
+    /* keep the studio header on one row on phones (compact Google icon + tighter spacing) */
+    @media(max-width:600px){
+      header .wrap{gap:8px;}
+      .hcta{gap:7px;}
+      .hcta .btn{padding:9px 13px;font-size:13px;}
+      .brand{font-size:17px;gap:7px;} .brand img{width:26px;height:26px;}
+      .bbadge{display:none;}
+      #hdrGbtn{display:flex;align-items:center;}
+    }
+
+    /* header account chip / sign-in */
+    .hdrauth{display:flex;align-items:center;}
+    #hdrGbtn{display:flex;}
+    .hdrchip{display:flex;align-items:center;gap:9px;background:#16161b;border:1px solid var(--line);border-radius:30px;padding:5px 12px 5px 6px;cursor:pointer;position:relative;user-select:none;transition:border-color .15s ease;}
+    .hdrchip:hover{border-color:rgba(255,255,255,.28);}
+    .hdrchip .av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--red),#ff7a5c);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:14px;flex:none;}
+    .hdrchip .av.live{box-shadow:0 0 0 2px #16161b,0 0 0 4px #ff3b30;animation:avpulse 1.6s ease-in-out infinite;}
+    @keyframes avpulse{0%,100%{box-shadow:0 0 0 2px #16161b,0 0 0 4px #ff3b30;}50%{box-shadow:0 0 0 2px #16161b,0 0 0 4px rgba(255,59,48,.35);}}
+    .hdrchip .em{font-size:13px;color:#d4d4dc;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .hdrchip .caret{color:var(--sub);font-size:11px;}
+    .hdrmenu{position:absolute;top:48px;right:0;background:#15151a;border:1px solid var(--line);border-radius:14px;padding:6px;min-width:200px;box-shadow:0 16px 40px rgba(0,0,0,.55);display:none;z-index:250;}
+    .hdrmenu.show{display:block;}
+    .hdrmenu .who{padding:9px 12px 10px;border-bottom:1px solid var(--line);margin-bottom:4px;}
+    .hdrmenu .who .e{font-size:13px;color:#e6e6ee;font-weight:600;word-break:break-all;}
+    .hdrmenu .who .p{font-size:12px;margin-top:2px;}
+    .hdrmenu a{display:block;padding:10px 12px;border-radius:9px;font-size:14px;color:#d4d4dc;cursor:pointer;text-decoration:none;}
+    .hdrmenu a:hover{background:#222;}
+    @media(max-width:560px){.hdrchip .em{display:none;} .hdrchip{padding:5px;}}
+
+    /* mode cards (under the slots) */
+    .modes{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:840px;margin:10px auto 0;}
+    @media(max-width:680px){.modes{grid-template-columns:1fr;}}
+    .modecard{text-align:left;background:#121216;border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:24px;cursor:pointer;transition:border-color .15s ease,transform .15s ease;display:flex;flex-direction:column;gap:7px;width:100%;font:inherit;color:inherit;}
+    .modecard:hover{border-color:var(--red);transform:translateY(-3px);}
+    .modecard .ic{width:46px;height:46px;border-radius:12px;background:rgba(255,59,48,.12);color:var(--red);display:flex;align-items:center;justify-content:center;margin-bottom:6px;}
+    .modecard .ic svg{width:24px;height:24px;}
+    .modecard h3{font-size:19px;font-weight:800;letter-spacing:-.01em;}
+    .modecard p{color:var(--sub);font-size:14px;line-height:1.5;}
+    .modecard .go{margin-top:8px;color:var(--red);font-weight:700;font-size:14px;}
+
+    /* full-screen studio app (OBS/Streamlabs style) */
+    #studioApp{position:fixed;inset:0;z-index:200;background:#08080b;display:none;flex-direction:column;overflow:auto;}
+    #studioApp.show{display:flex;}
+    body.studio-open{overflow:hidden;}
+    .sapp-bar{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 20px;background:rgba(8,8,11,.92);border-bottom:1px solid rgba(255,255,255,.08);backdrop-filter:blur(12px);z-index:5;}
+    .sapp-bar .l{display:flex;align-items:center;gap:12px;}
+    .sapp-brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:16px;}
+    .sapp-brand img{width:26px;height:26px;border-radius:7px;}
+    .sapp-modepill{font-size:12px;font-weight:700;color:#fff;background:var(--red);border-radius:20px;padding:4px 12px;}
+    .sapp-r{display:flex;align-items:center;gap:12px;}
+    .sapp-status{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:var(--sub);}
+    .sapp-status .d{width:8px;height:8px;border-radius:50%;background:#555;}
+    .sapp-status.on{color:var(--red);} .sapp-status.on .d{background:var(--red);box-shadow:0 0 0 4px rgba(255,59,48,.2);animation:blink 1.2s infinite;}
+    .sapp-close{background:transparent;border:1px solid rgba(255,255,255,.16);color:#fff;border-radius:10px;padding:8px 14px;font-weight:600;cursor:pointer;font-size:14px;}
+    .sapp-close:hover{border-color:rgba(255,255,255,.32);}
+    .sapp-stop{background:var(--red);color:#fff;border:0;border-radius:10px;padding:8px 16px;font-weight:700;cursor:pointer;font-size:14px;}
+    .sapp-stop:hover{background:#e5332a;}
+    .liveinfo{background:rgba(255,59,48,.10);border:1px solid rgba(255,59,48,.35);border-radius:10px;padding:11px 14px;font-size:13.5px;color:#f3d4d1;font-weight:600;}
+    .liveinfo b{color:#fff;}
+    .sapp-body{flex:1;display:grid;grid-template-columns:1.55fr .95fr;gap:18px;max-width:1300px;width:100%;margin:0 auto;padding:20px 20px 48px;}
+    @media(max-width:920px){.sapp-body{grid-template-columns:1fr;}}
+    .stage{display:flex;flex-direction:column;gap:14px;min-width:0;}
+    .stage .head2{font-size:12px;color:var(--sub);font-weight:700;text-transform:uppercase;letter-spacing:.06em;}
+    .dock{background:#121216;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px;align-self:start;}
+    .dock #startBtn{padding:15px;font-size:16px;}
+    .authbox{margin-bottom:14px;}
+    .authhint{font-size:12px;color:var(--sub);margin-top:8px;}
+    #authUser{background:#1a1a1f;border:1px solid var(--line);border-radius:10px;padding:10px 13px;font-size:13px;color:#d0d0d8;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+    #authUser b{color:#fff;}
+    #authUser .so{color:var(--red);cursor:pointer;font-weight:700;}
+    .sapp-brand{cursor:pointer;}
+
+    /* colour-coded mode cards */
+    .modecard{position:relative;gap:8px;}
+    .modecard.single .ic{background:rgba(10,132,255,.14);color:#0A84FF;}
+    .modecard.single:hover{border-color:#0A84FF;}
+    .modecard.single .go{color:#0A84FF;}
+    .modecard.multi{border-color:rgba(255,59,48,.45);background:linear-gradient(180deg,rgba(255,59,48,.07),#121216);}
+    .modecard.multi:hover{border-color:var(--red);}
+    .cardprice{font-size:13px;font-weight:700;color:#fff;margin-top:2px;}
+    .cardbadge{position:absolute;top:14px;right:14px;background:var(--red);color:#fff;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:4px 10px;border-radius:20px;}
+
+    /* responsive — studio app + cards on phones */
+    @media(max-width:560px){
+      .sapp-bar{flex-wrap:wrap;height:auto;padding:10px 14px;gap:8px;}
+      .sapp-bar .l{gap:8px;} .sapp-brand{font-size:15px;} .sapp-brand img{width:24px;height:24px;}
+      .sapp-modepill{font-size:11px;padding:3px 9px;}
+      .sapp-close{padding:7px 11px;font-size:13px;}
+      .sapp-body{padding:14px 12px 36px;gap:14px;}
+      .modecard{padding:20px;} .modal .box{padding:22px;}
+      h1{font-size:30px;}
+    }
+  #recentList{display:flex;flex-direction:column;gap:8px;}
+  .recentCard{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #2a2a2a;border-radius:10px;background:#161616;cursor:pointer;transition:.15s;}
+  .recentCard:hover{border-color:#3a3a3a;}
+  .recentCard.sel{border-color:#FF3B30;background:#1f1413;}
+  .recentCard .rc-name{flex:1;font-weight:600;font-size:14px;color:#eee;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .recentCard .rc-meta{color:#8a8a8a;font-size:12px;white-space:nowrap;}
+  .recentCard .rc-del{background:none;border:none;color:#8a8a8a;font-size:15px;cursor:pointer;padding:2px 6px;border-radius:6px;line-height:1;}
+  .recentCard .rc-del:hover{color:#FF3B30;background:#241414;}
+  .recentHint{padding:10px 12px;border:1px dashed #333;border-radius:10px;color:#bbb;font-size:13px;background:#141414;}
+
+  /* ============================================================
+     Premium redesign layer — visual polish only. No IDs/classes
+     used by JS are removed or renamed here, only new rules added
+     and a few purely-cosmetic overrides.
+     ============================================================ */
+
+  /* subtle depth instead of flat black */
+  body{background:radial-gradient(ellipse 1200px 600px at 50% -10%, rgba(255,59,48,.08), transparent 60%), #08080b;}
+
+  /* hero: two-column layout with a product mockup */
+  .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:44px;align-items:center;}
+  @media(max-width:900px){.hero-grid{grid-template-columns:1fr;} .hero-visual{order:-1;max-width:420px;margin:0 auto;}}
+  .hero-copy .eyebrow{box-shadow:0 1px 0 rgba(255,255,255,.03) inset;}
+  .hero-copy h1{margin-top:18px;}
+  .hero-cta{margin-top:28px;}
+  .btn-primary{box-shadow:0 10px 26px rgba(255,59,48,.28);}
+  .btn-primary:hover{box-shadow:0 12px 30px rgba(255,59,48,.36);}
+
+  .hmock{background:#111115;border:1px solid rgba(255,255,255,.10);border-radius:18px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.02);}
+  .hmock-bar{display:flex;align-items:center;gap:7px;padding:11px 14px;background:#0c0c0f;border-bottom:1px solid rgba(255,255,255,.07);}
+  .hdot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+  .hdot.r{background:#ff5f57;} .hdot.y{background:#febc2e;} .hdot.g{background:#28c840;}
+  .hmock-url{margin-left:8px;display:flex;align-items:center;gap:6px;background:#1a1a1f;border-radius:7px;padding:5px 10px;font-size:11.5px;color:#9a9aa3;}
+  .hmock-body{padding:18px;}
+  .hmock-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .hmock-live{background:rgba(255,59,48,.14);color:#ff6259;font-size:11px;font-weight:800;letter-spacing:.03em;padding:4px 10px;border-radius:20px;}
+  .hmock-plat{font-size:12px;color:var(--sub);font-weight:600;}
+  .hmock-frame{aspect-ratio:16/9;background:linear-gradient(155deg,#1c1c22,#0c0c0f);border:1px solid rgba(255,255,255,.07);border-radius:12px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.25);margin-bottom:14px;}
+  .hmock-stat-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:16px;}
+  .hmock-stat{background:#0c0c0f;border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:9px 12px;}
+  .hmock-stat span{display:block;font-size:10.5px;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
+  .hmock-stat b{font-size:14px;font-weight:700;}
+  .hmock-stat b.good{color:#34C759;}
+  .hmock-slots{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+  .hs{height:16px;border-radius:5px;}
+  .hs.free{background:rgba(52,199,89,.20);border:1px solid rgba(52,199,89,.45);}
+  .hs.busy{background:rgba(255,59,48,.16);border:1px solid rgba(255,59,48,.4);}
+
+  /* slot board — more premium than flat squares */
+  .slot{position:relative;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease;}
+  .slot.free{cursor:pointer;}
+  .slot.free:hover{transform:translateY(-3px);border-color:rgba(52,199,89,.55);box-shadow:0 10px 26px rgba(52,199,89,.14);}
+  .slot.busy{opacity:.72;}
+  .slot .ring{transition:transform .15s ease;}
+  .slot.free:hover .ring{transform:scale(1.12);}
+
+  /* mode + plan + feature cards: consistent soft elevation */
+  .modecard,.plan,.step,.panel{box-shadow:0 1px 0 rgba(255,255,255,.02) inset;}
+  .modecard:hover{box-shadow:0 16px 34px rgba(0,0,0,.35);}
+  .plan.feat{box-shadow:0 16px 40px rgba(255,59,48,.14);}
+
+  /* full-screen studio: slightly richer dock + stage framing */
+  .dock{box-shadow:0 1px 0 rgba(255,255,255,.02) inset;}
+  .videoframe{box-shadow:0 20px 50px rgba(0,0,0,.4);}
+
+  /* fix: video + placeholder used to sit side-by-side (flex children) instead of overlaid */
+  .videoframe #preview{display:none;position:absolute;inset:0;}
+  .videoframe .placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;}
+  .videoframe .placeholder svg{opacity:.35;}
+
+  /* custom file dropzone (replaces the raw native file-input look) */
+  .dropzone{position:relative;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;background:var(--card2);border:1.5px dashed rgba(255,255,255,.18);border-radius:12px;padding:22px 16px;cursor:pointer;text-align:center;transition:border-color .15s ease,background .15s ease;}
+  .dropzone:hover{border-color:rgba(255,59,48,.55);background:#282830;}
+  .dropzone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+  .dz-empty,.dz-filled{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;pointer-events:none;}
+  .dz-empty svg{color:var(--sub);}
+  .dz-title{font-size:14px;font-weight:700;color:#fff;}
+  .dz-sub{font-size:12px;color:var(--sub);}
+  .dz-filled{display:none;flex-direction:row;gap:10px;width:100%;}
+  .dropzone.has-file{border-style:solid;border-color:rgba(52,199,89,.4);background:rgba(52,199,89,.06);}
+  .dropzone.has-file .dz-empty{display:none;}
+  .dropzone.has-file .dz-filled{display:flex;}
+  .dz-filled svg{color:var(--ok);flex:none;}
+  .dz-filename{flex:1;text-align:left;font-size:13.5px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .dz-change{font-size:12px;font-weight:700;color:var(--red);flex:none;}
+
+  /* notice boxes: icon-led, like a real product dock rather than plain text banners */
+  .beta,.selslot{display:flex;align-items:flex-start;gap:10px;}
+  .beta::before{content:"";flex:none;width:18px;height:18px;margin-top:1px;background:var(--red);-webkit-mask:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222%22><circle cx=%2212%22 cy=%2212%22 r=%2210%22/><path d=%22M12 8v5%22/><path d=%22M12 16h.01%22/></svg>') center/contain no-repeat;mask:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222%22><circle cx=%2212%22 cy=%2212%22 r=%2210%22/><path d=%22M12 8v5%22/><path d=%22M12 16h.01%22/></svg>') center/contain no-repeat;}
+  .selslot::before{content:"";flex:none;width:16px;height:16px;margin-top:2px;background:var(--red);-webkit-mask:url('data:image/svg+xml;utf8,<svg xmlns=%22www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222.2%22><path d=%22M13 2 3 14h7l-1 8 10-12h-7z%22/></svg>') center/contain no-repeat;mask:url('data:image/svg+xml;utf8,<svg xmlns=%22www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222.2%22><path d=%22M13 2 3 14h7l-1 8 10-12h-7z%22/></svg>') center/contain no-repeat;}
+  .beta > *:last-child, .selslot > *:last-child {flex:1;}
+  details.resume summary{display:flex;align-items:center;gap:9px;}
+  details.resume summary::before{content:"↻";color:var(--red);font-weight:800;}
+
+  /* labels: slightly more structured, section-like */
+  label{font-weight:600;color:#d4d4dc;}
   </style>
 </head>
 <body>
 
   <header>
     <div class="wrap">
-      <a class="brand" href="#"><img src="logo.svg" alt="Streamza" />Stream<b>za</b> Studio</a>
-      <nav class="links"><a href="#slots">Live slots</a><a href="#how">How it works</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a></nav>
-      <a class="btn btn-primary" href="#studio" style="padding:9px 18px;font-size:14px;">Claim a slot</a>
+      <a class="brand" href="/"><img src="logo.svg" alt="Streamza" /><span class="bname">Streamza</span><span class="bbadge">Studio</span></a>
+      <nav class="links"><a href="#slots">Slots</a><a href="#how">How it works</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a></nav>
+      <div class="hcta">
+        <div id="hdrAuth" class="hdrauth" style="display:none;"><div id="hdrGbtn"></div></div>
+        <a class="btn btn-ghost hide-sm" href="/">Main site</a>
+        <a class="btn btn-primary" href="#modes" id="headCta">Open studio</a>
+      </div>
     </div>
   </header>
 
   <section class="hero">
-    <div class="wrap">
-      <span class="eyebrow"><span class="live-dot"></span> <span id="heroAvail">5 live slots</span> · free during beta</span>
-      <h1>Claim a slot, stream any video <span class="red">24 hours non-stop.</span></h1>
-      <p class="lead">Grab one of 5 live slots, upload a video, paste your stream key — and Streamza broadcasts it to YouTube, Twitch, Facebook or any RTMP server for 24 hours, looping non-stop from the cloud.</p>
-      <div class="hero-cta">
-        <a class="btn btn-primary" href="#studio">Claim a slot →</a>
-        <a class="btn btn-ghost" href="#slots">See live slots</a>
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <span class="eyebrow"><span class="live-dot"></span> <span id="heroAvail">10 live slots</span> · free 5-min trial</span>
+        <h1>Claim a slot, stream any video <span class="red">24 hours non-stop.</span></h1>
+        <p class="lead">Grab one of 10 live slots, upload a video, paste your stream key — and Streamza broadcasts it to YouTube, Twitch, Facebook or any RTMP server. Start with a <b style="color:#fff;">free 5-minute trial</b>, then subscribe to stream 24 hours non-stop.</p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="#modes">Start streaming →</a>
+          <a class="btn btn-ghost" href="#slots">See live slots</a>
+        </div>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="hmock">
+          <div class="hmock-bar">
+            <span class="hdot r"></span><span class="hdot y"></span><span class="hdot g"></span>
+            <span class="hmock-url"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg> streamza.live/studio</span>
+          </div>
+          <div class="hmock-body">
+            <div class="hmock-row"><span class="hmock-live">● LIVE</span><span class="hmock-plat">YouTube</span></div>
+            <div class="hmock-frame"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 5v14l11-7z"/></svg></div>
+            <div class="hmock-stat-row">
+              <div class="hmock-stat"><span>Bitrate</span><b>4.6 Mbps</b></div>
+              <div class="hmock-stat"><span>Health</span><b class="good">Good</b></div>
+            </div>
+            <div class="hmock-slots">
+              <span class="hs busy"></span><span class="hs busy"></span><span class="hs free"></span><span class="hs free"></span>
+              <span class="hs busy"></span><span class="hs free"></span><span class="hs free"></span><span class="hs busy"></span>
+              <span class="hs free"></span><span class="hs free"></span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -131,9 +466,33 @@
   <!-- LIVE SLOTS -->
   <section id="slots" style="padding-top:20px;">
     <div class="wrap">
-      <div class="head"><p class="kicker">Live now</p><h2>5 streaming slots</h2><p>Each slot streams one video for 24 hours. Grab any free slot below.</p></div>
+      <div class="head"><p class="kicker">Live now</p><h2>10 streaming slots</h2><p>Each slot streams one video for 24 hours. Grab any free slot below.</p></div>
       <div class="slotboard" id="slotboard"></div>
       <p class="availline" id="availLine">Checking availability…</p>
+    </div>
+  </section>
+
+  <!-- CHOOSE MODE -->
+  <section id="modes" style="padding-top:10px;">
+    <div class="wrap">
+      <div class="head"><p class="kicker">Start streaming</p><h2>Pick how you want to broadcast</h2><p>Open the studio, upload a video and go live — starting with a free 5-minute trial.</p></div>
+      <div class="modes">
+        <button type="button" class="modecard single" id="cardSingle">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M8 5v14l11-7z"/></svg></span>
+          <h3>Single stream</h3>
+          <p>Stream your video to one platform — YouTube, Twitch, Facebook, Kick or any RTMP server.</p>
+          <span class="cardprice">Free trial, then $4.99/mo</span>
+          <span class="go">Open studio →</span>
+        </button>
+        <button type="button" class="modecard multi" id="cardMulti">
+          <span class="cardbadge">Most popular</span>
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8.2 10.8 15.6 7.2M8.2 13.2l7.4 3.6"/></svg></span>
+          <h3>Multistream</h3>
+          <p>Broadcast one video to up to 3 platforms at once — e.g. YouTube + Twitch + Facebook together.</p>
+          <span class="cardprice">$9.99/mo</span>
+          <span class="go">Open studio →</span>
+        </button>
+      </div>
     </div>
   </section>
 
@@ -141,84 +500,176 @@
     <div class="wrap">
       <div class="head"><p class="kicker">How it works</p><h2>Live in 3 steps</h2></div>
       <div class="grid3">
-        <div class="step"><div class="n">1</div><h3>Grab a free slot</h3><p>One of the 5 slots is yours for 24 hours ($1/day — free during beta).</p></div>
-        <div class="step"><div class="n">2</div><h3>Upload &amp; paste your key</h3><p>Pick an MP4 (H.264+AAC) and your RTMP URL + stream key from your platform.</p></div>
-        <div class="step"><div class="n">3</div><h3>Go live for 24h</h3><p>It loops non-stop from the cloud. At 24h it stops — renew to keep going.</p></div>
+        <div class="step"><div class="n">1</div><h3>Tap a free slot</h3><p>No payment needed — every slot starts a free 5-minute trial.</p></div>
+        <div class="step"><div class="n">2</div><h3>Upload &amp; paste your key</h3><p>Pick an MP4 (H.264+AAC), choose your platform and paste your stream key.</p></div>
+        <div class="step"><div class="n">3</div><h3>Go live free for 5 min</h3><p>Your trial streams instantly. Subscribe anytime to keep streaming the full 24 hours.</p></div>
       </div>
     </div>
   </section>
 
-  <!-- STUDIO -->
-  <section id="studio">
-    <div class="wrap">
-      <div class="head"><p class="kicker">The Studio</p><h2>Claim your slot &amp; go live</h2></div>
-      <div class="studio-grid">
+  <!-- FULL-SCREEN STUDIO APP (opens from the mode cards / slots) -->
+  <div id="studioApp" aria-hidden="true">
+    <div class="sapp-bar">
+      <div class="l">
+        <span class="sapp-brand" id="sappLogo" title="Back to slots"><img src="logo.svg" alt="" />Streamza Studio</span>
+        <span class="sapp-modepill" id="sappMode">Single stream</span>
+      </div>
+      <div class="sapp-r">
+        <span class="sapp-status" id="sappStatus"><span class="d"></span><span id="sappStatusTxt">Idle</span></span>
+        <button class="sapp-stop" id="sappStop" style="display:none;">■ Stop stream</button>
+        <button class="sapp-close" id="sappClose">← Back to slots</button>
+      </div>
+    </div>
+    <div class="sapp-body">
 
-        <div class="panel">
-          <div class="beta"><b style="color:#fff;">Free during beta.</b> Slots will be <b>$1 for 24 hours</b> soon. One video per slot; 24-hour limit, then renew.</div>
-          <label>Your email (for access &amp; renewal reminder)</label>
-          <input type="email" id="email" placeholder="you@example.com" />
-          <label>Video file — MP4 (H.264 + AAC)</label>
+      <!-- STAGE -->
+      <div class="stage">
+        <div class="head2">Preview</div>
+        <div class="videoframe">
+          <span class="livebadge" id="liveBadge"><i></i>LIVE</span>
+          <video id="preview" controls muted playsinline></video>
+          <div class="placeholder" id="vplaceholder">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="14" height="14" rx="2"/><path d="m17 9 4-2v10l-4-2"/></svg>
+            <span>Your selected video previews here</span>
+          </div>
+        </div>
+        <div class="liveinfo" id="liveInfo" style="display:none;"></div>
+        <div class="countdown" id="cd" style="display:none;">
+          <div class="t" id="cdTime">5:00</div><div class="l"><span id="cdLabel">remaining on your free trial</span> (Slot <span id="cdSlot">–</span>)</div>
+          <button class="btn btn-primary btn-block" id="upgradeBtn" style="margin-top:12px;">Subscribe — stream 24 hours</button>
+        </div>
+        <div class="statgrid">
+          <div class="stat"><div class="k">Status</div><div class="v" id="sStatus">Idle</div></div>
+          <div class="stat"><div class="k">Bitrate</div><div class="v" id="sBitrate">—</div></div>
+          <div class="stat"><div class="k">Health</div><div class="v" id="sSpeed">—</div></div>
+        </div>
+        <details class="logwrap"><summary>Technical log</summary><div class="logbox" id="log"></div></details>
+      </div>
+
+      <!-- DOCK (controls) -->
+      <div class="dock">
+        <div id="authBox" class="authbox" style="display:none;">
+          <div id="gbtnWrap"><div id="gbtn"></div><div class="authhint">Sign in to save your videos and manage your subscription.</div></div>
+          <div id="authUser" style="display:none;"></div>
+        </div>
+        <div class="beta" id="betaNote"><b style="color:#fff;">Free 5-minute trial</b> — no payment needed to start. <b>Subscribe</b> to stream the full 24 hours.</div>
+        <div class="selslot" id="selSlot">Claiming the <b>next free slot</b></div>
+        <details class="resume">
+          <summary>Already streaming on another device? Resume it →</summary>
+          <div class="resume-body">
+            <input type="text" id="resumeInput" placeholder="Paste your manage link or stream code" />
+            <button class="btn btn-ghost" id="resumeBtn">Resume</button>
+          </div>
+        </details>
+        <label>Your email (for access &amp; renewal reminder)</label>
+        <input type="email" id="email" placeholder="you@example.com" />
+        <div id="recentWrap" style="display:none;margin:4px 0 10px;">
+          <label>Your recent videos <span style="color:#8a8a8a;font-weight:400;">— tap to re-stream, no re-upload</span></label>
+          <div id="recentList"></div>
+        </div>
+        <label>Video file — MP4 (H.264 + AAC)</label>
+        <label class="dropzone" for="video" id="dropzone">
           <input type="file" id="video" accept="video/*" />
+          <div class="dz-empty" id="dzEmpty">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M5 20h14"/></svg>
+            <span class="dz-title">Choose a video or drag it here</span>
+            <span class="dz-sub">MP4 · H.264 + AAC</span>
+          </div>
+          <div class="dz-filled" id="dzFilled">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="m9 8 5 3.5L9 15z"/></svg>
+            <span class="dz-filename" id="dzFilename">video.mp4</span>
+            <span class="dz-change">Change</span>
+          </div>
+        </label>
+        <label>Where to stream</label>
+        <div class="modetabs" id="modeTabs">
+          <button type="button" class="modetab active" data-mode="single">Single stream</button>
+          <button type="button" class="modetab" data-mode="multi">Multistream <span class="mtag">$9.99/mo</span></button>
+        </div>
+        <div id="singleDest">
+          <div class="platrow" id="platrow">
+            <button type="button" class="chip" data-p="youtube">YouTube</button>
+            <button type="button" class="chip" data-p="twitch">Twitch</button>
+            <button type="button" class="chip" data-p="facebook">Facebook</button>
+            <button type="button" class="chip" data-p="kick">Kick</button>
+            <button type="button" class="chip" data-p="custom">Custom RTMP</button>
+          </div>
           <label>RTMP server URL</label>
           <input type="text" id="rtmpUrl" placeholder="rtmp://a.rtmp.youtube.com/live2" />
-          <label>Stream key</label>
-          <input type="text" id="streamKey" placeholder="xxxx-xxxx-xxxx-xxxx" />
-          <div class="checkrow"><input type="checkbox" id="loop" checked /><label style="margin:0;color:#d0d0d8;">Loop the video for the full 24 hours</label></div>
-          <div class="checkrow"><input type="checkbox" id="agree" /><label style="margin:0;">I own or have the rights to stream this content and accept the fair-use terms.</label></div>
-          <button class="btn btn-primary btn-block" id="startBtn" style="margin-top:18px;">Claim a slot &amp; Go Live</button>
-          <button class="btn btn-ghost btn-block" id="stopBtn" style="margin-top:18px;display:none;">Stop my stream</button>
-          <p class="hint">Start the live event on your platform first, then go live here. Stream-copy only (no re-encode) — the file must be H.264 + AAC.</p>
+          <label>Stream key <a href="#" id="keyHelp" class="keyhelp" target="_blank" rel="noopener" style="display:none;">Where do I get this? ↗</a></label>
+          <div class="keywrap">
+            <input type="password" id="streamKey" placeholder="xxxx-xxxx-xxxx-xxxx" />
+            <button type="button" class="eye" id="eyeBtn" aria-label="Show stream key">show</button>
+          </div>
         </div>
-
-        <div class="panel">
-          <div class="videoframe">
-            <span class="livebadge" id="liveBadge"><i></i>LIVE</span>
-            <video id="preview" controls muted playsinline></video>
-            <div class="placeholder" id="vplaceholder">Your selected video previews here</div>
-          </div>
-          <div class="countdown" id="cd" style="display:none;">
-            <div class="t" id="cdTime">24:00:00</div><div class="l">remaining on your 24-hour slot (Slot <span id="cdSlot">–</span>)</div>
-          </div>
-          <div class="statgrid">
-            <div class="stat"><div class="k">Status</div><div class="v" id="sStatus">Idle</div></div>
-            <div class="stat"><div class="k">Bitrate</div><div class="v" id="sBitrate">—</div></div>
-            <div class="stat"><div class="k">Health</div><div class="v" id="sSpeed">—</div></div>
-          </div>
-          <details class="logwrap"><summary>Technical log</summary><div class="logbox" id="log"></div></details>
+        <div id="multiDest" style="display:none;">
+          <p class="modehint">Broadcast to up to <b>3 platforms at once</b> — the Multistream plan (<b>$9.99/mo</b>).</p>
+          <div id="destList"></div>
+          <button type="button" class="btn btn-ghost btn-block" id="addDest2">+ Add a platform</button>
         </div>
-
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-title">Loop the video</div>
+            <div class="toggle-sub">Repeats your video non-stop while you're live</div>
+          </div>
+          <label class="switch"><input type="checkbox" id="loop" checked /><span class="slider"></span></label>
+        </div>
+        <div class="checkrow"><input type="checkbox" id="agree" /><label style="margin:0;">I own or have the rights to stream this content and accept the fair-use terms.</label></div>
+        <button class="btn btn-primary btn-block" id="startBtn" style="margin-top:18px;">Go Live</button>
+        <button class="btn btn-ghost btn-block" id="stopBtn" style="margin-top:18px;display:none;">Stop my stream</button>
+        <div class="managebox" id="manageBox" style="display:none;">
+          <div class="ml-label">🔗 Your manage link — control this stream from any device</div>
+          <div class="ml-row">
+            <input type="text" id="manageLink" readonly />
+            <button class="btn btn-ghost" id="copyLinkBtn">Copy</button>
+          </div>
+          <div class="ml-hint">Bookmark this. Open it on any device to return to your live stream.</div>
+        </div>
+        <p class="hint">Start the live event on your platform first, then go live here. Stream-copy only — the file must be H.264 + AAC.</p>
       </div>
+
     </div>
-  </section>
+  </div>
 
   <!-- PRICING -->
   <section id="pricing" style="background:#08080a;">
     <div class="wrap">
-      <div class="head"><p class="kicker">Pricing</p><h2>Simple, pay-as-you-go</h2><p>Free while we're in beta. When it launches, a slot is just $1 for 24 hours.</p></div>
-      <div class="price-grid">
-        <div class="plan feat">
-          <span class="tag">FREE IN BETA</span>
-          <h3>24-Hour Slot</h3>
-          <div class="pr">$1 <small>/ 24 hours</small></div>
+      <div class="head"><p class="kicker">Pricing</p><h2>Start free, upgrade when you need more</h2><p>Free 5-minute trial on every slot. Subscribe for full 24-hour streaming — add Multistream to broadcast to several platforms at once.</p></div>
+      <div class="price-grid price-grid-3">
+        <div class="plan">
+          <span class="tag" style="background:#2c2c33;">FREE</span>
+          <h3>Free Trial</h3>
+          <div class="pr">$0</div>
           <ul>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>One of 5 live slots, yours for 24h</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Stream to YouTube, Twitch, any RTMP</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>24/7 seamless looping from the cloud</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Renew anytime to keep going</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>5-minute trial on any slot</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>No card needed to start</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>One platform (YouTube, Twitch…)</li>
           </ul>
-          <a class="btn btn-primary btn-block" href="#studio">Claim a slot</a>
+          <a class="btn btn-ghost btn-block" href="#modes">Try it free</a>
+        </div>
+        <div class="plan feat">
+          <span class="tag">SINGLE</span>
+          <h3>Single</h3>
+          <div class="pr" id="planPrice">$4.99 <small>/mo</small></div>
+          <ul>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Full <b>24-hour</b> streaming slots</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Stream as often as you like</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>One platform · 24/7 looping</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Cancel anytime</li>
+          </ul>
+          <a class="btn btn-primary btn-block" href="#modes" id="planSubscribe">Subscribe</a>
         </div>
         <div class="plan">
-          <span class="tag">COMING SOON</span>
-          <h3>Monthly Pro</h3>
-          <div class="pr">$<small>soon</small></div>
+          <span class="tag">MULTISTREAM</span>
+          <h3>Multistream</h3>
+          <div class="pr" id="planPriceMulti">$10 <small>/mo</small></div>
           <ul>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Your own always-on slot (no daily renew)</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Multiple simultaneous streams</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Priority capacity &amp; scheduling</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Everything in Single, plus:</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Stream to <b>up to 3 platforms</b> at once</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>e.g. YouTube + Twitch + Facebook together</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Cancel anytime</li>
           </ul>
-          <div class="wait"><input type="email" id="waitEmail" placeholder="Email me when Pro launches" /><button class="btn btn-primary" id="waitBtn">Notify me</button></div>
+          <a class="btn btn-primary btn-block" href="#modes" id="planSubscribeMulti">Go Multistream</a>
         </div>
       </div>
     </div>
@@ -227,48 +678,389 @@
   <section id="faq">
     <div class="wrap">
       <div class="head"><p class="kicker">FAQ</p><h2>Questions, answered</h2></div>
-      <details class="faq" open><summary>How do the 5 slots work?</summary><p>There are 5 streaming slots. You claim a free one, and it's yours for 24 hours. When all 5 are busy, you wait for one to free up. At 24h your slot stops automatically and you can renew.</p></details>
-      <details class="faq"><summary>What does it cost?</summary><p>Free during beta. At launch, a slot is $1 for 24 hours — pay only for the days you stream.</p></details>
+      <details class="faq" open><summary>How do the 10 slots work?</summary><p>There are 10 streaming slots. Tap any free slot to start a free 5-minute trial. To keep streaming, subscribe for full 24-hour slots. When all 10 are busy, you wait for one to free up.</p></details>
+      <details class="faq"><summary>What does it cost?</summary><p>Every slot is free for the first 5 minutes — no card needed. To stream the full 24 hours, subscribe monthly and stream as often as you like. Cancel anytime.</p></details>
       <details class="faq"><summary>Which platforms can I stream to?</summary><p>YouTube, Twitch, Facebook, Kick, Restream, and any service with a Custom RTMP / RTMPS key.</p></details>
       <details class="faq"><summary>What video format do I need?</summary><p>An MP4 with H.264 video + AAC audio (the default export from most tools). We stream-copy it — no re-encode — so it goes live instantly.</p></details>
-      <details class="faq"><summary>What happens after 24 hours?</summary><p>The stream stops and the slot frees for others. You'll be prompted to renew (claim again) to continue.</p></details>
+      <details class="faq"><summary>What happens after the free trial?</summary><p>At 5 minutes the stream stops and the slot frees for others. <b>Subscribe</b> while you're live to switch to a full 24-hour slot and keep streaming non-stop.</p></details>
     </div>
   </section>
 
   <footer>
     <div class="wrap">
       <p style="font-weight:700;color:#fff;font-size:16px;margin-bottom:6px;"><img src="logo.svg" alt="" />Stream<b style="color:#FF3B30;">za</b> Studio</p>
+      <p style="margin-bottom:10px;"><a href="/" style="color:#fff;font-weight:600;">← Back to Streamza.live</a> &nbsp;·&nbsp; <a href="/privacy.html" style="color:#9b9ba3;">Privacy</a> &nbsp;·&nbsp; <a href="/terms.html" style="color:#9b9ba3;">Terms</a> &nbsp;·&nbsp; <a href="/support.html" style="color:#9b9ba3;">Support</a></p>
       <p>© 2026 Streamza · Probros. Not affiliated with YouTube, Twitch, Facebook, Kick or any third-party platform. You are responsible for the content you stream.</p>
     </div>
   </footer>
+
+  <!-- Subscribe modal (replaces the browser prompt) -->
+  <div class="modal" id="subModal">
+    <div class="box">
+      <img src="logo.svg" alt="Streamza" />
+      <h3 id="subTitle">Subscribe</h3>
+      <p id="subDesc">Enter your email to continue to secure checkout.</p>
+      <input type="email" id="subEmail" placeholder="you@example.com" autocomplete="email" />
+      <div class="mrow">
+        <button class="btn btn-ghost" id="subCancel">Cancel</button>
+        <button class="btn btn-primary" id="subGo">Continue →</button>
+      </div>
+      <p class="secure">🔒 Secure checkout by Lemon Squeezy · cancel anytime</p>
+    </div>
+  </div>
+
+  <!-- Mode chooser (when a slot is tapped) -->
+  <div class="modal" id="modeModal">
+    <div class="box">
+      <img src="logo.svg" alt="Streamza" />
+      <h3>Stream <span id="mmSlot">this slot</span></h3>
+      <p>How do you want to broadcast? You can switch inside the studio too.</p>
+      <button class="btn btn-primary btn-block" id="mmSingle">Single stream — one platform</button>
+      <button class="btn btn-ghost btn-block" id="mmMulti" style="margin-top:10px;">Multistream — up to 3 platforms · $9.99/mo</button>
+      <p class="secure"><a id="mmCancel" style="cursor:pointer;">Cancel</a></p>
+    </div>
+  </div>
+
+  <!-- Trial-ended → subscribe prompt (shown when the free 5-min trial runs out) -->
+  <div class="modal" id="trialModal">
+    <div class="box">
+      <img src="logo.svg" alt="Streamza" />
+      <h3>⏱️ Your free trial ended</h3>
+      <p>Your 5-minute trial is up and the stream stopped. <b style="color:#fff;">Subscribe to keep streaming the full 24 hours</b>, non-stop — cancel anytime.</p>
+      <button class="btn btn-primary btn-block" id="trialSubSingle">Subscribe — 24-hour streaming · <span id="trialPrice">$4.99/mo</span></button>
+      <button class="btn btn-ghost btn-block" id="trialSubMulti" style="margin-top:10px;">Multistream — up to 3 platforms · <span id="trialPriceMulti">$9.99/mo</span></button>
+      <p class="secure"><a id="trialLater" style="cursor:pointer;">Maybe later</a> · 🔒 Secure checkout by Lemon Squeezy</p>
+    </div>
+  </div>
 
   <div class="toast" id="toast"></div>
 
   <script>
     const $ = (id) => document.getElementById(id);
     const TKEY = "streamza_slot_token";
+    let selectedSlot = null; // which slot the user tapped to claim (null = next free)
+    let myEmail = "";        // the live stream's email (for resume + checkout)
+    let resumeOpen = false;  // open the studio app on load if arriving via a manage link
+    let _wasTrial = false;   // was the last live stream a free trial? (drives the trial-ended prompt)
+    // Resume via a manage link (?s=token) — lets a user reclaim control from ANY device.
+    (function(){ const p=new URLSearchParams(location.search); const t=p.get("s")||p.get("token"); if(t){ localStorage.setItem(TKEY, t.replace(/[^a-f0-9]/gi,"")); resumeOpen=true; history.replaceState(null,"","/studio"); } })();
+
+    // ---- Google account sign-in ----
+    let AUTH={enabled:false};
+    (async function(){
+      try{
+        AUTH = await (await fetch("/auth/config")).json();
+        const me = await (await fetch("/auth/me")).json();
+        if(me.signedIn) showSignedIn(me);
+        else if(AUTH.enabled){ const b=$("authBox"); if(b) b.style.display="block"; const h=$("hdrAuth"); if(h) h.style.display="flex"; waitGoogle(0); }
+      }catch(_){}
+    })();
+    function escHtml(s){ return String(s||"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+    function waitGoogle(n){
+      if(AUTH._rendered || !AUTH.enabled) return;
+      if(window.google && google.accounts && google.accounts.id && AUTH.clientId){
+        google.accounts.id.initialize({ client_id:AUTH.clientId, callback:onGoogleCred });
+        try{ if($("hdrGbtn")){ var _sm = window.matchMedia && window.matchMedia("(max-width:600px)").matches; google.accounts.id.renderButton($("hdrGbtn"), _sm ? { type:"icon", theme:"outline", shape:"circle", size:"large" } : { theme:"outline", size:"medium", text:"signin_with", shape:"pill" }); } }catch(_){}
+        try{ if($("gbtn")) google.accounts.id.renderButton($("gbtn"), { theme:"filled_black", size:"large", text:"signin_with", shape:"pill" }); }catch(_){}
+        AUTH._rendered=true;
+      } else if(n<40) setTimeout(()=>waitGoogle(n+1), 250);
+    }
+    async function onGoogleCred(resp){
+      try{
+        const r=await fetch("/auth/google",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({credential:resp.credential})});
+        const j=await r.json();
+        if(j.signedIn){ showSignedIn(j); toast("Signed in as "+j.email); } else toast(j.error||"Sign-in failed.");
+      }catch(_){ toast("Sign-in failed."); }
+    }
+    function showSignedIn(u){
+      myEmail=u.email; window.IS_SUBSCRIBED=!!u.subscribed; try{localStorage.setItem("streamza_email",u.email);}catch(_){}
+      const b=$("authBox"); if(b) b.style.display="block";
+      const g=$("gbtnWrap"); if(g) g.style.display="none";
+      const a=$("authUser"); if(a){ a.style.display="flex"; a.innerHTML='👤 <b>'+escHtml(u.email)+'</b>'+(u.subscribed?(' · <span style="color:#34C759">✓ '+(u.multi?'Multistream':'Subscribed')+'</span>'):'')+' <a class="so" id="signout">Sign out</a>'; const so=$("signout"); if(so) so.onclick=signOut; }
+      // header account chip + dropdown
+      const h=$("hdrAuth");
+      if(h){
+        h.style.display="flex";
+        const initial=(u.email[0]||"U").toUpperCase();
+        const planTxt = u.subscribed ? (u.multi?"Multistream plan":"Subscribed") : "Free plan";
+        const planCol = u.subscribed ? "#34C759" : "var(--sub)";
+        const live = u.slot && u.slot.live;
+        const planLine = (live?'🔴 Live · Slot '+u.slot.id+' · ':'')+planTxt;
+        h.innerHTML =
+          '<div class="hdrchip" id="hdrChip" title="Account">'+
+            '<span class="av'+(live?' live':'')+'">'+escHtml(initial)+'</span>'+
+            '<span class="em">'+escHtml(u.email)+'</span>'+
+            '<span class="caret">▾</span>'+
+            '<div class="hdrmenu" id="hdrMenu">'+
+              '<div class="who"><div class="e">'+escHtml(u.email)+'</div><div class="p" style="color:'+(live?'#ff3b30':planCol)+'">'+planLine+'</div></div>'+
+              (u.slot?'<a id="hdrResume">▶ Resume my stream — Slot '+u.slot.id+'</a>':'')+
+              '<a id="hdrStudio">Open studio</a>'+
+              (u.subscribed?'<a id="hdrManage">Manage subscription</a>':'<a id="hdrUpgrade">Upgrade plan</a>')+
+              '<a id="hdrSignout">Sign out</a>'+
+            '</div>'+
+          '</div>';
+        const chip=$("hdrChip"), menu=$("hdrMenu");
+        if(chip&&menu){ chip.onclick=(e)=>{ e.stopPropagation(); menu.classList.toggle("show"); };
+          document.addEventListener("click", ()=>menu.classList.remove("show")); }
+        if($("hdrResume")) $("hdrResume").onclick=()=>{ try{ if(u.slot&&u.slot.token) localStorage.setItem(TKEY,u.slot.token); }catch(_){} if(typeof openStudioApp==="function") openStudioApp("single"); if(typeof refreshMine==="function") refreshMine(); };
+        if($("hdrStudio")) $("hdrStudio").onclick=()=>{ if(typeof openStudioApp==="function") openStudioApp("single"); };
+        if($("hdrManage")) $("hdrManage").onclick=()=>{ window.open(u.portal||"https://app.lemonsqueezy.com/my-orders","_blank","noopener"); };
+        if($("hdrUpgrade")) $("hdrUpgrade").onclick=()=>{ const t=$("subModal"); if(t) t.classList.add("show"); else location.hash="#pricing"; };
+        if($("hdrSignout")) $("hdrSignout").onclick=signOut;
+      }
+      if($("email")){ $("email").value=u.email; $("email").readOnly=true; $("email").style.opacity=".8"; $("email").dispatchEvent(new Event("input")); }
+      if($("subEmail")) $("subEmail").value=u.email;
+      if(typeof checkSub==="function") checkSub(u.email);
+    }
+    async function signOut(){ try{ await fetch("/auth/logout",{method:"POST"}); }catch(_){} try{localStorage.removeItem("streamza_email");}catch(_){} location.reload(); }
+
+    // Subscription checkout (Lemon Squeezy) — auto-enabled once store env vars are set on the server
+    let PAY = { enabled:false };
+    (async function(){
+      try{
+        PAY = await (await fetch("/pay/config")).json();
+        if(PAY.priceLabel){ const el=$("planPrice"); if(el) el.textContent=PAY.priceLabel; }
+        if(PAY.priceLabelMulti){ const el=$("planPriceMulti"); if(el) el.textContent=PAY.priceLabelMulti; }
+      }catch(_){}
+    })();
+    function lsReady(){
+      if(!window.LemonSqueezy && typeof createLemonSqueezy==="function") createLemonSqueezy();
+      if(window.LemonSqueezy && !PAY._inited && LemonSqueezy.Setup){
+        LemonSqueezy.Setup({ eventHandler:(e)=>{ if(e && e.event==="Checkout.Success" && PAY._email){ toast("Payment received — activating your subscription…"); pollSubscribed(PAY._email,0); } } });
+        PAY._inited=true;
+      }
+      return !!window.LemonSqueezy;
+    }
+    function openCheckout(email, plan){
+      const url0 = plan==="multi" ? PAY.checkoutMultiUrl : PAY.checkoutUrl;
+      if(!PAY.enabled || !url0){ toast(plan==="multi" ? "The Multistream plan isn't switched on yet." : "Subscriptions aren't switched on yet."); return; }
+      PAY._email = email;
+      try{ localStorage.setItem("streamza_email", email); }catch(_){}
+      const url = url0 + "?embed=1&media=0&checkout[email]=" + encodeURIComponent(email) + "&checkout[custom][relay_email]=" + encodeURIComponent(email) + "&checkout[custom][tier]=" + (plan==="multi"?"multi":"single");
+      if(lsReady() && window.LemonSqueezy.Url){ LemonSqueezy.Url.Open(url); }
+      else { window.open(url, "_blank"); pollSubscribed(email,0); }
+    }
+    // Branded subscribe modal (no ugly browser prompt)
+    let _subPlan="single";
+    function subscribeModal(plan){
+      _subPlan=plan;
+      $("subTitle").textContent = plan==="multi" ? "Subscribe — Multistream" : "Subscribe — Single";
+      $("subDesc").textContent = plan==="multi"
+        ? "Stream to up to 3 platforms at once, 24/7. Enter your email to continue to secure checkout."
+        : "Full 24-hour streaming, as often as you like. Enter your email to continue to secure checkout.";
+      $("subEmail").value = ((($("email")&&$("email").value)||myEmail)||"").trim();
+      $("subModal").classList.add("show");
+      setTimeout(()=>$("subEmail").focus(),60);
+    }
+    $("subCancel").onclick=()=>$("subModal").classList.remove("show");
+    $("subModal").onclick=(e)=>{ if(e.target===$("subModal")) $("subModal").classList.remove("show"); };
+    $("subGo").onclick=()=>{
+      const em=($("subEmail").value||"").trim();
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return toast("Please enter a valid email.");
+      $("subModal").classList.remove("show");
+      openCheckout(em,_subPlan);
+    };
+    $("subEmail").addEventListener("keydown",(e)=>{ if(e.key==="Enter") $("subGo").click(); });
+    { const ps=$("planSubscribe");      if(ps) ps.addEventListener("click",(e)=>{ e.preventDefault(); PAY.enabled ? subscribeModal("single") : toast("Subscriptions aren't switched on yet."); }); }
+    { const pm=$("planSubscribeMulti"); if(pm) pm.addEventListener("click",(e)=>{ e.preventDefault(); PAY.enabled ? subscribeModal("multi") : toast("The Multistream plan isn't switched on yet."); }); }
+
+    // Prominent "your trial ended" prompt → subscribe (shown once the free 5-min stream stops).
+    function showTrialEnded(){
+      if(window.IS_SUBSCRIBED) return;
+      if(!PAY.enabled){ toast("Your free trial ended. Subscriptions open soon."); return; }
+      const tp=$("trialPrice"); if(tp && PAY.priceLabel) tp.textContent=PAY.priceLabel;
+      const tpm=$("trialPriceMulti"); if(tpm && PAY.priceLabelMulti) tpm.textContent=PAY.priceLabelMulti;
+      const tm=$("trialSubMulti"); if(tm) tm.style.display = PAY.multiEnabled ? "block" : "none";
+      $("trialModal").classList.add("show");
+    }
+    if($("trialSubSingle")) $("trialSubSingle").onclick=()=>{ $("trialModal").classList.remove("show"); PAY.enabled ? subscribeModal("single") : toast("Subscriptions aren't switched on yet."); };
+    if($("trialSubMulti"))  $("trialSubMulti").onclick =()=>{ $("trialModal").classList.remove("show"); PAY.enabled ? subscribeModal("multi")  : toast("The Multistream plan isn't switched on yet."); };
+    if($("trialLater"))     $("trialLater").onclick    =()=>$("trialModal").classList.remove("show");
+    if($("trialModal"))     $("trialModal").onclick    =(e)=>{ if(e.target===$("trialModal")) $("trialModal").classList.remove("show"); };
+
+    // Studio mode — Single stream vs Multistream (two clear sections, like the app)
+    let mode = "single";
+    function setMode(m){
+      mode = m;
+      document.querySelectorAll(".modetab").forEach(t=>t.classList.toggle("active", t.dataset.mode===m));
+      $("singleDest").style.display = m==="single" ? "block" : "none";
+      $("multiDest").style.display  = m==="multi"  ? "block" : "none";
+      const mp=$("sappMode"); if(mp) mp.textContent = m==="multi" ? "Multistream" : "Single stream";
+      const ub=$("upgradeBtn"); if(ub) ub.textContent = m==="multi" ? "Subscribe to Multistream — $9.99/mo" : "Subscribe — stream 24 hours";
+      if(m==="multi" && $("destList").children.length===0){ addDestCard("youtube"); addDestCard("twitch"); }
+    }
+    document.querySelectorAll(".modetab").forEach(t=>t.onclick=()=>setMode(t.dataset.mode));
+    function addDestCard(preset){
+      const list=$("destList");
+      if(list.children.length>=3) return toast("Up to 3 platforms per stream.");
+      const c=document.createElement("div"); c.className="dcard";
+      c.innerHTML='<div class="dcard-top"><select class="dPlat"><option value="">Choose platform…</option><option value="youtube">YouTube</option><option value="twitch">Twitch</option><option value="facebook">Facebook</option><option value="kick">Kick</option><option value="custom">Custom RTMP</option></select><button type="button" class="dRemove" title="Remove">&times;</button></div><input type="text" class="dUrl" placeholder="rtmp://… server URL" /><input type="text" class="dKey" placeholder="stream key" />';
+      const sel=c.querySelector(".dPlat");
+      sel.onchange=()=>{ const p=PRESETS[sel.value]; c.querySelector(".dUrl").value=(p && sel.value!=="custom" && sel.value!=="kick") ? p.url : ""; };
+      if(preset){ sel.value=preset; sel.onchange(); }
+      c.querySelector(".dRemove").onclick=()=>c.remove();
+      list.appendChild(c);
+    }
+    $("addDest2").onclick=()=>addDestCard("");
+    function collectDests(){
+      if(mode==="multi"){
+        const list=[];
+        document.querySelectorAll("#destList .dcard").forEach(c=>{ const u=c.querySelector(".dUrl").value.trim(); if(u) list.push({url:u, key:c.querySelector(".dKey").value.trim()}); });
+        return list;
+      }
+      const u=$("rtmpUrl").value.trim();
+      return u ? [{url:u, key:$("streamKey").value.trim()}] : [];
+    }
+
+    // open/close the full-screen studio app
+    function openStudioApp(m, slotId){
+      selectedSlot = slotId || null;            // specific slot, else next free
+      setMode(m||"single");
+      updateSelLabel();
+      document.body.classList.add("studio-open");
+      const a=$("studioApp"); a.classList.add("show"); a.setAttribute("aria-hidden","false");
+      window.scrollTo(0,0);
+      loadRecent();   // show the subscriber's saved videos (if any) for one-tap re-streaming
+      if(typeof waitGoogle==="function") waitGoogle(0); // render the Google button now the dock is visible
+    }
+    function closeStudioApp(){
+      const a=$("studioApp"); a.classList.remove("show"); a.setAttribute("aria-hidden","true");
+      document.body.classList.remove("studio-open");
+    }
+    $("sappClose").onclick=closeStudioApp;
+    { const lg=$("sappLogo"); if(lg) lg.onclick=closeStudioApp; }
+    { const c=$("cardSingle"); if(c) c.onclick=()=>openStudioApp("single"); }
+    { const c=$("cardMulti");  if(c) c.onclick=()=>openStudioApp("multi"); }
+    document.addEventListener("keydown",(e)=>{ if(e.key==="Escape"){ if($("modeModal").classList.contains("show")) $("modeModal").classList.remove("show"); else if($("studioApp").classList.contains("show")) closeStudioApp(); } });
+
+    // tapping a slot → ask Single or Multistream, then open the studio in that mode
+    let _pendingSlot=null;
+    function chooseMode(slotId){ _pendingSlot=slotId||null; $("mmSlot").textContent = slotId ? ("Slot "+slotId) : "this slot"; $("modeModal").classList.add("show"); }
+    $("mmSingle").onclick=()=>{ $("modeModal").classList.remove("show"); openStudioApp("single", _pendingSlot); };
+    $("mmMulti").onclick =()=>{ $("modeModal").classList.remove("show"); openStudioApp("multi",  _pendingSlot); };
+    $("mmCancel").onclick=()=>$("modeModal").classList.remove("show");
+    $("modeModal").onclick=(e)=>{ if(e.target===$("modeModal")) $("modeModal").classList.remove("show"); };
+    async function pollSubscribed(email,n){
+      if(n>15){ toast("Subscription is processing — it'll unlock shortly. Tap Upgrade again in a moment."); return; }
+      try{
+        const r=await (await fetch("/subscribed?email="+encodeURIComponent(email))).json();
+        if(r.active){
+          applySubState(r);                                    // hide the Subscribe prompts right away
+          try{ localStorage.setItem(EKEY, email); }catch(_){}  // remember so it stays recognised
+          const token=localStorage.getItem(TKEY);
+          if(token){ await fetch("/upgrade",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token})}); }
+          toast("Subscription active — you're now on a full 24-hour slot!"); refreshMine(); return;
+        }
+      }catch(_){}
+      setTimeout(()=>pollSubscribed(email,n+1),2000);
+    }
     function toast(m){const t=$("toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),3400);}
     function fmt(sec){sec=Math.max(0,sec);const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");}
     function fmtShort(sec){const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60);return h>0?h+"h "+m+"m":m+"m";}
 
     // video preview
     let pUrl=null;
-    $("video").addEventListener("change",()=>{const f=$("video").files[0];if(pUrl)URL.revokeObjectURL(pUrl);if(f){pUrl=URL.createObjectURL(f);const v=$("preview");v.src=pUrl;v.style.display="block";$("vplaceholder").style.display="none";v.play().catch(()=>{});}});
+    let selectedFileId = null; // a saved (reused) video chosen instead of a new upload
+    $("video").addEventListener("change",()=>{
+      const f=$("video").files[0];
+      if(f){ selectedFileId=null; document.querySelectorAll("#recentList .recentCard").forEach(c=>c.classList.remove("sel")); } // a new upload replaces a saved pick
+      if(pUrl)URL.revokeObjectURL(pUrl);
+      if(f){pUrl=URL.createObjectURL(f);const v=$("preview");v.src=pUrl;v.style.display="block";$("vplaceholder").style.display="none";v.play().catch(()=>{});}
+    });
+    // dropzone visual state (purely cosmetic — doesn't affect the upload logic above)
+    $("video").addEventListener("change",()=>{
+      const f=$("video").files[0];
+      const dz=$("dropzone");
+      if(f){ dz.classList.add("has-file"); $("dzFilename").textContent=f.name+" · "+fmtSize(f.size); }
+      else { dz.classList.remove("has-file"); }
+    });
+    function fmtSize(b){ b=+b||0; if(b<1048576) return (b/1024).toFixed(0)+" KB"; if(b<1073741824) return (b/1048576).toFixed(1)+" MB"; return (b/1073741824).toFixed(2)+" GB"; }
+    function escHtml(s){ return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+    // Saved-videos picker (subscriber perk): list this email's reusable uploads.
+    async function loadRecent(email){
+      const wrap=$("recentWrap"), list=$("recentList"); if(!wrap||!list) return;
+      email=(email||($("email")&&$("email").value)||"").trim();
+      if(!email.includes("@")){ wrap.style.display="none"; return; }
+      let r={uploads:[],subscribed:false};
+      try{ r=await (await fetch("/myuploads?email="+encodeURIComponent(email))).json(); }catch(_){}
+      if(!r.uploads || !r.uploads.length){
+        if(r.subscribed){ wrap.style.display="none"; }
+        else { wrap.style.display="block"; list.innerHTML='<div class="recentHint">💡 <b>Subscribe</b> to save your videos and skip re-uploading every time.</div>'; }
+        return;
+      }
+      wrap.style.display="block"; list.innerHTML="";
+      r.uploads.forEach(u=>{
+        const card=document.createElement("div"); card.className="recentCard"+(selectedFileId===u.id?" sel":"");
+        card.innerHTML='<div class="rc-name">📹 '+escHtml(u.name)+'</div><div class="rc-meta">'+fmtSize(u.size)+'</div><button class="rc-del" title="Delete">✕</button>';
+        card.onclick=()=>selectRecent(u.id,card);
+        card.querySelector(".rc-del").onclick=(e)=>{ e.stopPropagation(); deleteRecent(u.id,email); };
+        list.appendChild(card);
+      });
+    }
+    function selectRecent(id,card){
+      selectedFileId = (selectedFileId===id) ? null : id; // toggle
+      if(selectedFileId){ try{ $("video").value=""; }catch(_){} const v=$("preview"); if(v) v.style.display="none"; const ph=$("vplaceholder"); if(ph) ph.style.display=""; }
+      document.querySelectorAll("#recentList .recentCard").forEach(c=>c.classList.remove("sel"));
+      if(selectedFileId && card) card.classList.add("sel");
+    }
+    async function deleteRecent(id,email){
+      try{ await fetch("/deleteupload",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({fileId:id,email})}); }catch(_){}
+      if(selectedFileId===id) selectedFileId=null;
+      loadRecent(email);
+    }
 
-    // live slot board
+    // platform presets — auto-fill the RTMP URL + key help
+    const PRESETS={
+      youtube :{url:"rtmp://a.rtmp.youtube.com/live2", help:"https://youtube.com/livestreaming", keyph:"From YouTube Studio → Go Live → Stream key"},
+      twitch  :{url:"rtmp://live.twitch.tv/app", help:"https://dashboard.twitch.tv/settings/stream", keyph:"From Twitch Dashboard → Settings → Stream key"},
+      facebook:{url:"rtmps://live-api-s.facebook.com:443/rtmp/", help:"https://www.facebook.com/live/producer", keyph:"From Facebook Live Producer → Stream key"},
+      kick    :{url:"", help:"https://kick.com/dashboard/settings/stream", keyph:"Kick gives a unique URL + key — paste the URL above"},
+      custom  :{url:"", help:"", keyph:"xxxx-xxxx-xxxx-xxxx"}
+    };
+    function pickPlatform(p){
+      document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c.getAttribute('data-p')===p));
+      const pr=PRESETS[p]; if(!pr) return;
+      if(p==='custom'||p==='kick'){ $("rtmpUrl").value=""; } else { $("rtmpUrl").value=pr.url; }
+      $("streamKey").placeholder=pr.keyph||"xxxx-xxxx-xxxx-xxxx";
+      const kh=$("keyHelp");
+      if(pr.help){ kh.href=pr.help; kh.style.display="inline"; } else { kh.style.display="none"; }
+    }
+    document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>pickPlatform(c.getAttribute('data-p')));
+    pickPlatform('youtube'); // sensible default
+
+    // stream key show / hide
+    $("eyeBtn").onclick=()=>{ const k=$("streamKey"); const showing=k.type==="text"; k.type=showing?"password":"text"; $("eyeBtn").textContent=showing?"show":"hide"; };
+
+    // live slot board — free slots are clickable to start claiming that exact slot
     async function refreshSlots(){
       try{
         const d=await (await fetch("/slots")).json();
         $("slotboard").innerHTML = d.slots.map(s=>`
-          <div class="slot ${s.busy?'busy':'free'}">
+          <div class="slot ${s.busy?'busy':'free'}${(!s.busy&&s.id===selectedSlot)?' sel':''}" ${s.busy?'':`data-claim="${s.id}"`}>
             <div class="sid">Slot ${s.id}</div>
             <div class="ring">${s.busy?'●':'○'}</div>
             <div class="st">${s.busy?'In use':'Free'}</div>
-            <div class="left">${s.busy && s.secondsLeft? fmtShort(s.secondsLeft)+' left':''}</div>
+            <div class="left">${s.busy?(s.secondsLeft?fmtShort(s.secondsLeft)+' left':''):'Tap to claim'}</div>
           </div>`).join("");
-        $("availLine").innerHTML = d.free>0 ? `<b>${d.free}</b> of ${d.total} slots free — claim one now` : `All ${d.total} slots are busy — check back soon`;
+        document.querySelectorAll('#slotboard [data-claim]').forEach(el=>el.onclick=()=>selectSlot(+el.getAttribute('data-claim')));
+        $("availLine").innerHTML = d.free>0 ? `<b>${d.free}</b> of ${d.total} slots free — tap a free slot to claim it` : `All ${d.total} slots are busy — check back soon`;
         $("heroAvail").textContent = `${d.free}/${d.total} slots free`;
+        // if the slot we had selected just got taken, fall back to "next free"
+        const sel=d.slots.find(x=>x.id===selectedSlot);
+        if(selectedSlot && sel && sel.busy){ selectedSlot=null; updateSelLabel(); }
       }catch(_){}
+    }
+
+    // tapping a free slot asks for the mode, then opens the studio with that slot
+    function selectSlot(id){ chooseMode(id); }
+    function updateSelLabel(){
+      const el=$("selSlot"); if(!el) return;
+      if(selectedSlot){
+        el.innerHTML = `Claiming <b>Slot ${selectedSlot}</b> — fill the form & go live. <a id="clearSel">change</a>`;
+        const c=$("clearSel"); if(c) c.onclick=()=>{ selectedSlot=null; updateSelLabel(); refreshSlots(); };
+      } else {
+        el.innerHTML = `Claiming the <b>next free slot</b> — or tap a specific slot above.`;
+      }
     }
 
     function parseStats(log){for(let i=log.length-1;i>=0;i--){const l=log[i];if(l.includes("bitrate=")){const br=l.match(/bitrate=\s*([\d.]+)\s*kbits\/s/i);const sp=l.match(/speed=\s*([\d.]+)\s*x/i);return{br:br?+br[1]:null,speed:sp?+sp[1]:null};}}return null;}
@@ -279,13 +1071,27 @@
       if(!token){ setLive(false); return; }
       try{
         const s=await (await fetch("/status?token="+token)).json();
-        if(!s.running){ // expired or stopped
-          if(localStorage.getItem(TKEY)){ localStorage.removeItem(TKEY); toast("Your 24-hour slot ended. Claim again to continue."); }
+        if(!s.running){ // trial ended or stopped
+          if(localStorage.getItem(TKEY)){
+            localStorage.removeItem(TKEY);
+            // A free trial that just ran out → show the prominent subscribe card. Otherwise a quiet toast.
+            if(_wasTrial && !window.IS_SUBSCRIBED) showTrialEnded();
+            else toast("Your stream stopped.");
+          }
+          _wasTrial=false;
           setLive(false); return;
         }
         setLive(true);
+        myEmail = s.email || myEmail;
+        _wasTrial = !!s.trial;   // remember so we can prompt to subscribe when this trial ends
+        const n=(s.dests&&s.dests.length)||1;
+        $("liveInfo").style.display="block";
+        $("liveInfo").innerHTML='🔴 <b>LIVE</b> · streaming to '+n+' platform'+(n>1?'s':'')+' · live for <b>'+fmt(s.uptime)+'</b>';
         $("cdSlot").textContent=s.slot;
         $("cdTime").textContent=fmt(s.secondsLeft);
+        $("cdLabel").textContent = s.trial ? "remaining on your free trial" : "remaining on your 24-hour slot";
+        // Only show "Subscribe — stream 24 hours" to non-subscribers on a trial.
+        $("upgradeBtn").style.display = (s.trial && !window.IS_SUBSCRIBED) ? "flex" : "none";
         $("log").textContent=(s.log||[]).join("\n"); $("log").scrollTop=$("log").scrollHeight;
         const st=parseStats(s.log||[]);
         $("sBitrate").textContent = st&&st.br!=null ? (st.br/1000).toFixed(2)+" Mbps":"—";
@@ -296,44 +1102,120 @@
     function setLive(on){
       $("liveBadge").className="livebadge"+(on?" on":"");
       $("cd").style.display=on?"block":"none";
+      $("manageBox").style.display=on?"block":"none";
       $("sStatus").textContent=on?"LIVE":"Idle";
+      const ss=$("sappStatus"), stx=$("sappStatusTxt");
+      if(ss) ss.className="sapp-status"+(on?" on":""); if(stx) stx.textContent=on?"LIVE":"Idle";
+      const sp=$("sappStop"); if(sp) sp.style.display=on?"inline-flex":"none";
       $("startBtn").style.display=on?"none":"flex";
       $("stopBtn").style.display=on?"flex":"none";
-      if(!on){ $("sBitrate").textContent="—"; $("sSpeed").textContent="—"; $("sSpeed").className="v"; }
+      if(on){ const tok=localStorage.getItem(TKEY)||""; $("manageLink").value=location.origin+"/studio?s="+tok; }
+      else{ $("sBitrate").textContent="—"; $("sSpeed").textContent="—"; $("sSpeed").className="v"; const li=$("liveInfo"); if(li) li.style.display="none"; }
     }
 
     $("startBtn").onclick=async()=>{
       const f=$("video").files[0];
       if(!$("email").value) return toast("Enter your email.");
-      if(!f) return toast("Choose a video file.");
-      if(!$("rtmpUrl").value) return toast("Enter your RTMP server URL.");
+      if(!f && !selectedFileId) return toast("Choose a video file (or tap one of your recent videos).");
+      const dests=collectDests();
+      if(!dests.length){ return toast(mode==="multi" ? "Add at least one platform (URL + key)." : "Enter your RTMP server URL."); }
       if(!$("agree").checked) return toast("Confirm you have the rights to this content.");
       const fd=new FormData();
-      fd.append("email",$("email").value); fd.append("video",f);
-      fd.append("rtmpUrl",$("rtmpUrl").value); fd.append("streamKey",$("streamKey").value);
+      fd.append("email",$("email").value);
+      if(f) fd.append("video",f); else fd.append("fileId",selectedFileId);   // reuse a saved video → no upload
+      fd.append("dests",JSON.stringify(dests));
       fd.append("loop",$("loop").checked); fd.append("agree",$("agree").checked);
-      $("startBtn").disabled=true; $("startBtn").textContent="Uploading…";
-      try{
-        const r=await fetch("/start",{method:"POST",body:fd}); const j=await r.json();
-        if(!r.ok){ toast(j.error||"Couldn't start."); }
-        else { localStorage.setItem(TKEY,j.token); toast("Slot "+j.slot+" claimed — you're going live for 24h!"); }
-      }catch(e){ toast("Upload failed: "+e.message); }
-      $("startBtn").disabled=false; $("startBtn").textContent="Claim a slot & Go Live";
-      refreshMine(); refreshSlots();
+      if(selectedSlot) fd.append("slot",selectedSlot);
+      const btn=$("startBtn"); btn.disabled=true; btn.textContent = f ? "Uploading… 0%" : "Starting…";
+      const done=(label)=>{ btn.disabled=false; btn.textContent=label||"Go Live"; };
+      const xhr=new XMLHttpRequest();
+      xhr.open("POST","/start"); xhr.timeout=900000; // 15 min
+      xhr.upload.onprogress=(e)=>{ if(e.lengthComputable){ const pct=Math.round(e.loaded/e.total*100); btn.textContent = pct<100 ? ("Uploading… "+pct+"%") : "Processing…"; } };
+      xhr.onload=()=>{
+        let j={}; try{ j=JSON.parse(xhr.responseText); }catch(_){}
+        if(xhr.status>=200 && xhr.status<300 && j.ok){
+          done("Go Live");
+          localStorage.setItem(TKEY,j.token); localStorage.setItem("streamza_email",($("email").value||"").trim()); selectedSlot=null; updateSelLabel();
+          if(j.multistreamLimited) toast("Multistream is the $9.99 plan — going live to your first platform only. Subscribe to add more.");
+          else toast("Slot "+j.slot+" claimed — live"+(j.destinations>1?(" to "+j.destinations+" platforms"):"")+"!");
+        } else { done("Go Live"); toast(j.error || ("Couldn't start (error "+xhr.status+"). Make sure the file is an MP4 with H.264 video + AAC audio.")); }
+        refreshMine(); refreshSlots(); loadRecent($("email").value);
+      };
+      xhr.onerror=()=>{ done("Go Live"); toast("Upload failed — check your internet connection and try again."); };
+      xhr.ontimeout=()=>{ done("Go Live"); toast("Upload timed out — try a smaller file or a better connection."); };
+      xhr.send(fd);
     };
-    $("stopBtn").onclick=async()=>{
+    async function stopStream(){
       const token=localStorage.getItem(TKEY); if(!token) return;
-      await fetch("/stop",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token})});
+      if(!confirm("Stop your stream now? This ends the broadcast and frees the slot.")) return;
+      try{ await fetch("/stop",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token})}); }catch(_){}
       localStorage.removeItem(TKEY); toast("Stream stopped, slot freed."); setLive(false); refreshSlots();
+    }
+    $("stopBtn").onclick=stopStream;
+    $("sappStop").onclick=stopStream;
+    $("upgradeBtn").onclick=async()=>{
+      const token=localStorage.getItem(TKEY); if(!token) return;
+      const email=($("email").value||"").trim()||myEmail;
+      try{
+        const r=await fetch("/upgrade",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token})});
+        const j=await r.json();
+        if(j.ok){ toast("Upgraded to 24 hours — your stream stays live!"); refreshMine(); }
+        else if(j.needsCheckout){ if(!email) return toast("Enter your email above first, then tap Upgrade."); openCheckout(email, mode==="multi"?"multi":"single"); }
+        else if(j.comingSoon){ toast("Paid plans are coming very soon — we saved your interest. Your trial keeps running."); }
+        else { toast(j.error||"Couldn't upgrade right now."); }
+      }catch(e){ toast("Something went wrong."); }
     };
-    $("waitBtn").onclick=async()=>{
+    $("copyLinkBtn").onclick=()=>{
+      const v=$("manageLink"); v.select(); v.setSelectionRange(0,300);
+      try{ navigator.clipboard.writeText(v.value); }catch(_){ try{document.execCommand("copy");}catch(_){} }
+      toast("Manage link copied — save it to resume on any device.");
+    };
+    $("resumeBtn").onclick=async()=>{
+      const raw=$("resumeInput").value.trim(); if(!raw) return toast("Paste your manage link or stream code.");
+      const m=raw.match(/[?&](?:s|token)=([a-f0-9]+)/i); const tok=m?m[1]:raw.replace(/[^a-f0-9]/gi,"");
+      if(!tok) return toast("That doesn't look like a valid code.");
+      try{
+        const s=await (await fetch("/status?token="+encodeURIComponent(tok))).json();
+        if(s.running){ localStorage.setItem(TKEY,tok); openStudioApp("single"); refreshMine(); toast("Found your stream — resumed!"); }
+        else { toast("No active stream found for that code — it may have already ended."); }
+      }catch(e){ toast("Couldn't resume right now."); }
+    };
+    if($("waitBtn")) $("waitBtn").onclick=async()=>{
       const email=$("waitEmail").value; if(!email) return toast("Enter your email.");
       try{const r=await fetch("/waitlist",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,source:"pro-waitlist"})});
         if(r.ok){toast("You're on the list!");$("waitEmail").value="";}else toast("Enter a valid email.");}catch(e){toast("Something went wrong.");}
     };
 
-    refreshSlots(); refreshMine();
-    setInterval(refreshSlots,4000); setInterval(refreshMine,2000);
+    // remember the user's email so returning subscribers are recognised instantly
+    const EKEY="streamza_email";
+    const savedEmail=localStorage.getItem(EKEY);
+    if(savedEmail){ if($("email")&&!$("email").value)$("email").value=savedEmail; if($("subEmail"))$("subEmail").value=savedEmail; myEmail=savedEmail; checkSub(savedEmail); loadRecent(savedEmail); }
+    // Reflect the subscription state across the whole studio UI (called on load, on email entry, and the
+    // moment a fresh checkout is detected) — so the "Subscribe" prompts actually disappear once active.
+    function applySubState(r){
+      const active = !!(r && r.active);
+      window.IS_SUBSCRIBED = active;
+      if(!active) return;
+      const bn=$("betaNote");
+      if(bn) bn.innerHTML='<b style="color:#34C759;">✓ Subscribed'+(r.multi?" · Multistream":"")+'</b> — claim any free slot for a full <b>24-hour</b> stream'+(r.multi?" to up to 3 platforms":"")+'.';
+      const ub=$("upgradeBtn"); if(ub) ub.style.display="none";           // in-stream upgrade CTA
+      const ps=$("planSubscribe"); if(ps){ ps.textContent="✓ Subscribed"; ps.style.pointerEvents="none"; ps.style.opacity=".7"; }
+      if(r.multi){ const pm=$("planSubscribeMulti"); if(pm){ pm.textContent="✓ Subscribed · Multistream"; pm.style.pointerEvents="none"; pm.style.opacity=".7"; } }
+    }
+    async function checkSub(email){
+      if(!email) return;
+      try{ const r=await (await fetch("/subscribed?email="+encodeURIComponent(email))).json(); applySubState(r); }catch(_){}
+    }
+    // Recognise a returning subscriber the moment they type their email (not only the saved one on load).
+    function watchEmail(id){ const el=$(id); if(!el) return; el.addEventListener("change",()=>{ const v=(el.value||"").trim(); if(v.includes("@")){ try{ localStorage.setItem(EKEY,v); }catch(_){} checkSub(v); loadRecent(v); } }); }
+    watchEmail("email"); watchEmail("subEmail");
+
+    updateSelLabel(); refreshSlots(); refreshMine();
+    if(resumeOpen) openStudioApp("single"); // arrived via a manage link → open the studio
+    // poll only while the tab is visible — saves network/CPU and keeps it snappy
+    setInterval(()=>{ if(!document.hidden) refreshSlots(); },5000);
+    setInterval(()=>{ if(!document.hidden) refreshMine(); },2500);
+    document.addEventListener("visibilitychange",()=>{ if(!document.hidden){ refreshSlots(); refreshMine(); } });
   </script>
 </body>
 </html>

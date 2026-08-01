@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Connecting to Streamza…</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { font-family: -apple-system, sans-serif; background: #000; color: #fff; display: flex;
+         align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
+  p { padding: 0 24px; color: #aeaeb2; }
+</style>
+</head>
+<body>
+<p id="msg">Connecting to Streamza…</p>
+<script>
+  // Twitch's implicit grant flow puts the token in the URL fragment, not a query param.
+  var params = new URLSearchParams(window.location.hash.substring(1));
+  var accessToken = params.get('access_token');
+  var error = params.get('error');
+  var errorDescription = params.get('error_description');
+
+  if (accessToken) {
+    window.location.href = 'streamza://twitch-auth?access_token=' + encodeURIComponent(accessToken);
+  } else if (error) {
+    window.location.href = 'streamza://twitch-auth?error=' + encodeURIComponent(error) +
+      '&error_description=' + encodeURIComponent(errorDescription || '');
+    document.getElementById('msg').textContent =
+      'Twitch sign-in failed: ' + (errorDescription || error) + '. Please return to the Streamza app.';
+  } else {
+    document.getElementById('msg').textContent =
+      'Something went wrong. Please return to the Streamza app and try again.';
+  }
+</script>
+</body>
+</html>

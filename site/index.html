@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Streamza — Live Streaming &amp; Screen Recorder | Stream to YouTube, Twitch &amp; RTMP</title>
+  <meta name="description" content="Streamza lets you go live to YouTube, Twitch, Facebook, Kick and any RTMP server — from your Android phone or right in your browser. Stream your camera, screen, or upload a video to broadcast 24/7 with seamless looping. Free, no account needed." />
+  <meta name="keywords" content="live streaming app, stream to YouTube, RTMP streamer, screen recorder android, stream video to RTMP, loop video live stream 24/7, multi-platform streaming, Twitch streaming, Facebook live, Kick streaming, upload video stream to RTMP, browser live streaming, broadcast software" />
+  <meta name="author" content="Probros" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="icon" type="image/svg+xml" href="logo.svg" />
+  <link rel="canonical" href="https://streamza.live/" />
+
+  <!-- Open Graph -->
+  <meta property="og:site_name" content="Streamza" />
+  <meta property="og:title" content="Streamza — Live Streaming &amp; Screen Recorder" />
+  <meta property="og:description" content="Go live to YouTube, Twitch, Facebook, Kick and any RTMP server — from your phone or your browser. Stream camera, screen, or a video file 24/7." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://streamza.live/" />
+  <meta property="og:image" content="https://streamza.live/og-banner.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Streamza — Live Streaming &amp; Screen Recorder" />
+  <meta name="twitter:description" content="Go live to YouTube, Twitch, Facebook, Kick and any RTMP server — from your phone or your browser." />
+  <meta name="twitter:image" content="https://streamza.live/og-banner.png" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="index.html">
+        <img class="logo-img" src="logo.svg" alt="Streamza logo" width="34" height="34" />
+        <span>Stream<b>za</b></span>
+      </a>
+      <nav class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#web-studio">Web Studio</a>
+        <a href="#how">How it works</a>
+        <a href="#faq">FAQ</a>
+        <a href="support.html">Support</a>
+      </nav>
+      <div class="header-cta">
+        <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <a class="btn btn-ghost btn-sm" href="/studio">Web Studio</a>
+        <a class="btn btn-primary btn-sm" href="https://play.google.com/store/apps/details?id=com.streamza.app" target="_blank" rel="noopener">Get the app</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <span class="eyebrow"><span class="live"></span> Live streaming &amp; screen recorder</span>
+        <h1>Go live to any platform, <span class="red">from your phone or browser.</span></h1>
+        <p class="lead">Streamza turns your Android into a broadcast studio — or stream right from your browser. Go live to YouTube, Facebook, Twitch, Kick and any RTMP server from your camera, screen, or a video file.</p>
+        <div class="hero-cta" id="download">
+          <a class="btn btn-primary" href="https://play.google.com/store/apps/details?id=com.streamza.app" target="_blank" rel="noopener">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5V3.5c0-.5.5-.8.9-.6l14.7 8.5c.4.2.4.8 0 1l-14.7 8.7c-.4.2-.9-.1-.9-.6z"/></svg>
+            Get it on Google Play
+          </a>
+          <a class="btn btn-ghost" href="/studio">Stream from browser →</a>
+        </div>
+        <div class="hero-meta">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 13 4 4L19 7"/></svg> No account needed</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 13 4 4L19 7"/></svg> Free to start</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 13 4 4L19 7"/></svg> Any RTMP server</span>
+        </div>
+      </div>
+
+      <!-- App mockup (mirrors the real home screen) -->
+      <div class="device-wrap">
+        <div class="device">
+          <div class="device-screen">
+            <span class="scr-notch"></span>
+            <div class="scr">
+              <div class="scr-top">
+                <img class="logo-img" src="logo.svg" alt="" />
+                <span class="wm">Stream<b>za</b></span>
+                <span class="crown"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 7l4.5 4L12 5l4.5 6L21 7l-1.5 11h-15z"/></svg></span>
+              </div>
+              <div class="scr-banner">
+                <h4>Go Live Anywhere</h4>
+                <p>Stream to YouTube, Twitch &amp; more</p>
+                <span class="wave"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M5 12a7 7 0 0 1 7-7"/><path d="M19 12a7 7 0 0 0-3-5.7"/><circle cx="12" cy="12" r="2"/></svg></span>
+              </div>
+              <p class="scr-label">Choose Platform</p>
+              <div class="scr-grid">
+                <div class="scr-card"><span class="ic" style="background:var(--c-youtube)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8,5v14l11,-7z"/></svg></span><span>YouTube</span></div>
+                <div class="scr-card"><span class="ic" style="background:var(--c-facebook)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 22v-8h3l1-4h-4V8c0-1 .3-1.7 1.8-1.7H17V2.8C16.5 2.7 15.3 2.6 14 2.6 11.2 2.6 9.3 4.3 9.3 7.5V10H6v4h3.3v8z"/></svg></span><span>Facebook</span></div>
+                <div class="scr-card"><span class="ic" style="background:var(--c-twitch)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 3 3 6v13h4v2h2l2-2h3l5-5V3zm14 9-3 3h-3l-2 2v-2H6V5h12z"/><path d="M11 8h1.5v4H11zm4 0h1.5v4H15z" fill="#bf5af2"/></svg></span><span>Twitch</span></div>
+                <div class="scr-card"><span class="ic" style="background:var(--c-kick)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 21h-1l1-7H7.5c-.6 0-.6-.3-.4-.7L13 3h1l-1 7h3.5c.5 0 .6.3.5.5z"/></svg></span><span>Kick</span></div>
+                <div class="scr-card"><span class="ic" style="background:var(--c-restream)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 16a3 3 0 0 0-2 .8L9 12.7q.1-.35 0-1.4l7-4.1a3 3 0 1 0-1-2.2q0 .3.1.7L8 9.8A3 3 0 1 0 8 15l7.1 4.2q-.1.3-.1.6a3 3 0 1 0 3-3.8z"/></svg></span><span>Restream</span></div>
+                <div class="scr-card"><span class="ic" style="background:var(--c-rtmp)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20m-1 17.9A8 8 0 0 1 4.3 14L9 15v1a2 2 0 0 0 2 2zm6.9-2.5A2 2 0 0 0 16 16h-1v-3a1 1 0 0 0-1-1H8v-2h2a1 1 0 0 0 1-1V7h2a2 2 0 0 0 2-2v-.4A8 8 0 0 1 17.9 17.4"/></svg></span><span>Custom RTMP</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROTATING AD CAROUSEL -->
+  <section class="adcarousel" aria-label="Streamza highlights">
+    <div class="container">
+      <div class="ac-wrap" id="adCarousel">
+        <div class="ac-track">
+
+          <div class="ac-slide">
+            <div class="ac-card g1">
+              <span class="ac-eyebrow"><span class="live"></span> No device needed</span>
+              <h3>Go live 24/7 — without your device</h3>
+              <p>Upload a video and Streamza streams it from the cloud, non-stop. Close your laptop, switch off your phone — your channel stays live around the clock.</p>
+              <a class="btn btn-white ac-btn" href="/studio">Start free on streamza.live →</a>
+              <span class="ac-motif"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="12" cy="18" r="1.7" fill="currentColor" stroke="none"/><path d="M8 15a5.5 5.5 0 0 1 8 0"/><path d="M5 12a9.5 9.5 0 0 1 14 0"/><path d="M2.5 9a13 13 0 0 1 19 0"/></svg></span>
+            </div>
+          </div>
+
+          <div class="ac-slide">
+            <div class="ac-card g2">
+              <span class="ac-eyebrow"><span class="live"></span> Multistream</span>
+              <h3>Stream to every platform at once</h3>
+              <p>YouTube, Twitch, Facebook, Kick &amp; Restream — broadcast to all of them at the same time from one place.</p>
+              <a class="btn btn-white ac-btn" href="https://play.google.com/store/apps/details?id=com.streamza.app" target="_blank" rel="noopener">Get the app →</a>
+              <span class="ac-motif"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="5" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="12" r="2.4"/><path d="M7 7l10 4M7 17l10-4"/></svg></span>
+            </div>
+          </div>
+
+          <div class="ac-slide">
+            <div class="ac-card g3">
+              <span class="ac-eyebrow"><span class="live"></span> 24/7 loop</span>
+              <h3>Loop a video forever</h3>
+              <p>Run round-the-clock music, radio, info or ambient channels with seamless looping — no gaps, no babysitting.</p>
+              <a class="btn btn-white ac-btn" href="/studio">Open Web Studio →</a>
+              <span class="ac-motif"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M4 9a8 8 0 0 1 13-3l2 2"/><path d="M20 4v4h-4"/><path d="M20 15a8 8 0 0 1-13 3l-2-2"/><path d="M4 20v-4h4"/></svg></span>
+            </div>
+          </div>
+
+          <div class="ac-slide">
+            <div class="ac-card g1">
+              <span class="ac-eyebrow"><span class="live"></span> No download</span>
+              <h3>Stream right from your browser</h3>
+              <p>No app, no software, no account. Open Streamza Web Studio, paste your stream key, and go live in seconds.</p>
+              <a class="btn btn-white ac-btn" href="/studio">Try it on streamza.live →</a>
+              <span class="ac-motif"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18"/><circle cx="6" cy="7" r=".7" fill="currentColor" stroke="none"/></svg></span>
+            </div>
+          </div>
+
+        </div>
+
+        <button class="ac-arrow prev" aria-label="Previous slide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <button class="ac-arrow next" aria-label="Next slide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+        <div class="ac-dots" aria-label="Slide navigation"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PLATFORM STRIP -->
+  <div class="logos" id="platforms">
+    <div class="container">
+      <div class="row">
+        <span class="pl"><span class="dot" style="background:var(--c-youtube)"></span> YouTube</span>
+        <span class="pl"><span class="dot" style="background:var(--c-facebook)"></span> Facebook</span>
+        <span class="pl"><span class="dot" style="background:var(--c-twitch)"></span> Twitch</span>
+        <span class="pl"><span class="dot" style="background:var(--c-kick)"></span> Kick</span>
+        <span class="pl"><span class="dot" style="background:var(--c-restream)"></span> Restream</span>
+        <span class="pl"><span class="dot" style="background:var(--c-rtmp)"></span> Custom RTMP</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 24/7 CLOUD PROMO BANNER -->
+  <section class="promo24" aria-label="Stream 24/7 from the cloud — no device needed">
+    <div class="container">
+      <div class="promo24-inner">
+        <div class="promo24-copy">
+          <span class="promo24-tag"><span class="live"></span> No device required</span>
+          <h2>Stream <span class="u">24/7</span> — even with your phone switched off.</h2>
+          <p>No phone, no PC, no software running at home. Upload a video to <b>Streamza Web Studio</b> and it broadcasts from the <b>cloud</b> to YouTube, Twitch, Facebook, Kick or any RTMP server — looping non-stop. Close your laptop, turn off your phone; your channel stays live around the clock.</p>
+          <div class="promo24-pills">
+            <span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 13 4 4L19 7"/></svg> Runs in the cloud</span>
+            <span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 13 4 4L19 7"/></svg> 24/7 seamless loop</span>
+            <span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 13 4 4L19 7"/></svg> No app or download</span>
+            <span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 13 4 4L19 7"/></svg> Any RTMP platform</span>
+          </div>
+        </div>
+        <div class="promo24-action">
+          <a class="btn btn-lg btn-white" href="/studio">Start streaming free →</a>
+          <span class="promo24-note">Free during beta · no account needed</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="container">
+      <div class="section-head">
+        <p class="kicker">Features</p>
+        <h2>Built to broadcast</h2>
+        <p>One app for live streaming and high-quality screen recording — made for creators, gamers and IRL streamers.</p>
+      </div>
+      <div class="grid grid-3">
+
+        <div class="feature">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12a7 7 0 0 1 14 0"/><circle cx="12" cy="12" r="2.5"/><path d="M2 12a10 10 0 0 1 20 0"/></svg></div>
+          <h3>Multi-platform streaming</h3>
+          <p>Go live on YouTube, Facebook, Twitch, Kick, Restream or any Custom RTMP server. Paste your stream key and you're on air.</p>
+        </div>
+
+        <div class="feature">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="14" height="12" rx="2"/><path d="m17 10 4-2v8l-4-2"/></svg></div>
+          <h3>Camera, screen &amp; video</h3>
+          <p>Stream from your camera, share your screen, or broadcast a pre-recorded video file — and switch sources in a tap.</p>
+        </div>
+
+        <div class="feature">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="14" rx="2"/><circle cx="12" cy="11" r="3"/><path d="M9 22h6"/></svg></div>
+          <h3>HD screen recorder</h3>
+          <p>Record your screen with internal audio, a front-camera facecam, on-screen drawing, and a one-tap Game Mode for smooth gameplay.</p>
+        </div>
+
+        <div class="feature">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20a8 8 0 1 0-8-8"/><path d="M12 12 8 8"/><path d="M12 4V2"/></svg></div>
+          <h3>Adaptive bitrate</h3>
+          <p>Your stream stays smooth on weak mobile connections — the bitrate adjusts automatically so you stay live without dropped frames.</p>
+        </div>
+
+        <div class="feature">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg></div>
+          <h3>Upload speed test</h3>
+          <p>Measure your real upload speed and get the ideal resolution and bitrate for a stable broadcast — applied with one tap.</p>
+        </div>
+
+        <div class="feature">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 6v6c0 5 3.4 7.7 8 10 4.6-2.3 8-5 8-10V6z"/><path d="m9 12 2 2 4-4"/></svg></div>
+          <h3>Private by design</h3>
+          <p>No account, no sign-up. Your stream goes straight to your platform and your keys never leave your device.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing" style="border-top:1px solid var(--hairline)">
+    <div class="container">
+      <div class="section-head">
+        <p class="kicker">Pricing</p>
+        <h2>Free to start. PRO when you're ready.</h2>
+        <p>Core streaming and screen recording are free, forever. Upgrade any time for studio-quality output.</p>
+      </div>
+      <div class="pricing-grid">
+
+        <div class="price-card">
+          <h3>Free</h3>
+          <div class="price-value">$0<span>/forever</span></div>
+          <ul class="price-list">
+            <li>Stream to YouTube, Facebook, Twitch, Kick &amp; more</li>
+            <li>1080p @ 30fps streaming</li>
+            <li>Screen recording with facecam</li>
+            <li>Streamza watermark</li>
+          </ul>
+          <a class="btn btn-ghost" href="https://play.google.com/store/apps/details?id=com.streamza.app" target="_blank" rel="noopener">Get started</a>
+        </div>
+
+        <div class="price-card featured">
+          <span class="price-badge">Best value</span>
+          <h3>PRO Yearly</h3>
+          <div class="price-value">$24.99<span>/year</span></div>
+          <p class="price-sub">3-day free trial, then billed yearly</p>
+          <ul class="price-list">
+            <li>Everything in Free</li>
+            <li>No watermark — custom branding</li>
+            <li>2K (1440p) &amp; 60fps streaming</li>
+            <li>Multistream to every platform at once</li>
+            <li>Studio-quality audio, up to 320 kbps</li>
+            <li>Unlimited 24/7 video-file looping</li>
+          </ul>
+          <a class="btn btn-primary" href="https://play.google.com/store/apps/details?id=com.streamza.app" target="_blank" rel="noopener">Start free trial</a>
+        </div>
+
+        <div class="price-card">
+          <h3>PRO Monthly</h3>
+          <div class="price-value">$3.99<span>/month</span></div>
+          <p class="price-sub">3-day free trial, then billed monthly</p>
+          <ul class="price-list">
+            <li>Everything in Free</li>
+            <li>No watermark — custom branding</li>
+            <li>2K (1440p) &amp; 60fps streaming</li>
+            <li>Multistream to every platform at once</li>
+            <li>Studio-quality audio, up to 320 kbps</li>
+          </ul>
+          <a class="btn btn-ghost" href="https://play.google.com/store/apps/details?id=com.streamza.app" target="_blank" rel="noopener">Start free trial</a>
+        </div>
+
+      </div>
+      <p class="price-note">Prices shown in USD and may vary by region. Billed via Google Play (Android) or our Web Studio, processed by our Merchant of Record, <a href="https://lemonsqueezy.com" target="_blank" rel="noopener">Lemon Squeezy</a>. See our <a href="refund.html">Refund Policy</a> for details.</p>
+    </div>
+  </section>
+
+  <!-- WEB STUDIO (big feature section) -->
+  <section id="web-studio" class="webstudio">
+    <div class="container">
+      <div class="ws-grid">
+        <div class="ws-copy">
+          <span class="eyebrow"><span class="live"></span> Web Studio · No app needed</span>
+          <h2>Stream a video file <span class="red">to any platform, 24/7 — straight from your browser.</span></h2>
+          <p class="ws-lead">No phone, no software, no download. Upload a video, paste your stream key, and Streamza broadcasts it to YouTube, Twitch, Facebook, Kick or any RTMP server — looping non-stop from the cloud. Grab one of <b>10 free live slots</b>.</p>
+          <ul class="ws-list">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 13 4 4L19 7"/></svg> Upload an MP4 and go live in seconds</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 13 4 4L19 7"/></svg> 24/7 seamless loop — music, radio, info &amp; ambient channels</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 13 4 4L19 7"/></svg> Runs in the cloud — close your laptop, it keeps streaming</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 13 4 4L19 7"/></svg> 10 live slots · free during beta</li>
+          </ul>
+          <div class="ws-cta">
+            <a class="btn btn-primary btn-lg" href="/studio">Open Web Studio →</a>
+            <span class="ws-note">Free during beta · no account needed</span>
+          </div>
+        </div>
+
+        <!-- Browser mockup of the studio -->
+        <div class="ws-visual">
+          <div class="browser">
+            <div class="browser-bar">
+              <span class="bdot r"></span><span class="bdot y"></span><span class="bdot g"></span>
+              <span class="burl"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg> streamza.live/studio</span>
+            </div>
+            <div class="browser-body">
+              <div class="mock-up">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M5 20h14"/></svg>
+                <span>Drop your MP4 here</span>
+              </div>
+              <div class="mock-row"><span class="mk-label">RTMP key</span><span class="mk-input">••••-••••-••••-••••</span></div>
+              <p class="mk-slots-label">Live slots</p>
+              <div class="mock-slots">
+                <span class="mk-slot busy"></span><span class="mk-slot busy"></span><span class="mk-slot free"></span>
+                <span class="mk-slot free"></span><span class="mk-slot busy"></span><span class="mk-slot free"></span>
+                <span class="mk-slot free"></span><span class="mk-slot free"></span><span class="mk-slot busy"></span><span class="mk-slot free"></span>
+              </div>
+              <div class="mock-golive"><span class="mk-livedot"></span> Claim a slot &amp; Go Live</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="how" style="padding-top:0">
+    <div class="container">
+      <div class="section-head">
+        <p class="kicker">How it works</p>
+        <h2>Live in three steps</h2>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="n">1</div>
+          <h3>Choose a platform</h3>
+          <p>Tap YouTube, Twitch, Facebook, Kick or Custom RTMP on the home screen.</p>
+        </div>
+        <div class="step">
+          <div class="n">2</div>
+          <h3>Paste your stream key</h3>
+          <p>Copy it from the platform's dashboard — the server URL is filled in for you.</p>
+        </div>
+        <div class="step">
+          <div class="n">3</div>
+          <h3>Go live</h3>
+          <p>Pick your camera, screen or a video file, then tap Go Live.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-band">
+    <div class="container">
+      <div class="cta-inner">
+        <img src="logo.svg" alt="Streamza" />
+        <h2>Ready to go live?</h2>
+        <p>Download Streamza and start broadcasting in minutes. Free to start, with PRO quality available as a subscription.</p>
+        <a class="btn btn-primary" href="https://play.google.com/store/apps/details?id=com.streamza.app" target="_blank" rel="noopener">Get it on Google Play</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" style="border-top:1px solid var(--hairline)">
+    <div class="container">
+      <div class="section-head">
+        <p class="kicker">FAQ</p>
+        <h2>Questions, answered</h2>
+      </div>
+      <div class="faq">
+        <details open>
+          <summary>Do I need an account to use Streamza?</summary>
+          <p>No. Streamza works without any sign-up. You connect to streaming platforms using a stream key from that platform — your data stays on your device.</p>
+        </details>
+        <details>
+          <summary>Which platforms can I stream to?</summary>
+          <p>YouTube, Facebook, Twitch, Kick, Restream, and any service that accepts a Custom RTMP / RTMPS stream key.</p>
+        </details>
+        <details>
+          <summary>Where do I find my stream key?</summary>
+          <p>In your platform's live dashboard — for example, YouTube Studio → Go Live → Stream, or your Twitch Creator Dashboard → Settings → Stream. See the <a href="support.html">Support page</a> for per-platform steps.</p>
+        </details>
+        <details>
+          <summary>Is Streamza free?</summary>
+          <p>Yes — core streaming and screen recording are free. A PRO subscription unlocks higher-quality options such as 60&nbsp;fps, 1440p screen recording, higher bitrate and studio audio.</p>
+        </details>
+        <details>
+          <summary>Does Streamza collect my data?</summary>
+          <p>We do not collect your personal data or your stream content on our servers. Your broadcast goes directly to the platform you choose. Read the full <a href="privacy.html">Privacy Policy</a>.</p>
+        </details>
+        <details>
+          <summary>Can I stream without installing the app?</summary>
+          <p>Yes. <a href="#web-studio">Streamza Web Studio</a> runs in your browser — upload a video, paste your RTMP key, and it broadcasts from the cloud. No app or download needed.</p>
+        </details>
+        <details>
+          <summary>Can I run a 24/7 looping live stream?</summary>
+          <p>Yes. Turn on “Loop the video forever” in Web Studio (or the app's video-file mode) to broadcast a clip non-stop — ideal for music, radio, and info channels.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="col" style="max-width:300px">
+          <a class="brand" href="index.html" style="margin-bottom:14px"><img class="logo-img" src="logo.svg" alt="" width="34" height="34" /><span>Stream<b>za</b></span></a>
+          <p style="color:var(--muted);font-size:15px;margin:0">Professional live streaming &amp; screen recording for Android.</p>
+        </div>
+        <div class="col">
+          <h4>Product</h4>
+          <a href="#features">Features</a>
+          <a href="#web-studio">Web Studio</a>
+          <a href="#how">How it works</a>
+          <a href="#faq">FAQ</a>
+        </div>
+        <div class="col">
+          <h4>Legal</h4>
+          <a href="privacy.html">Privacy Policy</a>
+          <a href="terms.html">Terms of Service</a>
+          <a href="data-deletion.html">Data Deletion</a>
+          <a href="refund.html">Refund Policy</a>
+          <a href="acceptable-use.html">Acceptable Use Policy</a>
+          <a href="copyright.html">DMCA Policy</a>
+        </div>
+        <div class="col">
+          <h4>Support</h4>
+          <a href="support.html">Help &amp; FAQ</a>
+          <a href="mailto:probrostraders@gmail.com">probrostraders@gmail.com</a>
+        </div>
+        <div class="col">
+          <h4>Get the app</h4>
+          <a class="store-badge" href="https://play.google.com/store/apps/details?id=com.streamza.app" target="_blank" rel="noopener" aria-label="Get it on Google Play">
+            <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" loading="lazy" width="162" height="48" />
+          </a>
+          <a class="store-qr" href="https://play.google.com/store/apps/details?id=com.streamza.app" target="_blank" rel="noopener" aria-label="Scan to get Streamza on Google Play">
+            <img src="qr-play.png" alt="QR code to download Streamza on Google Play" loading="lazy" width="96" height="96" />
+            <span>Scan to install</span>
+          </a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 Streamza · Probros</span>
+        <span>Not affiliated with or endorsed by YouTube, Twitch, Facebook, Kick or any third-party platform.</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Mobile menu toggle -->
+  <script>
+    (function () {
+      var h = document.querySelector('.site-header'), t = document.getElementById('navToggle');
+      if (!h || !t) return;
+      t.addEventListener('click', function () {
+        var open = h.classList.toggle('nav-open');
+        t.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      h.querySelectorAll('.nav-links a').forEach(function (a) {
+        a.addEventListener('click', function () { h.classList.remove('nav-open'); t.setAttribute('aria-expanded', 'false'); });
+      });
+    })();
+  </script>
+
+  <!-- Ad carousel: auto-rotate + swipe + dots -->
+  <script>
+    (function () {
+      var root = document.getElementById('adCarousel');
+      if (!root) return;
+      var track = root.querySelector('.ac-track');
+      var slides = root.querySelectorAll('.ac-slide');
+      var dotsWrap = root.querySelector('.ac-dots');
+      var n = slides.length, i = 0, timer = null, DELAY = 3000;
+      for (var d = 0; d < n; d++) {
+        var b = document.createElement('button');
+        b.className = 'ac-dot' + (d === 0 ? ' active' : '');
+        b.setAttribute('aria-label', 'Go to slide ' + (d + 1));
+        (function (idx) { b.addEventListener('click', function () { go(idx); reset(); }); })(d);
+        dotsWrap.appendChild(b);
+      }
+      var dots = dotsWrap.querySelectorAll('.ac-dot');
+      function render() {
+        track.style.transform = 'translateX(-' + (i * 100) + '%)';
+        for (var k = 0; k < n; k++) dots[k].classList.toggle('active', k === i);
+      }
+      function go(x) { i = (x + n) % n; render(); }
+      function next() { go(i + 1); }
+      function prev() { go(i - 1); }
+      function stop() { if (timer) { clearInterval(timer); timer = null; } }
+      function start() { stop(); timer = setInterval(next, DELAY); }
+      function reset() { start(); }
+      root.querySelector('.ac-arrow.next').addEventListener('click', function () { next(); reset(); });
+      root.querySelector('.ac-arrow.prev').addEventListener('click', function () { prev(); reset(); });
+      root.addEventListener('mouseenter', stop);
+      root.addEventListener('mouseleave', start);
+      var x0 = null;
+      root.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; stop(); }, { passive: true });
+      root.addEventListener('touchend', function (e) {
+        if (x0 === null) return;
+        var dx = e.changedTouches[0].clientX - x0;
+        if (Math.abs(dx) > 40) { if (dx < 0) { next(); } else { prev(); } }
+        x0 = null; start();
+      }, { passive: true });
+      document.addEventListener('visibilitychange', function () { if (document.hidden) { stop(); } else { start(); } });
+      render(); start();
+    })();
+  </script>
+
+  <!-- Structured data for Google (rich results) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://streamza.live/#org",
+        "name": "Streamza",
+        "legalName": "Probros",
+        "url": "https://streamza.live/",
+        "logo": "https://streamza.live/logo.svg",
+        "email": "probrostraders@gmail.com"
+      },
+      {
+        "@type": "SoftwareApplication",
+        "name": "Streamza — Live Streaming & Screen Recorder",
+        "operatingSystem": "Android",
+        "applicationCategory": "MultimediaApplication",
+        "description": "Go live to YouTube, Twitch, Facebook, Kick and any RTMP server from your Android phone. Stream your camera, screen, or a video file, and record your screen in HD.",
+        "url": "https://streamza.live/",
+        "publisher": { "@id": "https://streamza.live/#org" },
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+      },
+      {
+        "@type": "WebApplication",
+        "name": "Streamza Web Studio",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "Any (web browser)",
+        "browserRequirements": "Requires a modern web browser",
+        "description": "Upload a video and stream it to any RTMP destination (YouTube, Twitch, Facebook, Kick) directly from your browser, with 24/7 seamless looping.",
+        "url": "https://streamza.live/studio",
+        "publisher": { "@id": "https://streamza.live/#org" },
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "Do I need an account to use Streamza?", "acceptedAnswer": { "@type": "Answer", "text": "No. Streamza works without any sign-up. You connect to streaming platforms using a stream key from that platform, and your data stays on your device." } },
+          { "@type": "Question", "name": "Which platforms can I stream to?", "acceptedAnswer": { "@type": "Answer", "text": "YouTube, Facebook, Twitch, Kick, Restream, and any service that accepts a Custom RTMP or RTMPS stream key." } },
+          { "@type": "Question", "name": "Can I stream without installing the app?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Streamza Web Studio runs in your browser — upload a video, paste your RTMP key, and it broadcasts from the cloud. No app or download needed." } },
+          { "@type": "Question", "name": "Can I run a 24/7 looping live stream?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Turn on Loop the video forever in Web Studio or the app's video-file mode to broadcast a clip non-stop — ideal for music, radio and info channels." } },
+          { "@type": "Question", "name": "Is Streamza free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Core streaming and screen recording are free. A PRO subscription unlocks higher-quality options such as 60 fps, 1440p screen recording, higher bitrate and studio audio." } }
+        ]
+      }
+    ]
+  }
+  </script>
+
+</body>
+</html>
