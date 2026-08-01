@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multistream One Video to 3 Platforms at Once | Streamza</title>
+  <meta name="description" content="Broadcast one video to YouTube, Twitch, Facebook, Kick or any RTMP server simultaneously. One upload, three live streams, no extra upload bandwidth." />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="icon" type="image/svg+xml" href="logo.svg" />
+  <link rel="canonical" href="https://streamza.live/multistream.html" />
+
+  <meta property="og:site_name" content="Streamza" />
+  <meta property="og:title" content="Multistream One Video to 3 Platforms at Once" />
+  <meta property="og:description" content="Broadcast one video to YouTube, Twitch, Facebook, Kick or any RTMP server simultaneously. One upload, three live streams, no extra upload bandwidth." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://streamza.live/multistream.html" />
+  <meta property="og:image" content="https://streamza.live/og-banner.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Multistream One Video to 3 Platforms at Once" />
+  <meta name="twitter:description" content="Broadcast one video to YouTube, Twitch, Facebook, Kick or any RTMP server simultaneously. One upload, three live streams, no extra upload bandwidth." />
+  <meta name="twitter:image" content="https://streamza.live/og-banner.png" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="/">
+        <img class="logo-img" src="logo.svg" alt="Streamza logo" width="34" height="34" />
+        <span>Stream<b>za</b></span>
+      </a>
+      <nav class="nav-links">
+        <a href="/stream-pre-recorded-video-live.html">Pre-recorded live</a>
+        <a href="/24-7-live-stream.html">24/7 streaming</a>
+        <a href="/multistream.html">Multistream</a>
+        <a href="/stream-key-guide.html">Stream keys</a>
+        <a href="/support.html">Support</a>
+      </nav>
+      <div class="header-cta">
+        <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <a class="btn btn-primary btn-sm" href="/studio">Start streaming free</a>
+      </div>
+    </div>
+  </header>
+
+  <nav class="crumbs container" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Home</a></li>
+      <li><span aria-current="page">Multistreaming</span></li>
+    </ol>
+  </nav>
+
+  <section class="lp-hero lp-wide">
+    <div class="container">
+      <span class="eyebrow"><span class="live"></span> One upload, three destinations</span>
+      <h1>Multistream one video to three platforms at once.</h1>
+      <p class="lp-lead">Upload once and go live on YouTube, Twitch, Facebook, Kick or any RTMP server simultaneously. Because the fan-out happens on our servers, sending to three platforms costs you exactly the same upload bandwidth as sending to one — none at all after the file is in.</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary btn-lg" href="/studio">Start multistreaming →</a>
+        <a class="btn btn-ghost" href="#how">How it works</a>
+      </div>
+      <dl class="lp-facts">
+        <div><dt>Destinations</dt><dd>Up to 3 at once</dd></div>
+        <div><dt>Your upload</dt><dd>Used once, not 3×</dd></div>
+        <div><dt>Mix &amp; match</dt><dd>Any RTMP endpoints</dd></div>
+        <div><dt>Software needed</dt><dd>None</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="lp-body">
+    <div class="container">
+      <div class="lp-prose">
+
+        <h2>Why cloud multistreaming beats doing it locally</h2>
+        <p>The obvious way to reach three platforms is to open three RTMP connections from your own machine. The arithmetic is what kills it.</p>
+        <p>A single 1080p60 stream at 6,000 kbps needs roughly 6&nbsp;Mbps of sustained upload. Three of them need <strong>18&nbsp;Mbps, continuously, for the entire broadcast</strong> — more than most home connections can hold steady, and any dip hits all three streams at once. Add the CPU cost of encoding three outputs and a mid-range machine is finished.</p>
+        <p>Cloud multistreaming inverts it. You upload the file once, at whatever speed you have, with no deadline. Our servers then open the three RTMP connections from a datacentre with bandwidth that does not care. Your connection is out of the picture the moment the upload completes.</p>
+        <table>
+          <thead><tr><th></th><th>Multistreaming locally</th><th>Streamza in the cloud</th></tr></thead>
+          <tbody>
+            <tr><td>Upload needed for 3 × 1080p60</td><td>~18 Mbps sustained</td><td>One file upload, then nothing</td></tr>
+            <tr><td>Encoding load</td><td>Three outputs on your CPU/GPU</td><td>None on your device</td></tr>
+            <tr><td>Effect of a home outage</td><td>All three streams die</td><td>No effect</td></tr>
+            <tr><td>Machine must stay on</td><td>Yes</td><td>No</td></tr>
+            <tr><td>Setup</td><td>Three outputs, or a restreaming plugin</td><td>Paste up to three keys</td></tr>
+          </tbody>
+        </table>
+
+        <h2 id="how">How to multistream a video</h2>
+        <ol class="lp-steps">
+          <li>
+            <h3>Set up the live event on each platform</h3>
+            <p>Create the broadcast on every destination you want to hit and collect each one's RTMP URL and stream key. The <a href="/stream-key-guide.html">stream key guide</a> covers all of them.</p>
+          </li>
+          <li>
+            <h3>Claim a slot and upload once</h3>
+            <p>At <a href="/studio">streamza.live/studio</a>, upload the video a single time. It is stored once and read once, no matter how many destinations you add.</p>
+          </li>
+          <li>
+            <h3>Add up to three destinations</h3>
+            <p>Paste each URL and key as a separate destination — YouTube, Twitch and a custom endpoint, or any other combination. Built-in platforms fill their URL in automatically.</p>
+          </li>
+          <li>
+            <h3>Go live everywhere at once</h3>
+            <p>One press starts all three RTMP connections together, so the broadcasts begin in sync. Then confirm the go-live on whichever platforms require it.</p>
+          </li>
+        </ol>
+
+        <div class="note">
+          <p class="mt-0"><strong>Multistreaming is a paid feature.</strong> A free slot claim streams to one destination. Sending to two or three simultaneously requires the Multistream plan, which raises the limit to three concurrent destinations from a single upload.</p>
+        </div>
+
+        <h2>Choose your destination mix carefully</h2>
+        <p>Reaching everywhere at once is not automatically the right move. Three things worth thinking about:</p>
+        <ul>
+          <li><strong>Exclusivity contracts.</strong> Twitch Partners in particular have contractual limits on streaming the same content to other platforms at the same time. Check your agreement before pairing Twitch with anything.</li>
+          <li><strong>Split chat.</strong> Three platforms means three separate comment threads. For a pre-recorded broadcast where nobody is answering live anyway this matters less, but it is worth knowing.</li>
+          <li><strong>The lowest ceiling wins.</strong> All destinations receive the same file, so your export has to satisfy the strictest one. Twitch caps at 6,000 kbps, so a YouTube-plus-Twitch multistream should export at or below 6,000 kbps even though YouTube would accept far more.</li>
+        </ul>
+
+        <h2>Good reasons to multistream a recorded video</h2>
+        <div class="lp-cards">
+          <div class="lp-card">
+            <h3>Launches and announcements</h3>
+            <p>Put the same polished launch video live on every channel at the same moment instead of publishing three times.</p>
+          </div>
+          <div class="lp-card">
+            <h3>Services and events</h3>
+            <p>Congregations and communities are split across platforms. Reach all of them from one upload at the scheduled hour.</p>
+          </div>
+          <div class="lp-card">
+            <h3>Testing a new platform</h3>
+            <p>Mirror your main channel to Kick, Trovo or Rumble to see whether an audience is there before committing.</p>
+          </div>
+          <div class="lp-card">
+            <h3>Always-on, everywhere</h3>
+            <p>Run a <a href="/24-7-live-stream.html">looping channel</a> on more than one platform from a single upload.</p>
+          </div>
+          <div class="lp-card">
+            <h3>Backup destinations</h3>
+            <p>Send to a second endpoint as insurance so one platform having a bad day does not take the broadcast down.</p>
+          </div>
+          <div class="lp-card">
+            <h3>Regional or language channels</h3>
+            <p>Push the same recording to separate channels aimed at different audiences, simultaneously.</p>
+          </div>
+        </div>
+
+        <h2>Frequently asked questions</h2>
+        <div class="faq" style="max-width:none;margin-top:22px">
+          <details open>
+            <summary>How many platforms can I stream to at once?</summary>
+            <p>Up to three simultaneous destinations on the Multistream plan. They can be any mix of the built-in platforms and custom RTMP endpoints.</p>
+          </details>
+          <details>
+            <summary>Does multistreaming use three times my upload bandwidth?</summary>
+            <p>No. You upload the file once and the three outbound RTMP connections originate from our servers. This is the main practical advantage over multistreaming from your own machine, where three destinations really does mean three times the upload.</p>
+          </details>
+          <details>
+            <summary>Can I multistream on the free trial?</summary>
+            <p>No. A free slot claim streams to a single destination. Multistreaming is part of the paid Multistream plan.</p>
+          </details>
+          <details>
+            <summary>Can I mix built-in platforms with a custom RTMP server?</summary>
+            <p>Yes. YouTube plus Twitch plus your own server is a perfectly normal combination — every destination is just a URL and a key.</p>
+          </details>
+          <details>
+            <summary>What if one destination fails?</summary>
+            <p>The other connections are independent, so a rejected key or an unreachable server on one destination does not stop the rest.</p>
+          </details>
+          <details>
+            <summary>Do all destinations get the same quality?</summary>
+            <p>Yes — the same file is relayed to each one. Export to satisfy the strictest platform in your set, since there is no per-destination transcoding.</p>
+          </details>
+          <details>
+            <summary>Is multistreaming against any platform's rules?</summary>
+            <p>Not generally, but exclusivity contracts exist. Twitch Partners especially should check their agreement before streaming the same content elsewhere simultaneously.</p>
+          </details>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-band">
+    <div class="container">
+      <div class="cta-inner">
+        <div>
+          <h2>One upload. Three platforms. One click.</h2>
+          <p>Go live everywhere at once without touching your upload bandwidth.</p>
+        </div>
+        <a class="btn btn-lg btn-white" href="/studio">Open Web Studio →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-related">
+    <div class="container">
+      <div class="section-head"><p class="kicker">Keep reading</p><h2>Related guides</h2></div>
+      <div class="lp-related-grid">
+        <a href="/stream-pre-recorded-video-live.html">Pre-recorded live streaming<span>The full guide to broadcasting a recorded file as live.</span></a>
+        <a href="/24-7-live-stream.html">24/7 live streaming<span>Loop one video around the clock with nothing switched on.</span></a>
+        <a href="/custom-rtmp.html">Custom RTMP<span>Kick, Trovo, LinkedIn, X, Rumble and self-hosted servers.</span></a>
+        <a href="/stream-key-guide.html">Stream key guide<span>Collect every destination's URL and key in one pass.</span></a>
+        <a href="/youtube-live-streaming.html">YouTube Live<span>Ingest URL, key location, bitrates and 24/7 channels.</span></a>
+        <a href="/twitch-streaming.html">Twitch<span>Bitrate ceilings and exclusivity to check before multistreaming.</span></a>
+        <a href="/facebook-live-streaming.html">Facebook Live<span>Live Producer, RTMPS, and Facebook's 8-hour limit.</span></a>
+        <a href="/live-stream-without-obs.html">Live stream without OBS<span>What OBS does, and what replaces it when you have no PC.</span></a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="col wide">
+          <a class="brand" href="/" style="margin-bottom:14px"><img class="logo-img" src="logo.svg" alt="" width="34" height="34" /><span>Stream<b>za</b></span></a>
+          <p style="color:var(--muted);font-size:15px;margin:0">Stream pre-recorded video live to any platform — from the cloud, with no device left running.</p>
+        </div>
+        <div class="col">
+          <h4>Guides</h4>
+          <a href="/stream-pre-recorded-video-live.html">Pre-recorded live streaming</a>
+          <a href="/24-7-live-stream.html">24/7 live streaming</a>
+          <a href="/live-stream-without-obs.html">Streaming without OBS</a>
+          <a href="/multistream.html">Multistreaming</a>
+          <a href="/stream-key-guide.html">Stream key guide</a>
+        </div>
+        <div class="col">
+          <h4>Platforms</h4>
+          <a href="/youtube-live-streaming.html">YouTube Live</a>
+          <a href="/facebook-live-streaming.html">Facebook Live</a>
+          <a href="/twitch-streaming.html">Twitch</a>
+          <a href="/custom-rtmp.html">Custom RTMP</a>
+        </div>
+        <div class="col">
+          <h4>Legal</h4>
+          <a href="/privacy.html">Privacy Policy</a>
+          <a href="/terms.html">Terms of Service</a>
+          <a href="/acceptable-use.html">Acceptable Use</a>
+          <a href="/copyright.html">DMCA Policy</a>
+          <a href="/refund.html">Refund Policy</a>
+        </div>
+        <div class="col">
+          <h4>Support</h4>
+          <a href="/support.html">Help &amp; FAQ</a>
+          <a href="/studio">Web Studio</a>
+          <a href="mailto:probrostraders@gmail.com">probrostraders@gmail.com</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 Streamza · Probros</span>
+        <span>Not affiliated with or endorsed by YouTube, Twitch, Facebook, Kick or any third-party platform.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var h = document.querySelector('.site-header'), t = document.getElementById('navToggle');
+      if (!h || !t) return;
+      t.addEventListener('click', function () {
+        var open = h.classList.toggle('nav-open');
+        t.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      h.querySelectorAll('.nav-links a').forEach(function (a) {
+        a.addEventListener('click', function () { h.classList.remove('nav-open'); t.setAttribute('aria-expanded', 'false'); });
+      });
+    })();
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://streamza.live/" },
+          { "@type": "ListItem", "position": 2, "name": "Multistreaming", "item": "https://streamza.live/multistream.html" }
+        ]
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://streamza.live/multistream.html",
+        "url": "https://streamza.live/multistream.html",
+        "name": "Multistream One Video to 3 Platforms at Once",
+        "description": "How to broadcast one video to up to three platforms simultaneously from the cloud, without multiplying your upload bandwidth.",
+        "inLanguage": "en",
+        "isPartOf": { "@type": "WebSite", "@id": "https://streamza.live/#website" },
+        "about": { "@id": "https://streamza.live/#webapp" },
+        "publisher": { "@id": "https://streamza.live/#org" }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "How many platforms can I stream to at once?", "acceptedAnswer": { "@type": "Answer", "text": "Up to three simultaneous destinations on the Multistream plan, in any mix of built-in platforms and custom RTMP endpoints." } },
+          { "@type": "Question", "name": "Does multistreaming use three times my upload bandwidth?", "acceptedAnswer": { "@type": "Answer", "text": "No. You upload the file once and the three outbound RTMP connections originate from Streamza's servers, unlike multistreaming from your own machine where three destinations means three times the upload." } },
+          { "@type": "Question", "name": "Can I multistream on the free trial?", "acceptedAnswer": { "@type": "Answer", "text": "No. A free slot claim streams to a single destination. Multistreaming is part of the paid Multistream plan." } },
+          { "@type": "Question", "name": "Can I mix built-in platforms with a custom RTMP server?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Every destination is just a URL and a key, so YouTube plus Twitch plus your own server is a normal combination." } },
+          { "@type": "Question", "name": "What if one destination fails?", "acceptedAnswer": { "@type": "Answer", "text": "The connections are independent, so a rejected key or unreachable server on one destination does not stop the others." } },
+          { "@type": "Question", "name": "Do all destinations get the same quality?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, the same file is relayed to each one. Export to satisfy the strictest platform in your set, since there is no per-destination transcoding." } },
+          { "@type": "Question", "name": "Is multistreaming against any platform's rules?", "acceptedAnswer": { "@type": "Answer", "text": "Not generally, but exclusivity contracts exist. Twitch Partners in particular should check their agreement before streaming the same content elsewhere simultaneously." } }
+        ]
+      }
+    ]
+  }
+  </script>
+
+</body>
+</html>

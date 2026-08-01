@@ -3,10 +3,70 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Streamza Studio — Claim a live slot, stream any video to YouTube/Twitch 24/7</title>
-  <meta name="description" content="Claim 1 of 10 live slots and stream any video to YouTube, Twitch, Facebook or any RTMP server from your browser, with seamless looping. Start with a free 5-minute trial, then $1 / 24 hours." />
+  <title>Stream a Video 24/7 with a Stream Key — Streamza Web Studio</title>
+  <meta name="description" content="Upload a pre-recorded video, paste your RTMP URL and stream key, and go live on YouTube, Twitch, Facebook or Kick — looping 24/7. No software, no PC needed." />
+  <meta name="keywords" content="stream pre-recorded video, stream video with stream key, RTMP URL stream key, upload video go live, 24/7 loop live stream, stream mp4 to youtube, browser live streaming, no software live stream" />
+  <meta name="robots" content="index, follow" />
   <meta name="theme-color" content="#000000" />
   <link rel="icon" type="image/svg+xml" href="logo.svg" />
+  <link rel="canonical" href="https://streamza.live/studio" />
+
+  <!-- Open Graph -->
+  <meta property="og:site_name" content="Streamza" />
+  <meta property="og:title" content="Stream a Video 24/7 with a Stream Key — Streamza Web Studio" />
+  <meta property="og:description" content="Upload a pre-recorded video, paste your RTMP URL and stream key, and go live on YouTube, Twitch, Facebook, Kick or any RTMP server — looping 24/7. No software, no PC." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://streamza.live/studio" />
+  <meta property="og:image" content="https://streamza.live/og-banner.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Stream a Video 24/7 with a Stream Key — Streamza Web Studio" />
+  <meta name="twitter:description" content="Upload a video, paste your RTMP URL and stream key, and go live 24/7 — no software, no PC needed." />
+  <meta name="twitter:image" content="https://streamza.live/og-banner.png" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "name": "Streamza Web Studio",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "Any (web browser)",
+        "browserRequirements": "Requires a modern web browser",
+        "description": "Upload a pre-recorded video, paste your RTMP URL and stream key, and Streamza streams it to YouTube, Twitch, Facebook, Kick or any RTMP server — looping 24/7 from the cloud, no software or PC required.",
+        "url": "https://streamza.live/studio",
+        "offers": [
+          { "@type": "Offer", "name": "Free trial", "price": "0", "priceCurrency": "USD" },
+          { "@type": "Offer", "name": "Single platform", "price": "4.99", "priceCurrency": "USD" },
+          { "@type": "Offer", "name": "Multistream", "price": "9.99", "priceCurrency": "USD" }
+        ]
+      },
+      {
+        "@type": "HowTo",
+        "name": "How to stream a pre-recorded video with a stream key",
+        "description": "Stream any video file to YouTube, Twitch, Facebook, Kick or a custom RTMP server using just a stream key — no software or PC needed.",
+        "step": [
+          { "@type": "HowToStep", "name": "Tap a free slot", "text": "No payment needed — every slot starts a free 15-minute trial." },
+          { "@type": "HowToStep", "name": "Upload & paste your key", "text": "Pick an MP4 (H.264 + AAC), choose your platform and paste your RTMP URL and stream key." },
+          { "@type": "HowToStep", "name": "Go live", "text": "Your trial streams instantly, looping non-stop if you turn on Loop the video. Subscribe anytime to keep streaming the full 24 hours." }
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "Can I stream a pre-recorded video using just a URL and stream key?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Upload your video file in Streamza Web Studio, paste the RTMP URL and stream key from YouTube, Twitch, Facebook, Kick or any custom RTMP server, and it goes live immediately." } },
+          { "@type": "Question", "name": "Do I need OBS or any software installed?", "acceptedAnswer": { "@type": "Answer", "text": "No. Streamza Web Studio runs entirely in your browser and streams from the cloud — no OBS, no software install, and no PC needs to stay on." } },
+          { "@type": "Question", "name": "Can the video loop 24/7 automatically?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Turn on Loop the video and Streamza replays it seamlessly, non-stop, for as long as your slot or subscription is active." } },
+          { "@type": "Question", "name": "Where do I get my RTMP URL and stream key?", "acceptedAnswer": { "@type": "Answer", "text": "Every platform provides one in its live-streaming dashboard — for example YouTube Studio > Go Live > Stream, or Twitch Creator Dashboard > Settings > Stream." } }
+        ]
+      }
+    ]
+  }
+  </script>
   <link rel="preconnect" href="https://app.lemonsqueezy.com" crossorigin />
   <link rel="preconnect" href="https://accounts.google.com" crossorigin />
   <script src="https://app.lemonsqueezy.com/js/lemon.js" defer></script>
@@ -412,6 +472,84 @@
 
   /* labels: slightly more structured, section-like */
   label{font-weight:600;color:#d4d4dc;}
+
+  /* ============================================================
+     PROFESSIONAL STUDIO CONSOLE — redesign of #studioApp only.
+     Scoped to #studioApp so the marketing/landing view is
+     untouched. Every id/class the JS relies on is preserved.
+     ============================================================ */
+  #studioApp{background:radial-gradient(1100px 520px at 72% -10%,rgba(255,59,48,.10),transparent 60%),linear-gradient(180deg,#0b0b0f,#08080b 42%);}
+
+  /* command bar */
+  #studioApp .sapp-bar{padding:12px 22px;gap:16px;background:rgba(10,10,13,.86);backdrop-filter:blur(16px) saturate(1.2);border-bottom:1px solid rgba(255,255,255,.09);box-shadow:0 1px 0 rgba(255,255,255,.03) inset,0 10px 26px rgba(0,0,0,.35);}
+  #studioApp .sapp-bar .l{gap:14px;}
+  #studioApp .sapp-brand{gap:9px;font-size:16px;letter-spacing:-.02em;padding:4px 7px;border-radius:9px;transition:background .15s ease;}
+  #studioApp .sapp-brand:hover{background:rgba(255,255,255,.06);}
+  #studioApp .sapp-brand img{width:26px;height:26px;border-radius:7px;}
+  #studioApp .sapp-modepill{font-size:12px;font-weight:700;color:#fff;background:linear-gradient(180deg,#ff4f45,#e5332a);border-radius:8px;padding:5px 12px;box-shadow:0 4px 14px rgba(255,59,48,.32);}
+  #studioApp .sapp-status{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8a8a94;background:#111116;border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:7px 12px;}
+  #studioApp .sapp-status.on{color:#ff5147;border-color:rgba(255,59,48,.42);background:rgba(255,59,48,.09);}
+  #studioApp .sapp-stop{border-radius:10px;padding:9px 18px;font-weight:800;box-shadow:0 6px 18px rgba(255,59,48,.32);}
+  #studioApp .sapp-close{border-radius:10px;padding:9px 15px;}
+
+  /* body grid */
+  #studioApp .sapp-body{grid-template-columns:minmax(0,1.6fr) minmax(348px,.95fr);gap:22px;max-width:1340px;padding:24px 22px 64px;}
+  @media(max-width:960px){#studioApp .sapp-body{grid-template-columns:1fr;}}
+
+  /* stage */
+  #studioApp .stage{gap:14px;}
+  #studioApp .head2{font-size:11px;letter-spacing:.14em;color:#7c7c86;font-weight:800;text-transform:uppercase;}
+  #studioApp .videoframe{border-radius:16px;border:1px solid rgba(255,255,255,.10);background:#000;box-shadow:0 28px 64px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.02);}
+  #studioApp .livebadge{top:12px;left:12px;border-radius:8px;padding:5px 11px;font-size:11px;letter-spacing:.05em;box-shadow:0 4px 14px rgba(0,0,0,.4);}
+  #studioApp .liveinfo{border-radius:12px;padding:12px 15px;}
+  #studioApp .countdown{background:linear-gradient(180deg,#151519,#0f0f13);border:1px solid rgba(255,255,255,.10);border-radius:14px;padding:16px;}
+  #studioApp .countdown .t{font-size:34px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;}
+  #studioApp .countdown .l{font-size:12px;margin-top:3px;}
+  #studioApp .statgrid{gap:12px;}
+  #studioApp .stat{background:linear-gradient(180deg,#151519,#0f0f13);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 14px;text-align:left;}
+  #studioApp .stat .k{font-size:10px;letter-spacing:.08em;color:#7c7c86;}
+  #studioApp .stat .v{font-size:18px;margin-top:4px;font-variant-numeric:tabular-nums;}
+  #studioApp .logwrap{border-radius:12px;}
+
+  /* dock — stacked panels rather than one big box */
+  #studioApp .dock{background:transparent;border:0;padding:0;box-shadow:none;display:flex;flex-direction:column;gap:14px;align-self:start;}
+  #studioApp .sec{background:#131318;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px;box-shadow:0 1px 0 rgba(255,255,255,.02) inset;}
+  #studioApp .sec-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  #studioApp .sec-num{width:24px;height:24px;flex:none;border-radius:8px;font-size:13px;font-weight:800;color:#fff;background:linear-gradient(180deg,#ff4f45,#e5332a);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(255,59,48,.3);}
+  #studioApp .sec-title{margin:0;font-size:15px;font-weight:800;letter-spacing:-.01em;color:#fff;text-transform:none;}
+  #studioApp .lbl-sub{color:#7c7c86;font-weight:400;}
+
+  /* inputs / labels */
+  #studioApp label{font-weight:600;color:#c9c9d2;font-size:12.5px;margin:13px 0 6px;}
+  #studioApp .sec > label:first-of-type{margin-top:0;}
+  #studioApp input[type=text],#studioApp input[type=email],#studioApp input[type=password]{background:#1c1c22;border:1px solid rgba(255,255,255,.14);border-radius:11px;padding:12px 13px;font-size:15px;}
+  #studioApp input[type=text]:focus,#studioApp input[type=email]:focus,#studioApp input[type=password]:focus{border-color:rgba(255,59,48,.7);background:#22222a;}
+
+  /* platform chips + mode tabs */
+  #studioApp .platrow{gap:8px;}
+  #studioApp .chip{border-radius:10px;padding:9px 14px;background:#1c1c22;border:1px solid rgba(255,255,255,.12);}
+  #studioApp .chip:hover{border-color:rgba(255,255,255,.28);}
+  #studioApp .chip.active{background:rgba(255,59,48,.16);border-color:var(--red);color:#fff;}
+  #studioApp .modetabs{background:#0e0e12;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:5px;margin:0;}
+  #studioApp #singleDest,#studioApp #multiDest{margin-top:14px;}
+
+  /* dropzone + loop toggle */
+  #studioApp .dropzone{background:#1a1a20;border-color:rgba(255,255,255,.18);border-radius:12px;}
+  #studioApp .dropzone:hover{border-color:rgba(255,59,48,.55);background:#20202a;}
+  #studioApp .toggle-row{background:#1a1a20;border-radius:12px;margin-top:16px;}
+
+  /* go-live + manage */
+  #studioApp #startBtn{padding:16px;font-size:16px;font-weight:800;box-shadow:0 12px 28px rgba(255,59,48,.32);}
+  #studioApp #startBtn:hover{box-shadow:0 14px 34px rgba(255,59,48,.42);}
+  #studioApp .managebox{background:#0e0e12;border-radius:12px;}
+
+  /* responsive polish — keep Go Live reachable on phones */
+  @media(max-width:600px){
+    #studioApp .sapp-body{padding:14px 12px 92px;gap:14px;}
+    #studioApp .sec{padding:15px;}
+    #studioApp .countdown .t{font-size:28px;}
+    #studioApp #goSec{position:sticky;bottom:10px;z-index:6;box-shadow:0 -8px 26px rgba(8,8,11,.85),0 16px 34px rgba(0,0,0,.5);}
+  }
   </style>
 </head>
 <body>
@@ -431,9 +569,9 @@
   <section class="hero">
     <div class="wrap hero-grid">
       <div class="hero-copy">
-        <span class="eyebrow"><span class="live-dot"></span> <span id="heroAvail">10 live slots</span> · free 5-min trial</span>
+        <span class="eyebrow"><span class="live-dot"></span> <span id="heroAvail">10 live slots</span> · free 15-min trial</span>
         <h1>Claim a slot, stream any video <span class="red">24 hours non-stop.</span></h1>
-        <p class="lead">Grab one of 10 live slots, upload a video, paste your stream key — and Streamza broadcasts it to YouTube, Twitch, Facebook or any RTMP server. Start with a <b style="color:#fff;">free 5-minute trial</b>, then subscribe to stream 24 hours non-stop.</p>
+        <p class="lead">Grab one of 10 live slots, upload a video, paste your stream key — and Streamza broadcasts it to YouTube, Twitch, Facebook or any RTMP server. Start with a <b style="color:#fff;">free 15-minute trial</b>, then subscribe to stream 24 hours non-stop.</p>
         <div class="hero-cta">
           <a class="btn btn-primary" href="#modes">Start streaming →</a>
           <a class="btn btn-ghost" href="#slots">See live slots</a>
@@ -475,7 +613,7 @@
   <!-- CHOOSE MODE -->
   <section id="modes" style="padding-top:10px;">
     <div class="wrap">
-      <div class="head"><p class="kicker">Start streaming</p><h2>Pick how you want to broadcast</h2><p>Open the studio, upload a video and go live — starting with a free 5-minute trial.</p></div>
+      <div class="head"><p class="kicker">Start streaming</p><h2>Pick how you want to broadcast</h2><p>Open the studio, upload a video and go live — starting with a free 15-minute trial.</p></div>
       <div class="modes">
         <button type="button" class="modecard single" id="cardSingle">
           <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M8 5v14l11-7z"/></svg></span>
@@ -500,9 +638,9 @@
     <div class="wrap">
       <div class="head"><p class="kicker">How it works</p><h2>Live in 3 steps</h2></div>
       <div class="grid3">
-        <div class="step"><div class="n">1</div><h3>Tap a free slot</h3><p>No payment needed — every slot starts a free 5-minute trial.</p></div>
+        <div class="step"><div class="n">1</div><h3>Tap a free slot</h3><p>No payment needed — every slot starts a free 15-minute trial.</p></div>
         <div class="step"><div class="n">2</div><h3>Upload &amp; paste your key</h3><p>Pick an MP4 (H.264+AAC), choose your platform and paste your stream key.</p></div>
-        <div class="step"><div class="n">3</div><h3>Go live free for 5 min</h3><p>Your trial streams instantly. Subscribe anytime to keep streaming the full 24 hours.</p></div>
+        <div class="step"><div class="n">3</div><h3>Go live free for 15 min</h3><p>Your trial streams instantly. Subscribe anytime to keep streaming the full 24 hours.</p></div>
       </div>
     </div>
   </section>
@@ -524,7 +662,7 @@
 
       <!-- STAGE -->
       <div class="stage">
-        <div class="head2">Preview</div>
+        <div class="head2">Program preview</div>
         <div class="videoframe">
           <span class="livebadge" id="liveBadge"><i></i>LIVE</span>
           <video id="preview" controls muted playsinline></video>
@@ -535,9 +673,10 @@
         </div>
         <div class="liveinfo" id="liveInfo" style="display:none;"></div>
         <div class="countdown" id="cd" style="display:none;">
-          <div class="t" id="cdTime">5:00</div><div class="l"><span id="cdLabel">remaining on your free trial</span> (Slot <span id="cdSlot">–</span>)</div>
+          <div class="t" id="cdTime">15:00</div><div class="l"><span id="cdLabel">remaining on your free trial</span> (Slot <span id="cdSlot">–</span>)</div>
           <button class="btn btn-primary btn-block" id="upgradeBtn" style="margin-top:12px;">Subscribe — stream 24 hours</button>
         </div>
+        <div class="head2" style="margin-top:2px;">Broadcast health</div>
         <div class="statgrid">
           <div class="stat"><div class="k">Status</div><div class="v" id="sStatus">Idle</div></div>
           <div class="stat"><div class="k">Bitrate</div><div class="v" id="sBitrate">—</div></div>
@@ -552,7 +691,7 @@
           <div id="gbtnWrap"><div id="gbtn"></div><div class="authhint">Sign in to save your videos and manage your subscription.</div></div>
           <div id="authUser" style="display:none;"></div>
         </div>
-        <div class="beta" id="betaNote"><b style="color:#fff;">Free 5-minute trial</b> — no payment needed to start. <b>Subscribe</b> to stream the full 24 hours.</div>
+        <div class="beta" id="betaNote"><b style="color:#fff;">Free 15-minute trial</b> — no payment needed to start. <b>Subscribe</b> to stream the full 24 hours.</div>
         <div class="selslot" id="selSlot">Claiming the <b>next free slot</b></div>
         <details class="resume">
           <summary>Already streaming on another device? Resume it →</summary>
@@ -561,7 +700,11 @@
             <button class="btn btn-ghost" id="resumeBtn">Resume</button>
           </div>
         </details>
-        <label>Your email (for access &amp; renewal reminder)</label>
+
+        <!-- 1 · SOURCE -->
+        <section class="sec">
+          <div class="sec-head"><span class="sec-num">1</span><h3 class="sec-title">Source</h3></div>
+          <label>Your email (for access &amp; renewal reminder)</label>
         <input type="email" id="email" placeholder="you@example.com" />
         <div id="recentWrap" style="display:none;margin:4px 0 10px;">
           <label>Your recent videos <span style="color:#8a8a8a;font-weight:400;">— tap to re-stream, no re-upload</span></label>
@@ -581,8 +724,19 @@
             <span class="dz-change">Change</span>
           </div>
         </label>
-        <label>Where to stream</label>
-        <div class="modetabs" id="modeTabs">
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-title">Loop the video</div>
+              <div class="toggle-sub">Repeats your video non-stop while you're live</div>
+            </div>
+            <label class="switch"><input type="checkbox" id="loop" checked /><span class="slider"></span></label>
+          </div>
+        </section>
+
+        <!-- 2 · DESTINATION -->
+        <section class="sec">
+          <div class="sec-head"><span class="sec-num">2</span><h3 class="sec-title">Destination</h3></div>
+          <div class="modetabs" id="modeTabs">
           <button type="button" class="modetab active" data-mode="single">Single stream</button>
           <button type="button" class="modetab" data-mode="multi">Multistream <span class="mtag">$9.99/mo</span></button>
         </div>
@@ -607,14 +761,12 @@
           <div id="destList"></div>
           <button type="button" class="btn btn-ghost btn-block" id="addDest2">+ Add a platform</button>
         </div>
-        <div class="toggle-row">
-          <div>
-            <div class="toggle-title">Loop the video</div>
-            <div class="toggle-sub">Repeats your video non-stop while you're live</div>
-          </div>
-          <label class="switch"><input type="checkbox" id="loop" checked /><span class="slider"></span></label>
-        </div>
-        <div class="checkrow"><input type="checkbox" id="agree" /><label style="margin:0;">I own or have the rights to stream this content and accept the fair-use terms.</label></div>
+        </section>
+
+        <!-- 3 · GO LIVE -->
+        <section class="sec" id="goSec">
+          <div class="sec-head"><span class="sec-num">3</span><h3 class="sec-title">Go live</h3></div>
+          <div class="checkrow"><input type="checkbox" id="agree" /><label style="margin:0;">I own or have the rights to stream this content and accept the fair-use terms.</label></div>
         <button class="btn btn-primary btn-block" id="startBtn" style="margin-top:18px;">Go Live</button>
         <button class="btn btn-ghost btn-block" id="stopBtn" style="margin-top:18px;display:none;">Stop my stream</button>
         <div class="managebox" id="manageBox" style="display:none;">
@@ -626,6 +778,8 @@
           <div class="ml-hint">Bookmark this. Open it on any device to return to your live stream.</div>
         </div>
         <p class="hint">Start the live event on your platform first, then go live here. Stream-copy only — the file must be H.264 + AAC.</p>
+        </section>
+
       </div>
 
     </div>
@@ -634,14 +788,14 @@
   <!-- PRICING -->
   <section id="pricing" style="background:#08080a;">
     <div class="wrap">
-      <div class="head"><p class="kicker">Pricing</p><h2>Start free, upgrade when you need more</h2><p>Free 5-minute trial on every slot. Subscribe for full 24-hour streaming — add Multistream to broadcast to several platforms at once.</p></div>
+      <div class="head"><p class="kicker">Pricing</p><h2>Start free, upgrade when you need more</h2><p>Free 15-minute trial on every slot. Subscribe for full 24-hour streaming — add Multistream to broadcast to several platforms at once.</p></div>
       <div class="price-grid price-grid-3">
         <div class="plan">
           <span class="tag" style="background:#2c2c33;">FREE</span>
           <h3>Free Trial</h3>
           <div class="pr">$0</div>
           <ul>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>5-minute trial on any slot</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>15-minute trial on any slot</li>
             <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>No card needed to start</li>
             <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>One platform (YouTube, Twitch…)</li>
           </ul>
@@ -678,11 +832,15 @@
   <section id="faq">
     <div class="wrap">
       <div class="head"><p class="kicker">FAQ</p><h2>Questions, answered</h2></div>
-      <details class="faq" open><summary>How do the 10 slots work?</summary><p>There are 10 streaming slots. Tap any free slot to start a free 5-minute trial. To keep streaming, subscribe for full 24-hour slots. When all 10 are busy, you wait for one to free up.</p></details>
-      <details class="faq"><summary>What does it cost?</summary><p>Every slot is free for the first 5 minutes — no card needed. To stream the full 24 hours, subscribe monthly and stream as often as you like. Cancel anytime.</p></details>
+      <details class="faq" open><summary>How do the 10 slots work?</summary><p>There are 10 streaming slots. Tap any free slot to start a free 15-minute trial. To keep streaming, subscribe for full 24-hour slots. When all 10 are busy, you wait for one to free up.</p></details>
+      <details class="faq"><summary>What does it cost?</summary><p>Every slot is free for the first 15 minutes — no card needed. To stream the full 24 hours, subscribe monthly and stream as often as you like. Cancel anytime.</p></details>
       <details class="faq"><summary>Which platforms can I stream to?</summary><p>YouTube, Twitch, Facebook, Kick, Restream, and any service with a Custom RTMP / RTMPS key.</p></details>
       <details class="faq"><summary>What video format do I need?</summary><p>An MP4 with H.264 video + AAC audio (the default export from most tools). We stream-copy it — no re-encode — so it goes live instantly.</p></details>
-      <details class="faq"><summary>What happens after the free trial?</summary><p>At 5 minutes the stream stops and the slot frees for others. <b>Subscribe</b> while you're live to switch to a full 24-hour slot and keep streaming non-stop.</p></details>
+      <details class="faq"><summary>What happens after the free trial?</summary><p>At 15 minutes the stream stops and the slot frees for others. <b>Subscribe</b> while you're live to switch to a full 24-hour slot and keep streaming non-stop.</p></details>
+      <details class="faq"><summary>Can I stream a pre-recorded video using just a URL and stream key?</summary><p>Yes. Upload your video file, paste the RTMP URL and stream key from YouTube, Twitch, Facebook, Kick or any custom RTMP server, and it goes live immediately.</p></details>
+      <details class="faq"><summary>Do I need OBS or any software installed?</summary><p>No. Streamza Web Studio runs entirely in your browser and streams from the cloud — no OBS, no software install, and no PC needs to stay on.</p></details>
+      <details class="faq"><summary>Can the video loop 24/7 automatically?</summary><p>Yes. Turn on <b>Loop the video</b> and Streamza replays it seamlessly, non-stop, for as long as your slot or subscription is active.</p></details>
+      <details class="faq"><summary>Where do I get my RTMP URL and stream key?</summary><p>Every platform provides one in its live-streaming dashboard — for example YouTube Studio → Go Live → Stream, or Twitch Creator Dashboard → Settings → Stream.</p></details>
     </div>
   </section>
 
@@ -721,12 +879,12 @@
     </div>
   </div>
 
-  <!-- Trial-ended → subscribe prompt (shown when the free 5-min trial runs out) -->
+  <!-- Trial-ended → subscribe prompt (shown when the free 15-min trial runs out) -->
   <div class="modal" id="trialModal">
     <div class="box">
       <img src="logo.svg" alt="Streamza" />
       <h3>⏱️ Your free trial ended</h3>
-      <p>Your 5-minute trial is up and the stream stopped. <b style="color:#fff;">Subscribe to keep streaming the full 24 hours</b>, non-stop — cancel anytime.</p>
+      <p>Your 15-minute trial is up and the stream stopped. <b style="color:#fff;">Subscribe to keep streaming the full 24 hours</b>, non-stop — cancel anytime.</p>
       <button class="btn btn-primary btn-block" id="trialSubSingle">Subscribe — 24-hour streaming · <span id="trialPrice">$4.99/mo</span></button>
       <button class="btn btn-ghost btn-block" id="trialSubMulti" style="margin-top:10px;">Multistream — up to 3 platforms · <span id="trialPriceMulti">$9.99/mo</span></button>
       <p class="secure"><a id="trialLater" style="cursor:pointer;">Maybe later</a> · 🔒 Secure checkout by Lemon Squeezy</p>
@@ -864,7 +1022,7 @@
     { const ps=$("planSubscribe");      if(ps) ps.addEventListener("click",(e)=>{ e.preventDefault(); PAY.enabled ? subscribeModal("single") : toast("Subscriptions aren't switched on yet."); }); }
     { const pm=$("planSubscribeMulti"); if(pm) pm.addEventListener("click",(e)=>{ e.preventDefault(); PAY.enabled ? subscribeModal("multi") : toast("The Multistream plan isn't switched on yet."); }); }
 
-    // Prominent "your trial ended" prompt → subscribe (shown once the free 5-min stream stops).
+    // Prominent "your trial ended" prompt → subscribe (shown once the free 15-min stream stops).
     function showTrialEnded(){
       if(window.IS_SUBSCRIBED) return;
       if(!PAY.enabled){ toast("Your free trial ended. Subscriptions open soon."); return; }

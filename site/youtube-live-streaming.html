@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stream Pre-Recorded Video to YouTube Live | Streamza</title>
+  <meta name="description" content="Broadcast a recorded video to YouTube Live from the cloud. Upload an MP4, paste your stream key, and go live — including 24/7 looping channels. No OBS needed." />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="icon" type="image/svg+xml" href="logo.svg" />
+  <link rel="canonical" href="https://streamza.live/youtube-live-streaming.html" />
+
+  <meta property="og:site_name" content="Streamza" />
+  <meta property="og:title" content="Stream Pre-Recorded Video to YouTube Live" />
+  <meta property="og:description" content="Broadcast a recorded video to YouTube Live from the cloud. Upload an MP4, paste your stream key, and go live — including 24/7 looping channels. No OBS needed." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://streamza.live/youtube-live-streaming.html" />
+  <meta property="og:image" content="https://streamza.live/og-banner.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Stream Pre-Recorded Video to YouTube Live" />
+  <meta name="twitter:description" content="Broadcast a recorded video to YouTube Live from the cloud. Upload an MP4, paste your stream key, and go live — including 24/7 looping channels. No OBS needed." />
+  <meta name="twitter:image" content="https://streamza.live/og-banner.png" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="/">
+        <img class="logo-img" src="logo.svg" alt="Streamza logo" width="34" height="34" />
+        <span>Stream<b>za</b></span>
+      </a>
+      <nav class="nav-links">
+        <a href="/stream-pre-recorded-video-live.html">Pre-recorded live</a>
+        <a href="/24-7-live-stream.html">24/7 streaming</a>
+        <a href="/multistream.html">Multistream</a>
+        <a href="/stream-key-guide.html">Stream keys</a>
+        <a href="/support.html">Support</a>
+      </nav>
+      <div class="header-cta">
+        <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <a class="btn btn-primary btn-sm" href="/studio">Start streaming free</a>
+      </div>
+    </div>
+  </header>
+
+  <nav class="crumbs container" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Home</a></li>
+      <li><a href="/stream-pre-recorded-video-live.html">Pre-recorded live</a></li>
+      <li><span aria-current="page">YouTube Live</span></li>
+    </ol>
+  </nav>
+
+  <section class="lp-hero lp-wide">
+    <div class="container">
+      <span class="eyebrow"><span class="live"></span> YouTube Live</span>
+      <h1>Stream a pre-recorded video to YouTube Live.</h1>
+      <p class="lp-lead">Upload your MP4, paste the stream key from YouTube Studio, and Streamza broadcasts it to your channel as a genuine live stream — live badge, live chat, subscriber notifications and all. Loop it and you have a 24/7 channel. Your computer never has to be on.</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary btn-lg" href="/studio">Go live on YouTube →</a>
+        <a class="btn btn-ghost" href="#steps">Step-by-step</a>
+      </div>
+      <dl class="lp-facts">
+        <div><dt>Ingest URL</dt><dd>Pre-filled for you</dd></div>
+        <div><dt>Subscriber minimum</dt><dd>None, via encoder</dd></div>
+        <div><dt>24/7 looping</dt><dd>Supported</dd></div>
+        <div><dt>Software needed</dt><dd>None</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="lp-body">
+    <div class="container">
+      <div class="lp-prose">
+
+        <h2>Before you start: YouTube's requirements</h2>
+        <p>YouTube gates live streaming behind a few checks. Get these done first or the Stream tab will not give you a key:</p>
+        <ul>
+          <li><strong>Verify your channel with a phone number.</strong> Unverified channels cannot stream at all.</li>
+          <li><strong>Enable live streaming and wait.</strong> First activation can take up to 24 hours, so do not leave this until an hour before your broadcast.</li>
+          <li><strong>No live-streaming restrictions in the past 90 days.</strong> A previous strike locks you out for the rest of that window.</li>
+          <li><strong>No subscriber minimum for encoder streaming.</strong> This is the one people get wrong. The 50-subscriber rule applies to going live from the YouTube <em>mobile app</em>. Streaming through an encoder — which is what Streamza does — has no subscriber requirement, so a brand-new channel can go live today.</li>
+        </ul>
+
+        <h2>YouTube's RTMP ingest details</h2>
+        <table>
+          <thead><tr><th>Setting</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td>Primary server URL</td><td><code>rtmp://a.rtmp.youtube.com/live2</code></td></tr>
+            <tr><td>Backup server URL</td><td><code>rtmp://b.rtmp.youtube.com/live2?backup=1</code></td></tr>
+            <tr><td>Stream key</td><td>From YouTube Studio → Go Live → Stream</td></tr>
+            <tr><td>Video codec</td><td>H.264</td></tr>
+            <tr><td>Audio codec</td><td>AAC, 128 kbps and up</td></tr>
+            <tr><td>Keyframe interval</td><td>2 seconds</td></tr>
+            <tr><td>Rate control</td><td>CBR (constant bitrate)</td></tr>
+          </tbody>
+        </table>
+        <p>In Streamza the primary server URL is already filled in when you pick YouTube, so the stream key is the only thing you need to paste.</p>
+
+        <h2 id="steps">How to stream a recorded video to YouTube</h2>
+        <ol class="lp-steps">
+          <li>
+            <h3>Create the stream in YouTube Studio</h3>
+            <p>Go to <strong>YouTube Studio → Create → Go Live → Stream</strong>. Set the title, description, thumbnail, category and visibility. This is a normal live event; you are just going to feed it a file instead of a camera.</p>
+          </li>
+          <li>
+            <h3>Copy the stream key</h3>
+            <p>On the Stream tab, click <strong>Copy</strong> next to the stream key. Choose a <em>persistent</em> key if you plan to restart the broadcast later — a persistent key reuses the same URL and settings every time.</p>
+          </li>
+          <li>
+            <h3>Upload your video to Web Studio</h3>
+            <p>Open <a href="/studio">streamza.live/studio</a>, claim a free slot, and upload your MP4. Select YouTube so the ingest URL fills itself in, then paste the key.</p>
+          </li>
+          <li>
+            <h3>Start sending, then click Go Live</h3>
+            <p>Press start in Streamza. Within a few seconds YouTube's preview shows your video and stream health turns green. Now click <strong>Go Live</strong> in YouTube Studio to make it public. Close the tab — Streamza keeps sending.</p>
+          </li>
+        </ol>
+
+        <div class="note">
+          <p class="mt-0"><strong>Order matters.</strong> YouTube will not let you click "Go Live" until it is actually receiving video. If the button is greyed out, the stream has not reached YouTube yet — wait a few seconds, and check that the key was pasted with no trailing space.</p>
+        </div>
+
+        <h2>YouTube's recommended bitrates</h2>
+        <p>Because Streamza relays your file without re-encoding it, these are the numbers to target when you <em>export</em> from your editor, not settings you configure at broadcast time.</p>
+        <table>
+          <thead><tr><th>Resolution</th><th>Video bitrate range</th></tr></thead>
+          <tbody>
+            <tr><td>2160p (4K) 60fps</td><td>20,000 – 51,000 kbps</td></tr>
+            <tr><td>1440p (2K) 60fps</td><td>9,000 – 18,000 kbps</td></tr>
+            <tr><td>1080p 60fps</td><td>4,500 – 9,000 kbps</td></tr>
+            <tr><td>1080p 30fps</td><td>3,000 – 6,000 kbps</td></tr>
+            <tr><td>720p 60fps</td><td>2,250 – 6,000 kbps</td></tr>
+            <tr><td>720p 30fps</td><td>1,500 – 4,000 kbps</td></tr>
+          </tbody>
+        </table>
+        <p>Remember the 1.5&nbsp;GB upload cap when choosing: a 60-minute video at 6,000 kbps is roughly 2.6&nbsp;GB, so for anything long, export nearer the bottom of the recommended range or shorten the loop.</p>
+
+        <h2>Running a 24/7 YouTube channel</h2>
+        <p>YouTube is the natural home for always-on looping channels — music, study radio, ambience, information boards. Three things make the difference between one that survives and one that dies quietly:</p>
+        <ul>
+          <li><strong>Use a persistent stream key.</strong> It keeps the same video URL and watch page across restarts, so links, embeds and search results do not break every time the stream reconnects.</li>
+          <li><strong>Own everything in the loop.</strong> Content ID scans live streams. Background music you did not license will get the broadcast muted, blocked or claimed within minutes, and repeated hits put the channel's live privileges at risk.</li>
+          <li><strong>Give it real substance.</strong> YouTube acts against channels it judges to be repetitive with nothing added. An original mix with your own visuals is fine; a slideshow of other people's images is not.</li>
+        </ul>
+        <p>Full details in the <a href="/24-7-live-stream.html">24/7 live streaming guide</a>.</p>
+
+        <h2>Live stream, premiere, or plain upload?</h2>
+        <table>
+          <thead><tr><th></th><th>Upload</th><th>Premiere</th><th>Pre-recorded live via Streamza</th></tr></thead>
+          <tbody>
+            <tr><td>LIVE badge</td><td>No</td><td>Partial</td><td>Yes</td></tr>
+            <tr><td>Live chat</td><td>No</td><td>During premiere only</td><td>Yes, throughout</td></tr>
+            <tr><td>Appears in live surfaces</td><td>No</td><td>Limited</td><td>Yes</td></tr>
+            <tr><td>Can loop indefinitely</td><td>No</td><td>No</td><td>Yes</td></tr>
+            <tr><td>Same video to Twitch/Facebook too</td><td>No</td><td>No</td><td>Yes — <a href="/multistream.html">multistream</a></td></tr>
+            <tr><td>Video file stays on YouTube afterwards</td><td>Yes</td><td>Yes</td><td>Yes, as a live archive</td></tr>
+          </tbody>
+        </table>
+        <p>Premiere is the better choice if YouTube is your only destination and you want the video to play once and become a normal video afterwards. Pre-recorded live is what you want for looping, for other platforms, or for the full live-stream treatment.</p>
+
+        <h2>Troubleshooting</h2>
+        <h3>"Go Live" is greyed out</h3>
+        <p>YouTube is not receiving video yet. Confirm the stream is running in Web Studio, re-copy the key, and check you did not paste the ingest URL into the key field by mistake.</p>
+        <h3>Stream health says "not receiving enough data"</h3>
+        <p>Usually a bitrate mismatch — your export is far above what YouTube expects for its resolution. Re-export within the recommended range above.</p>
+        <h3>The stream is live but silent</h3>
+        <p>The audio track is probably not AAC, or the file has no audio stream at all. Re-export as H.264 video with AAC audio.</p>
+        <h3>It went live, then YouTube muted or blocked it</h3>
+        <p>Content ID matched music or footage in the file. You need rights to everything you broadcast — see our <a href="/copyright.html">DMCA policy</a>.</p>
+        <h3>The key stopped working</h3>
+        <p>Single-use keys expire once the event ends. Generate a new one, or switch to a persistent key so it stays valid.</p>
+
+        <h2>Frequently asked questions</h2>
+        <div class="faq" style="max-width:none;margin-top:22px">
+          <details open>
+            <summary>Can I stream a pre-recorded video on YouTube Live?</summary>
+            <p>Yes. YouTube accepts any RTMP feed at its live ingest, and it makes no distinction between frames from a camera and frames from a file. Broadcasting your own recorded video is a normal, supported use of YouTube Live.</p>
+          </details>
+          <details>
+            <summary>Do I need 50 subscribers to go live?</summary>
+            <p>Not for this. The 50-subscriber threshold applies to streaming from the YouTube mobile app. Streaming through an encoder or a service like Streamza has no subscriber minimum — you only need a phone-verified channel with live streaming enabled.</p>
+          </details>
+          <details>
+            <summary>Will the stream be saved on my channel afterwards?</summary>
+            <p>Yes. YouTube archives completed live streams to your channel as a video, so the broadcast keeps earning views after it ends.</p>
+          </details>
+          <details>
+            <summary>Can I run a 24/7 YouTube live stream this way?</summary>
+            <p>Yes — enable looping and the video repeats continuously inside one unbroken connection. Use a persistent stream key so the watch page URL survives restarts.</p>
+          </details>
+          <details>
+            <summary>Does my PC need to stay on?</summary>
+            <p>No. Once the stream has started it runs entirely on Streamza's servers. Close the browser, shut the laptop, turn off your phone — the broadcast continues.</p>
+          </details>
+          <details>
+            <summary>Where exactly is the YouTube stream key?</summary>
+            <p>YouTube Studio → Create → Go Live → the <em>Stream</em> tab → the "Stream key" box. Full instructions for every platform are in the <a href="/stream-key-guide.html">stream key guide</a>.</p>
+          </details>
+          <details>
+            <summary>Can I stream to YouTube and other platforms at the same time?</summary>
+            <p>Yes, up to three destinations at once on the Multistream plan — YouTube plus Twitch plus Facebook, for example, from a single upload. See <a href="/multistream.html">multistreaming</a>.</p>
+          </details>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-band">
+    <div class="container">
+      <div class="cta-inner">
+        <div>
+          <h2>Put your video on YouTube Live.</h2>
+          <p>Upload, paste your key, go live. Free to try, no account needed.</p>
+        </div>
+        <a class="btn btn-lg btn-white" href="/studio">Open Web Studio →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-related">
+    <div class="container">
+      <div class="section-head"><p class="kicker">Keep reading</p><h2>Related guides</h2></div>
+      <div class="lp-related-grid">
+        <a href="/stream-pre-recorded-video-live.html">Pre-recorded live streaming<span>The full guide to broadcasting a recorded file as live.</span></a>
+        <a href="/24-7-live-stream.html">24/7 live streaming<span>Loop one video around the clock with nothing switched on.</span></a>
+        <a href="/live-stream-without-obs.html">Live stream without OBS<span>What OBS does, and what replaces it when you have no PC.</span></a>
+        <a href="/facebook-live-streaming.html">Facebook Live<span>Live Producer, RTMPS, and Facebook's 8-hour limit.</span></a>
+        <a href="/twitch-streaming.html">Twitch<span>Reruns, bitrate ceilings and Twitch's rules on recorded content.</span></a>
+        <a href="/multistream.html">Multistreaming<span>YouTube plus two more platforms from one upload.</span></a>
+        <a href="/custom-rtmp.html">Custom RTMP<span>Kick, Trovo, LinkedIn, X, Rumble and self-hosted servers.</span></a>
+        <a href="/stream-key-guide.html">Stream key guide<span>Exactly where the RTMP URL and key live on each platform.</span></a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="col wide">
+          <a class="brand" href="/" style="margin-bottom:14px"><img class="logo-img" src="logo.svg" alt="" width="34" height="34" /><span>Stream<b>za</b></span></a>
+          <p style="color:var(--muted);font-size:15px;margin:0">Stream pre-recorded video live to any platform — from the cloud, with no device left running.</p>
+        </div>
+        <div class="col">
+          <h4>Guides</h4>
+          <a href="/stream-pre-recorded-video-live.html">Pre-recorded live streaming</a>
+          <a href="/24-7-live-stream.html">24/7 live streaming</a>
+          <a href="/live-stream-without-obs.html">Streaming without OBS</a>
+          <a href="/multistream.html">Multistreaming</a>
+          <a href="/stream-key-guide.html">Stream key guide</a>
+        </div>
+        <div class="col">
+          <h4>Platforms</h4>
+          <a href="/youtube-live-streaming.html">YouTube Live</a>
+          <a href="/facebook-live-streaming.html">Facebook Live</a>
+          <a href="/twitch-streaming.html">Twitch</a>
+          <a href="/custom-rtmp.html">Custom RTMP</a>
+        </div>
+        <div class="col">
+          <h4>Legal</h4>
+          <a href="/privacy.html">Privacy Policy</a>
+          <a href="/terms.html">Terms of Service</a>
+          <a href="/acceptable-use.html">Acceptable Use</a>
+          <a href="/copyright.html">DMCA Policy</a>
+          <a href="/refund.html">Refund Policy</a>
+        </div>
+        <div class="col">
+          <h4>Support</h4>
+          <a href="/support.html">Help &amp; FAQ</a>
+          <a href="/studio">Web Studio</a>
+          <a href="mailto:probrostraders@gmail.com">probrostraders@gmail.com</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 Streamza · Probros</span>
+        <span>Not affiliated with or endorsed by YouTube, Twitch, Facebook, Kick or any third-party platform.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var h = document.querySelector('.site-header'), t = document.getElementById('navToggle');
+      if (!h || !t) return;
+      t.addEventListener('click', function () {
+        var open = h.classList.toggle('nav-open');
+        t.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      h.querySelectorAll('.nav-links a').forEach(function (a) {
+        a.addEventListener('click', function () { h.classList.remove('nav-open'); t.setAttribute('aria-expanded', 'false'); });
+      });
+    })();
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://streamza.live/" },
+          { "@type": "ListItem", "position": 2, "name": "Pre-recorded live", "item": "https://streamza.live/stream-pre-recorded-video-live.html" },
+          { "@type": "ListItem", "position": 3, "name": "YouTube Live", "item": "https://streamza.live/youtube-live-streaming.html" }
+        ]
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://streamza.live/youtube-live-streaming.html",
+        "url": "https://streamza.live/youtube-live-streaming.html",
+        "name": "Stream a Pre-Recorded Video to YouTube Live (No OBS)",
+        "description": "How to broadcast a recorded video file to YouTube Live from the cloud, including ingest settings, recommended bitrates and 24/7 looping channels.",
+        "inLanguage": "en",
+        "isPartOf": { "@type": "WebSite", "@id": "https://streamza.live/#website" },
+        "about": { "@id": "https://streamza.live/#webapp" },
+        "publisher": { "@id": "https://streamza.live/#org" }
+      },
+      {
+        "@type": "HowTo",
+        "name": "How to stream a pre-recorded video to YouTube Live",
+        "description": "Broadcast a recorded video file to YouTube Live without OBS or a local encoder.",
+        "step": [
+          { "@type": "HowToStep", "name": "Create the stream in YouTube Studio", "text": "Go to YouTube Studio, then Create, Go Live, Stream. Set the title, description, thumbnail and visibility." },
+          { "@type": "HowToStep", "name": "Copy the stream key", "text": "On the Stream tab, copy the stream key. Choose a persistent key if you plan to restart the broadcast later." },
+          { "@type": "HowToStep", "name": "Upload your video to Web Studio", "text": "Open Streamza Web Studio, claim a free slot, upload your MP4, select YouTube so the ingest URL fills in, and paste the key.", "url": "https://streamza.live/studio" },
+          { "@type": "HowToStep", "name": "Start sending, then click Go Live", "text": "Start the stream in Streamza, wait for YouTube's preview and green stream health, then click Go Live in YouTube Studio." }
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "Can I stream a pre-recorded video on YouTube Live?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. YouTube accepts any RTMP feed at its live ingest and makes no distinction between frames from a camera and frames from a file. Broadcasting your own recorded video is a supported use of YouTube Live." } },
+          { "@type": "Question", "name": "Do I need 50 subscribers to go live on YouTube?", "acceptedAnswer": { "@type": "Answer", "text": "Not for encoder streaming. The 50-subscriber threshold applies to going live from the YouTube mobile app. Streaming through an encoder or a service like Streamza has no subscriber minimum — you need a phone-verified channel with live streaming enabled." } },
+          { "@type": "Question", "name": "Will the stream be saved on my channel afterwards?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. YouTube archives completed live streams to your channel as a video." } },
+          { "@type": "Question", "name": "Can I run a 24/7 YouTube live stream this way?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Enable looping and the video repeats continuously inside one unbroken connection. Use a persistent stream key so the watch page URL survives restarts." } },
+          { "@type": "Question", "name": "Does my PC need to stay on?", "acceptedAnswer": { "@type": "Answer", "text": "No. Once the stream has started it runs entirely on Streamza's servers, so you can close the browser and shut your device down." } },
+          { "@type": "Question", "name": "Where exactly is the YouTube stream key?", "acceptedAnswer": { "@type": "Answer", "text": "YouTube Studio, then Create, Go Live, and the Stream tab. The key is in the Stream key box." } },
+          { "@type": "Question", "name": "Can I stream to YouTube and other platforms at the same time?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, up to three destinations at once on the Multistream plan — for example YouTube, Twitch and Facebook from a single upload." } }
+        ]
+      }
+    ]
+  }
+  </script>
+
+</body>
+</html>

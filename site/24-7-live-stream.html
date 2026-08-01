@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>24/7 Live Stream: Loop a Video Non-Stop, No PC | Streamza</title>
+  <meta name="description" content="Run an always-on 24/7 live stream by looping a video from the cloud. No OBS, no computer left on. Works on YouTube, Twitch, Facebook, Kick and any RTMP server." />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="icon" type="image/svg+xml" href="logo.svg" />
+  <link rel="canonical" href="https://streamza.live/24-7-live-stream.html" />
+
+  <meta property="og:site_name" content="Streamza" />
+  <meta property="og:title" content="24/7 Live Stream: Loop a Video Non-Stop, No PC" />
+  <meta property="og:description" content="Run an always-on 24/7 live stream by looping a video from the cloud. No OBS, no computer left on. Works on YouTube, Twitch, Facebook, Kick and any RTMP server." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://streamza.live/24-7-live-stream.html" />
+  <meta property="og:image" content="https://streamza.live/og-banner.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="24/7 Live Stream: Loop a Video Non-Stop, No PC" />
+  <meta name="twitter:description" content="Run an always-on 24/7 live stream by looping a video from the cloud. No OBS, no computer left on. Works on YouTube, Twitch, Facebook, Kick and any RTMP server." />
+  <meta name="twitter:image" content="https://streamza.live/og-banner.png" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="/">
+        <img class="logo-img" src="logo.svg" alt="Streamza logo" width="34" height="34" />
+        <span>Stream<b>za</b></span>
+      </a>
+      <nav class="nav-links">
+        <a href="/stream-pre-recorded-video-live.html">Pre-recorded live</a>
+        <a href="/24-7-live-stream.html">24/7 streaming</a>
+        <a href="/multistream.html">Multistream</a>
+        <a href="/stream-key-guide.html">Stream keys</a>
+        <a href="/support.html">Support</a>
+      </nav>
+      <div class="header-cta">
+        <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <a class="btn btn-primary btn-sm" href="/studio">Start streaming free</a>
+      </div>
+    </div>
+  </header>
+
+  <nav class="crumbs container" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Home</a></li>
+      <li><span aria-current="page">24/7 live streaming</span></li>
+    </ol>
+  </nav>
+
+  <section class="lp-hero">
+    <div class="container">
+      <span class="eyebrow"><span class="live"></span> Always-on channels</span>
+      <h1>Run a 24/7 live stream without leaving a computer on.</h1>
+      <p class="lp-lead">Upload one video, switch on looping, and your channel broadcasts around the clock from our servers. No OBS running for weeks. No PC heating up your room. No 3&nbsp;a.m. crash that takes the stream down while you sleep.</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary btn-lg" href="/studio">Start a 24/7 stream →</a>
+        <a class="btn btn-ghost" href="#setup">How to set it up</a>
+      </div>
+      <dl class="lp-facts">
+        <div><dt>Runs on</dt><dd>Our servers</dd></div>
+        <div><dt>Your PC</dt><dd>Off, the whole time</dd></div>
+        <div><dt>Loop gaps</dt><dd>None — seamless</dd></div>
+        <div><dt>Destinations</dt><dd>Any RTMP platform</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="lp-body">
+    <div class="container">
+      <div class="lp-prose">
+
+        <h2>What a 24/7 live stream actually is</h2>
+        <p>A 24/7 stream is a live broadcast that never stops. Instead of a camera feed, it sends one video file — or a long mix — to the platform on repeat, so the channel is permanently live. This is the format behind every "lofi hip hop radio" channel, ambient fireplace stream, aquarium cam, radio station simulcast, crypto ticker board and looping product showcase you have scrolled past.</p>
+        <p>The appeal is simple: a live channel is discoverable in a way a video upload is not. It sits in the platform's live sections, it can be found at any hour by someone searching for background music or a study stream, and every viewer who arrives sees a live badge and an active chat. The channel works while you do not.</p>
+
+        <h2>The problem with doing it on your own machine</h2>
+        <p>The traditional approach is OBS on a spare computer, looping a media source, left running forever. It works right up until it doesn't:</p>
+        <ul>
+          <li><strong>Anything that touches the machine kills the stream.</strong> A Windows update, a driver crash, a power cut, someone unplugging it to vacuum.</li>
+          <li><strong>It occupies a whole computer.</strong> Permanently. You cannot use it for anything demanding without risking dropped frames.</li>
+          <li><strong>It burns electricity continuously.</strong> A desktop encoding video 24 hours a day, every day, for months.</li>
+          <li><strong>It saturates your upload.</strong> A 6&nbsp;Mbps outbound stream running non-stop makes everyone else in the house miserable.</li>
+          <li><strong>Your ISP is now a single point of failure.</strong> Every brief outage becomes a dead channel and a lost live position.</li>
+        </ul>
+        <p>Moving the loop into the cloud removes all five at once. The file lives on our servers, the encoding happens on our servers, and the RTMP connection to YouTube or Twitch originates from a datacentre rather than from your living room.</p>
+
+        <h2 id="setup">How to set up a 24/7 looping stream</h2>
+        <ol class="lp-steps">
+          <li>
+            <h3>Export a loop-friendly video</h3>
+            <p>Anything from a few minutes to a full-length mix works. Keep it under 1.5&nbsp;GB and export H.264 + AAC in MP4. See the loop tips below for making the seam invisible.</p>
+          </li>
+          <li>
+            <h3>Create the live event on your platform</h3>
+            <p>On YouTube, use a persistent stream key so the same URL survives restarts. Copy the RTMP URL and key — the <a href="/stream-key-guide.html">stream key guide</a> has the exact path for each platform.</p>
+          </li>
+          <li>
+            <h3>Upload to Web Studio and enable loop</h3>
+            <p>Claim a slot at <a href="/studio">streamza.live/studio</a>, upload the file, paste your key, and turn on <em>loop forever</em>. This is the setting that makes it a 24/7 channel rather than a one-shot broadcast.</p>
+          </li>
+          <li>
+            <h3>Go live and walk away</h3>
+            <p>Start the stream, confirm the broadcast on the platform side, then close everything. Renew the slot before it expires and the channel simply keeps running.</p>
+          </li>
+        </ol>
+
+        <h2>Choosing a video that loops cleanly</h2>
+        <p>The difference between an amateur 24/7 channel and one people leave on for hours is the seam — the moment the video restarts. A few things make it invisible:</p>
+        <ul>
+          <li><strong>Match the first and last frame.</strong> If the visual is a static scene or a slow animation, make the end state identical to the start state so the cut is imperceptible.</li>
+          <li><strong>Fade audio at both ends</strong>, or better, cut on a beat so the music restarts in tempo. An abrupt audio jump is far more noticeable than a visual one.</li>
+          <li><strong>Go longer than you think.</strong> A 3-minute loop repeats 480 times a day and viewers notice. Twenty minutes to two hours is a much better range.</li>
+          <li><strong>Avoid on-screen clocks, dates or "welcome" text</strong> that gives away the restart.</li>
+          <li><strong>Keep the frame rate constant.</strong> Variable frame rate exports, which phones produce by default, can drift over long broadcasts. Re-export as constant frame rate.</li>
+        </ul>
+
+        <div class="note">
+          <p class="mt-0"><strong>On looping and platform rules:</strong> looping your own content is allowed, but platforms do act against channels that are purely repetitive with no added value, and Facebook in particular limits how long a single broadcast can run. Check the platform guide for wherever you are streaming before committing to a permanent channel.</p>
+        </div>
+
+        <h2>What it costs to run</h2>
+        <p>Claiming a slot starts a free 15-minute trial so you can confirm everything works. To keep it running the slot becomes a paid 24-hour slot, renewable for as long as the channel should stay live. Compare that to the alternative: a dedicated machine, its power draw, and a permanently occupied share of your home upload connection.</p>
+        <p>There are 10 concurrent live slots on Streamza, so a slot is a real resource with a real limit — which is also why an idle stream does not sit there occupying one indefinitely for free.</p>
+
+        <h2>Good candidates for an always-on channel</h2>
+        <div class="lp-cards">
+          <div class="lp-card">
+            <h3>Music &amp; study radio</h3>
+            <p>Lofi, jazz, chillhop, focus and sleep channels. The classic 24/7 format, and still the one that grows fastest through the live tab.</p>
+          </div>
+          <div class="lp-card">
+            <h3>Ambience &amp; scenery</h3>
+            <p>Fireplaces, rain, aquariums, train windows, city views — long-session background content people leave running on a second screen.</p>
+          </div>
+          <div class="lp-card">
+            <h3>Radio &amp; podcast simulcast</h3>
+            <p>Put an audio station on a video platform with a static or animated visual so it is findable where your audience already is.</p>
+          </div>
+          <div class="lp-card">
+            <h3>Information boards</h3>
+            <p>Prices, scores, schedules, dashboards, countdowns — anything worth having permanently available as a live feed.</p>
+          </div>
+          <div class="lp-card">
+            <h3>Product &amp; showroom loops</h3>
+            <p>An always-live channel showing your catalogue or showroom reel, with links pinned in the live chat.</p>
+          </div>
+          <div class="lp-card">
+            <h3>Event countdowns</h3>
+            <p>Keep a looping teaser live in the days before a launch so the live URL is already ranking and subscribed to.</p>
+          </div>
+        </div>
+
+        <h2>Frequently asked questions</h2>
+        <div class="faq" style="max-width:none;margin-top:22px">
+          <details open>
+            <summary>Does my computer need to stay on for a 24/7 stream?</summary>
+            <p>No. The video is stored and broadcast from Streamza's servers. After you press start you can close the tab and shut the machine down — the stream is no longer connected to your device in any way.</p>
+          </details>
+          <details>
+            <summary>Is there a gap when the video loops?</summary>
+            <p>No. Looping happens inside the same continuous RTMP connection, so the platform never sees the stream stop and start. Viewers see one unbroken broadcast; there is no reconnect and no dropped live position.</p>
+          </details>
+          <details>
+            <summary>How long can one video be?</summary>
+            <p>Up to 1.5&nbsp;GB, which at typical 1080p bitrates is roughly 30–60 minutes of high quality video, or several hours for simpler visuals like a static image with music.</p>
+          </details>
+          <details>
+            <summary>Will a 24/7 stream get me strikes or demonetised?</summary>
+            <p>Not for looping itself, as long as you own the content. Streams get in trouble for using music or footage the channel does not have rights to, or for content platforms judge to be purely repetitive with no value added. Use your own material and you are on solid ground — see our <a href="/acceptable-use.html">Acceptable Use Policy</a>.</p>
+          </details>
+          <details>
+            <summary>Can I change the video without ending the stream?</summary>
+            <p>No — swapping the source means stopping and restarting the broadcast. Plan the loop content before you go live, and build in enough variety that you will not want to change it for a while.</p>
+          </details>
+          <details>
+            <summary>Can I run a 24/7 stream on several platforms at once?</summary>
+            <p>Yes, up to three destinations at the same time on the Multistream plan. One looping upload feeds all of them — see <a href="/multistream.html">multistreaming</a>.</p>
+          </details>
+          <details>
+            <summary>What happens if the platform disconnects the stream?</summary>
+            <p>Platforms occasionally reset ingest connections during maintenance. Check on a long-running channel every so often, and if the platform has dropped the connection, restart the stream from Web Studio.</p>
+          </details>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-band">
+    <div class="container">
+      <div class="cta-inner">
+        <div>
+          <h2>Put your channel on air permanently.</h2>
+          <p>Upload a loop, paste your key, and let it run. Your computer stays off.</p>
+        </div>
+        <a class="btn btn-lg btn-white" href="/studio">Open Web Studio →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-related">
+    <div class="container">
+      <div class="section-head"><p class="kicker">Keep reading</p><h2>Related guides</h2></div>
+      <div class="lp-related-grid">
+        <a href="/stream-pre-recorded-video-live.html">Pre-recorded live streaming<span>The full guide to broadcasting a recorded file as live.</span></a>
+        <a href="/live-stream-without-obs.html">Live stream without OBS<span>What OBS does, and what replaces it when you have no PC.</span></a>
+        <a href="/youtube-live-streaming.html">24/7 on YouTube<span>Persistent keys, bitrates and always-on YouTube channels.</span></a>
+        <a href="/twitch-streaming.html">Twitch<span>Reruns, bitrate ceilings and Twitch's rules on recorded content.</span></a>
+        <a href="/facebook-live-streaming.html">Facebook Live<span>Live Producer, RTMPS, and Facebook's broadcast time limit.</span></a>
+        <a href="/multistream.html">Multistreaming<span>Run the same loop on three platforms at once.</span></a>
+        <a href="/custom-rtmp.html">Custom RTMP<span>Kick, Trovo, LinkedIn, X, Rumble and self-hosted servers.</span></a>
+        <a href="/stream-key-guide.html">Stream key guide<span>Exactly where the RTMP URL and key live on each platform.</span></a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="col wide">
+          <a class="brand" href="/" style="margin-bottom:14px"><img class="logo-img" src="logo.svg" alt="" width="34" height="34" /><span>Stream<b>za</b></span></a>
+          <p style="color:var(--muted);font-size:15px;margin:0">Stream pre-recorded video live to any platform — from the cloud, with no device left running.</p>
+        </div>
+        <div class="col">
+          <h4>Guides</h4>
+          <a href="/stream-pre-recorded-video-live.html">Pre-recorded live streaming</a>
+          <a href="/24-7-live-stream.html">24/7 live streaming</a>
+          <a href="/live-stream-without-obs.html">Streaming without OBS</a>
+          <a href="/multistream.html">Multistreaming</a>
+          <a href="/stream-key-guide.html">Stream key guide</a>
+        </div>
+        <div class="col">
+          <h4>Platforms</h4>
+          <a href="/youtube-live-streaming.html">YouTube Live</a>
+          <a href="/facebook-live-streaming.html">Facebook Live</a>
+          <a href="/twitch-streaming.html">Twitch</a>
+          <a href="/custom-rtmp.html">Custom RTMP</a>
+        </div>
+        <div class="col">
+          <h4>Legal</h4>
+          <a href="/privacy.html">Privacy Policy</a>
+          <a href="/terms.html">Terms of Service</a>
+          <a href="/acceptable-use.html">Acceptable Use</a>
+          <a href="/copyright.html">DMCA Policy</a>
+          <a href="/refund.html">Refund Policy</a>
+        </div>
+        <div class="col">
+          <h4>Support</h4>
+          <a href="/support.html">Help &amp; FAQ</a>
+          <a href="/studio">Web Studio</a>
+          <a href="mailto:probrostraders@gmail.com">probrostraders@gmail.com</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 Streamza · Probros</span>
+        <span>Not affiliated with or endorsed by YouTube, Twitch, Facebook, Kick or any third-party platform.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var h = document.querySelector('.site-header'), t = document.getElementById('navToggle');
+      if (!h || !t) return;
+      t.addEventListener('click', function () {
+        var open = h.classList.toggle('nav-open');
+        t.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      h.querySelectorAll('.nav-links a').forEach(function (a) {
+        a.addEventListener('click', function () { h.classList.remove('nav-open'); t.setAttribute('aria-expanded', 'false'); });
+      });
+    })();
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://streamza.live/" },
+          { "@type": "ListItem", "position": 2, "name": "24/7 live streaming", "item": "https://streamza.live/24-7-live-stream.html" }
+        ]
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://streamza.live/24-7-live-stream.html",
+        "url": "https://streamza.live/24-7-live-stream.html",
+        "name": "24/7 Live Stream — Loop a Video Non-Stop, No PC Required",
+        "description": "How to run an always-on 24/7 live stream by looping a video from the cloud, without leaving a computer running.",
+        "inLanguage": "en",
+        "isPartOf": { "@type": "WebSite", "@id": "https://streamza.live/#website" },
+        "about": { "@id": "https://streamza.live/#webapp" },
+        "publisher": { "@id": "https://streamza.live/#org" }
+      },
+      {
+        "@type": "HowTo",
+        "name": "How to set up a 24/7 looping live stream",
+        "description": "Run a permanently live channel by looping one video from the cloud.",
+        "step": [
+          { "@type": "HowToStep", "name": "Export a loop-friendly video", "text": "Export H.264 and AAC in an MP4 under 1.5 GB, with matching first and last frames and faded or beat-matched audio so the loop seam is invisible." },
+          { "@type": "HowToStep", "name": "Create the live event", "text": "Create the broadcast on your platform and copy the RTMP URL and stream key. Use a persistent stream key where the platform offers one.", "url": "https://streamza.live/stream-key-guide.html" },
+          { "@type": "HowToStep", "name": "Upload and enable loop", "text": "Claim a slot in Streamza Web Studio, upload the video, paste the key, and switch on loop forever.", "url": "https://streamza.live/studio" },
+          { "@type": "HowToStep", "name": "Go live and walk away", "text": "Start the stream, confirm the broadcast on the platform, then close everything. Renew the slot to keep the channel running." }
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "Does my computer need to stay on for a 24/7 stream?", "acceptedAnswer": { "@type": "Answer", "text": "No. The video is stored and broadcast from Streamza's servers. After you press start you can close the tab and shut the machine down." } },
+          { "@type": "Question", "name": "Is there a gap when the video loops?", "acceptedAnswer": { "@type": "Answer", "text": "No. Looping happens inside the same continuous RTMP connection, so the platform never sees the stream stop and start. Viewers see one unbroken broadcast." } },
+          { "@type": "Question", "name": "How long can one video be?", "acceptedAnswer": { "@type": "Answer", "text": "Up to 1.5 GB, which at typical 1080p bitrates is roughly 30 to 60 minutes of high quality video, or several hours for simpler visuals such as a static image with music." } },
+          { "@type": "Question", "name": "Will a 24/7 stream get me strikes or demonetised?", "acceptedAnswer": { "@type": "Answer", "text": "Not for looping itself, as long as you own the content. Streams get in trouble for using music or footage the channel does not have rights to, or for content platforms judge to be purely repetitive with no value added." } },
+          { "@type": "Question", "name": "Can I change the video without ending the stream?", "acceptedAnswer": { "@type": "Answer", "text": "No. Swapping the source means stopping and restarting the broadcast, so plan the loop content before you go live." } },
+          { "@type": "Question", "name": "Can I run a 24/7 stream on several platforms at once?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, up to three destinations at the same time on the Multistream plan. One looping upload feeds all of them." } },
+          { "@type": "Question", "name": "What happens if the platform disconnects the stream?", "acceptedAnswer": { "@type": "Answer", "text": "Platforms occasionally reset ingest connections during maintenance. Check on a long-running channel periodically and restart the stream from Web Studio if the connection was dropped." } }
+        ]
+      }
+    ]
+  }
+  </script>
+
+</body>
+</html>

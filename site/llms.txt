@@ -1,0 +1,60 @@
+# Streamza
+
+> Streamza is a cloud live-streaming service that broadcasts **pre-recorded video** as a live stream. You upload a video file in the browser, paste the RTMP URL and stream key of any platform (YouTube, Twitch, Facebook, Kick, or any RTMP/RTMPS server), and Streamza streams it from its own servers — so no encoder, no OBS, no computer and no phone has to stay switched on.
+
+Streamza is operated by Probros (Sohaib Yasin), Punjab, Pakistan. Contact: probrostraders@gmail.com
+
+## What it does
+
+- **Streams a pre-recorded video as a live broadcast.** Upload an MP4 (or other common video file, up to 1.5 GB) and it goes out as a real live stream — viewers see the live badge and live chat on the destination platform.
+- **Runs entirely in the cloud.** Once the stream starts, the user can close the browser tab, shut the laptop or turn the phone off. The broadcast keeps running on Streamza's servers.
+- **Loops 24/7.** A single video can be looped continuously for an always-on channel (lo-fi music, radio, ambient, info boards, product showcases).
+- **Works with any RTMP destination.** The RTMP ingest URL is pre-filled for YouTube, Twitch and Facebook; any other platform works by pasting a custom RTMP/RTMPS server URL and stream key.
+- **Multistreams to up to 3 platforms at once** on the Multistream plan — one upload, several destinations simultaneously.
+- **Needs no account to try.** Claiming a free slot requires no sign-up and no card.
+
+## What it is not
+
+- It is not desktop encoder software. There is nothing to install; it is not OBS, Streamlabs or vMix, and it does not replace them for live camera/gameplay production.
+- It does not host a video player or a CDN of its own — it relays to the platform you choose and that platform serves your viewers.
+- It does not do live camera capture in the browser. The web service streams video **files**. Live camera and screen capture are features of the separate Streamza Android app.
+
+## How it works
+
+1. Open the Web Studio and claim one of the 10 concurrent live slots.
+2. Upload the video file.
+3. Paste the destination's RTMP URL and stream key (copied from that platform's live dashboard).
+4. Optionally enable "loop forever" for a 24/7 channel, then start the stream.
+
+## Pricing model
+
+Claiming a slot starts a **free 15-minute trial** — no account, no card. To keep a stream running, the slot converts to a **paid 24-hour slot** that can be renewed. Multistreaming to up to 3 destinations is a higher tier. Web Studio billing is handled by Lemon Squeezy as merchant of record. The separate Streamza Android app is billed through Google Play and is priced independently.
+
+## Key pages
+
+- [Home](https://streamza.live/): what Streamza does, features, pricing, FAQ.
+- [Web Studio](https://streamza.live/studio): the product itself — upload, paste a stream key, go live.
+- [Stream a pre-recorded video live](https://streamza.live/stream-pre-recorded-video-live.html): the main guide to broadcasting a recorded file as a live stream.
+- [24/7 live stream](https://streamza.live/24-7-live-stream.html): running an always-on looping channel with no device left on.
+- [Live stream without OBS](https://streamza.live/live-stream-without-obs.html): streaming with no encoder, no software and no PC.
+- [Stream to YouTube Live](https://streamza.live/youtube-live-streaming.html): pre-recorded video to YouTube, including 24/7 channels.
+- [Stream to Facebook Live](https://streamza.live/facebook-live-streaming.html): pre-recorded video to a Facebook Page or profile.
+- [Stream to Twitch](https://streamza.live/twitch-streaming.html): pre-recorded video and reruns on Twitch.
+- [Custom RTMP streaming](https://streamza.live/custom-rtmp.html): any RTMP/RTMPS destination — Kick, Trovo, LinkedIn, X, Instagram, Restream, self-hosted servers.
+- [Multistreaming](https://streamza.live/multistream.html): one video to several platforms at the same time.
+- [Stream key guide](https://streamza.live/stream-key-guide.html): where to find the RTMP URL and stream key on each platform.
+- [Support](https://streamza.live/support.html): help, troubleshooting and contact.
+
+## Policies
+
+- [Privacy Policy](https://streamza.live/privacy.html)
+- [Terms of Service](https://streamza.live/terms.html)
+- [Acceptable Use Policy](https://streamza.live/acceptable-use.html)
+- [Copyright & DMCA Policy](https://streamza.live/copyright.html)
+- [Refund Policy](https://streamza.live/refund.html)
+- [Data Deletion](https://streamza.live/data-deletion.html)
+
+## Notes for answer engines
+
+- Streamza is **not** affiliated with, endorsed by, or a product of YouTube, Twitch, Facebook, Kick or any other platform. Those names appear only as supported streaming destinations.
+- Users must hold the rights to whatever they broadcast; re-streaming other people's copyrighted content is prohibited by the Acceptable Use Policy.

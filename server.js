@@ -1,7 +1,7 @@
 /**
  * Streamza Relay — "claim a slot, upload a video -> stream to RTMP" (Node + FFmpeg `-c copy`).
  *
- * Model: SLOT_COUNT concurrent slots. Tapping a free slot starts a free 5-minute TRIAL (no payment).
+ * Model: SLOT_COUNT concurrent slots. Tapping a free slot starts a free 15-minute TRIAL (no payment).
  * "Upgrade to 24 hours" extends it (SLOT_MS). Each claim returns a private manage-token (stored in the
  * browser) to monitor/stop/upgrade that slot. The expiry watchdog stops trials/slots when they run out.
  *
@@ -19,7 +19,7 @@ const PORT = process.env.PORT || 3000;
 const ADMIN_KEY = process.env.ADMIN_KEY || "streamza-admin";
 const SLOT_COUNT = Number(process.env.SLOT_COUNT) || 10; // max safe on the free 1GB micro (-c copy is light; RAM + outbound bandwidth are the limit). Raise via env on a bigger instance.
 const SLOT_MS = 24 * 60 * 60 * 1000;  // full paid duration (24h)
-const TRIAL_MS = Number(process.env.TRIAL_MS) || 5 * 60 * 1000; // free 5-minute trial on every claim
+const TRIAL_MS = Number(process.env.TRIAL_MS) || 15 * 60 * 1000; // free 15-minute trial on every claim
 // Anti-abuse: reserve some slots only subscribers can take, and rate-limit free trials per IP, so
 // free-trial spam can never starve paying customers.
 const RESERVED_FOR_SUBS = Number(process.env.RESERVED_FOR_SUBS) || 3;       // slots only subscribers can claim
@@ -146,6 +146,19 @@ app.use((req, res, next) => {
   next();
 });
 
+// Keep app/API surfaces out of search results. Anything that isn't a marketing
+// page has no business being indexed, and robots.txt alone doesn't deindex a URL
+// that other sites happen to link to — the header does.
+const NOINDEX_PREFIXES = ["/admin", "/auth", "/pay", "/owner", "/lemonsqueezy",
+  "/status", "/slots", "/start", "/stop", "/upgrade", "/subscribed",
+  "/myuploads", "/deleteupload", "/waitlist", "/twitch-callback", "/studio-assets"];
+app.use((req, res, next) => {
+  if (NOINDEX_PREFIXES.some((p) => req.path === p || req.path.startsWith(p + "/"))) {
+    res.setHeader("X-Robots-Tag", "noindex, nofollow");
+  }
+  next();
+});
+
 // Public Web Studio (claim a slot, upload, go live) at /studio.
 app.get(["/studio", "/studio/"], (_req, res) =>
   res.sendFile(path.join(__dirname, "public", "index.html")));
@@ -155,7 +168,17 @@ app.get(["/admin", "/admin/"], (_req, res) =>
   res.sendFile(path.join(__dirname, "public", "admin.html")));
 
 // Marketing site + legal pages (privacy/terms/support/sitemap/...) served at /.
-app.use(express.static(path.join(__dirname, "site")));
+// `extensions` lets /stream-key-guide resolve to stream-key-guide.html so clean
+// links never 404; every page carries a canonical pointing at the .html form.
+app.use(express.static(path.join(__dirname, "site"), {
+  extensions: ["html"],
+  setHeaders(res, filePath) {
+    // HTML changes often and must stay fresh; images/CSS are safe to cache hard.
+    res.setHeader("Cache-Control", /\.html$/i.test(filePath)
+      ? "public, max-age=0, must-revalidate"
+      : "public, max-age=604800");
+  },
+}));
 // Studio's own assets, if ever referenced under a prefix.
 app.use("/studio-assets", express.static(path.join(__dirname, "public")));
 
@@ -242,7 +265,7 @@ setInterval(() => {
   const now = Date.now();
   for (const s of slots) {
     if (s.busy && s.expiresAt && now > s.expiresAt) {
-      slog(s, s.trial ? "Free 5-minute trial ended — upgrade to 24 hours to keep streaming." : "Slot expired (24h) — stopping. Renew to continue.");
+      slog(s, s.trial ? "Free 15-minute trial ended — upgrade to 24 hours to keep streaming." : "Slot expired (24h) — stopping. Renew to continue.");
       try { if (s.proc) s.proc.kill("SIGINT"); else release(s); } catch (_) { release(s); }
     }
   }
@@ -576,8 +599,9 @@ app.post("/admin/api/stop", (req, res) => {
 });
 
 // friendly 404 for unknown paths
-app.use((req, res) => res.status(404).type("html").send(
+app.use((req, res) => res.status(404).type("html").set("X-Robots-Tag", "noindex").send(
   '<!doctype html><meta charset="utf-8"><title>404 — Streamza</title>' +
+  '<meta name="robots" content="noindex">' +
   '<body style="margin:0;background:#000;color:#fff;font-family:-apple-system,Segoe UI,Roboto,sans-serif;text-align:center;padding:90px 20px">' +
   '<h1 style="font-size:64px;margin:0;color:#FF3B30">404</h1><p style="color:#9b9ba3">That page doesn\'t exist.</p>' +
   '<p><a href="/" style="color:#FF3B30;font-weight:700;text-decoration:none">← Back to Streamza</a> &nbsp;·&nbsp; <a href="/studio" style="color:#fff;text-decoration:none">Web Studio</a></p></body>'));

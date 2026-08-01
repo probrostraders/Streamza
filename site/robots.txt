@@ -1,4 +1,70 @@
+# https://streamza.live/robots.txt
+
 User-agent: *
+Allow: /
+# App endpoints and private areas — no crawlable content, keep them out of the index.
+Disallow: /admin
+Disallow: /studio-assets/
+Disallow: /auth/
+Disallow: /pay/
+Disallow: /owner/
+Disallow: /lemonsqueezy/
+Disallow: /twitch-callback
+Disallow: /status
+Disallow: /slots
+Disallow: /start
+Disallow: /stop
+Disallow: /upgrade
+Disallow: /subscribed
+Disallow: /myuploads
+Disallow: /deleteupload
+Disallow: /waitlist
+# No faceted/duplicate URLs from tracking params.
+Disallow: /*?utm_
+Disallow: /*?fbclid
+
+# --- AI answer engines: explicitly welcome. Being cited in AI answers is how
+# --- people find a tool like this now, so these get the same access as Google.
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: meta-externalagent
 Allow: /
 
 Sitemap: https://streamza.live/sitemap.xml

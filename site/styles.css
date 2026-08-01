@@ -357,3 +357,75 @@ section { padding: 76px 0; }
   .container { padding: 0 18px; }
   .footer-grid { margin-bottom: 26px; }
 }
+
+/* ===========================================================================
+   Landing pages (guides / platform pages) — lp-* namespace
+   =========================================================================== */
+
+/* Breadcrumbs */
+.crumbs { font-size: 14px; color: var(--muted-2); padding: 22px 0 0; }
+.crumbs ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.crumbs a { color: var(--muted); }
+.crumbs a:hover { color: var(--text); text-decoration: none; }
+.crumbs li + li::before { content: "/"; color: var(--hairline); margin-right: 8px; }
+.crumbs [aria-current] { color: var(--muted-2); }
+
+/* Landing hero */
+.lp-hero { padding: 34px 0 56px; border-bottom: 1px solid var(--hairline); }
+.lp-hero h1 { font-size: clamp(32px, 5.4vw, 52px); line-height: 1.06; letter-spacing: -.03em; font-weight: 800; margin: 14px 0 0; max-width: 15ch; }
+.lp-hero .lp-lead { color: var(--muted); font-size: clamp(16px, 2vw, 19px); line-height: 1.65; margin: 18px 0 0; max-width: 62ch; }
+.lp-hero .hero-cta { margin-top: 28px; }
+.lp-wide h1 { max-width: 20ch; }
+
+/* Key-fact strip under the hero */
+.lp-facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--hairline); border: 1px solid var(--hairline); border-radius: 14px; overflow: hidden; margin-top: 36px; }
+.lp-facts div { background: var(--bg); padding: 18px 20px; }
+.lp-facts dt { color: var(--muted-2); font-size: 13px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; margin: 0 0 6px; }
+.lp-facts dd { margin: 0; font-size: 16px; font-weight: 650; color: var(--text); }
+@media (max-width: 780px) { .lp-facts { grid-template-columns: repeat(2, 1fr); } }
+
+/* Prose body for guide pages */
+.lp-body { padding: 56px 0; }
+.lp-prose { max-width: 780px; }
+.lp-prose h2 { font-size: clamp(24px, 3.2vw, 31px); letter-spacing: -.02em; font-weight: 750; margin: 48px 0 14px; }
+.lp-prose h2:first-child { margin-top: 0; }
+.lp-prose h3 { font-size: 19px; font-weight: 650; margin: 30px 0 8px; }
+.lp-prose p, .lp-prose li { color: #d6d6db; font-size: 16.5px; line-height: 1.72; }
+.lp-prose ul, .lp-prose ol { padding-left: 22px; }
+.lp-prose li { margin-bottom: 9px; }
+.lp-prose a { color: var(--red); font-weight: 500; }
+.lp-prose a:hover { color: #ff6a5f; }
+.lp-prose code { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 2px 7px; font-size: 14.5px; color: #fff; word-break: break-all; }
+.lp-prose table { width: 100%; border-collapse: collapse; margin: 22px 0; font-size: 15px; }
+.lp-prose th, .lp-prose td { text-align: left; padding: 12px 13px; border: 1px solid var(--border); vertical-align: top; color: #d6d6db; }
+.lp-prose th { background: var(--surface); color: var(--text); font-weight: 650; }
+.lp-prose .note { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--red); border-radius: 10px; padding: 15px 19px; margin: 24px 0; color: var(--muted); font-size: 15.5px; }
+.lp-prose .note strong { color: var(--text); }
+
+/* Numbered step list */
+.lp-steps { list-style: none; padding: 0; counter-reset: lps; margin: 26px 0; }
+.lp-steps > li { counter-increment: lps; position: relative; padding: 0 0 26px 52px; border-left: 1px solid var(--hairline); margin-left: 15px; }
+.lp-steps > li:last-child { border-left-color: transparent; padding-bottom: 0; }
+.lp-steps > li::before { content: counter(lps); position: absolute; left: -15px; top: -3px; width: 30px; height: 30px; border-radius: 50%; background: var(--red); color: #fff; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+.lp-steps h3 { margin: 2px 0 6px; font-size: 18px; }
+.lp-steps p { margin: 0; color: var(--muted); font-size: 16px; }
+
+/* Use-case cards */
+.lp-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 30px 0 0; }
+.lp-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 22px; }
+.lp-card h3 { margin: 0 0 8px; font-size: 17px; font-weight: 650; }
+.lp-card p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.6; }
+@media (max-width: 900px) { .lp-cards { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .lp-cards { grid-template-columns: 1fr; } }
+
+/* "Related guides" link grid */
+.lp-related { border-top: 1px solid var(--hairline); padding: 52px 0 64px; }
+.lp-related-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 26px; }
+.lp-related-grid a { display: block; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; color: var(--text); font-weight: 600; font-size: 15.5px; transition: border-color .15s, transform .15s; }
+.lp-related-grid a:hover { border-color: var(--red); text-decoration: none; transform: translateY(-2px); }
+.lp-related-grid span { display: block; color: var(--muted-2); font-weight: 400; font-size: 14px; margin-top: 5px; line-height: 1.5; }
+@media (max-width: 900px) { .lp-related-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .lp-related-grid { grid-template-columns: 1fr; } }
+
+/* Footer guides column keeps its own tighter rhythm */
+.site-footer .col.wide { max-width: 260px; }
