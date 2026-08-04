@@ -69,6 +69,9 @@
   </script>
   <link rel="preconnect" href="https://app.lemonsqueezy.com" crossorigin />
   <link rel="preconnect" href="https://accounts.google.com" crossorigin />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet" />
   <script src="https://app.lemonsqueezy.com/js/lemon.js" defer></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
@@ -462,11 +465,16 @@
   .dz-filename{flex:1;text-align:left;font-size:13.5px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .dz-change{font-size:12px;font-weight:700;color:var(--red);flex:none;}
 
-  /* notice boxes: icon-led, like a real product dock rather than plain text banners */
-  .beta,.selslot{display:flex;align-items:flex-start;gap:10px;}
+  /* notice boxes: icon-led banners. Content is wrapped in ONE <span> (see markup/JS) so the
+     whole sentence is a single flex item and wraps like a normal paragraph — previously each
+     bare text run and <b> next to it became its own shrinking flex item, breaking the sentence
+     into a jumbled multi-column mess under any width pressure. */
+  .beta,.selslot{display:flex;align-items:flex-start;gap:10px;line-height:1.5;}
+  .beta > span,.selslot > span{flex:1;min-width:0;}
   .beta::before{content:"";flex:none;width:18px;height:18px;margin-top:1px;background:var(--red);-webkit-mask:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222%22><circle cx=%2212%22 cy=%2212%22 r=%2210%22/><path d=%22M12 8v5%22/><path d=%22M12 16h.01%22/></svg>') center/contain no-repeat;mask:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222%22><circle cx=%2212%22 cy=%2212%22 r=%2210%22/><path d=%22M12 8v5%22/><path d=%22M12 16h.01%22/></svg>') center/contain no-repeat;}
-  .selslot::before{content:"";flex:none;width:16px;height:16px;margin-top:2px;background:var(--red);-webkit-mask:url('data:image/svg+xml;utf8,<svg xmlns=%22www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222.2%22><path d=%22M13 2 3 14h7l-1 8 10-12h-7z%22/></svg>') center/contain no-repeat;mask:url('data:image/svg+xml;utf8,<svg xmlns=%22www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222.2%22><path d=%22M13 2 3 14h7l-1 8 10-12h-7z%22/></svg>') center/contain no-repeat;}
-  .beta > *:last-child, .selslot > *:last-child {flex:1;}
+  .beta.is-sub{border-left-color:#10B981;}
+  .beta.is-sub::before{background:#10B981;-webkit-mask:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222.5%22><path d=%22m5 13 4 4L19 7%22/></svg>') center/contain no-repeat;mask:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222.5%22><path d=%22m5 13 4 4L19 7%22/></svg>') center/contain no-repeat;}
+  .selslot::before{content:"";flex:none;width:16px;height:16px;margin-top:2px;background:#909090;-webkit-mask:url('data:image/svg+xml;utf8,<svg xmlns=%22www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222.2%22><path d=%22M13 2 3 14h7l-1 8 10-12h-7z%22/></svg>') center/contain no-repeat;mask:url('data:image/svg+xml;utf8,<svg xmlns=%22www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222.2%22><path d=%22M13 2 3 14h7l-1 8 10-12h-7z%22/></svg>') center/contain no-repeat;}
   details.resume summary{display:flex;align-items:center;gap:9px;}
   details.resume summary::before{content:"↻";color:var(--red);font-weight:800;}
 
@@ -474,81 +482,105 @@
   label{font-weight:600;color:#d4d4dc;}
 
   /* ============================================================
-     PROFESSIONAL STUDIO CONSOLE — redesign of #studioApp only.
-     Scoped to #studioApp so the marketing/landing view is
-     untouched. Every id/class the JS relies on is preserved.
+     STUDIO CONSOLE — YouTube Studio–inspired redesign of #studioApp.
+     Roboto, bold labels/values, flat YouTube dark palette (#0f0f0f /
+     #1f1f1f / #272727), pure YouTube red reserved for the primary
+     action and live/status states. One surface + one radius scale
+     throughout so every panel reads as part of the same system —
+     no stacked gradients or glow shadows. Scoped to #studioApp so
+     the marketing/landing page is untouched; every id/class the JS
+     relies on is preserved.
      ============================================================ */
-  #studioApp{background:radial-gradient(1100px 520px at 72% -10%,rgba(255,59,48,.10),transparent 60%),linear-gradient(180deg,#0b0b0f,#08080b 42%);}
+  #studioApp{
+    --red:#FF0000; --red-dark:#CC0000; --sub:#aaaaaa;
+    --yt-bg:#0f0f0f; --yt-surface:#1f1f1f; --yt-surface-2:#272727;
+    --yt-border:rgba(255,255,255,.1); --yt-border-2:rgba(255,255,255,.16); --yt-dim:#aaaaaa;
+    background:var(--yt-bg);
+    font-family:"Roboto","YouTube Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  }
 
   /* command bar */
-  #studioApp .sapp-bar{padding:12px 22px;gap:16px;background:rgba(10,10,13,.86);backdrop-filter:blur(16px) saturate(1.2);border-bottom:1px solid rgba(255,255,255,.09);box-shadow:0 1px 0 rgba(255,255,255,.03) inset,0 10px 26px rgba(0,0,0,.35);}
+  #studioApp .sapp-bar{padding:12px 22px;gap:16px;background:rgba(15,15,15,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--yt-border);}
   #studioApp .sapp-bar .l{gap:14px;}
-  #studioApp .sapp-brand{gap:9px;font-size:16px;letter-spacing:-.02em;padding:4px 7px;border-radius:9px;transition:background .15s ease;}
-  #studioApp .sapp-brand:hover{background:rgba(255,255,255,.06);}
+  #studioApp .sapp-brand{gap:9px;font-size:16px;font-weight:700;letter-spacing:-.01em;padding:4px 7px;border-radius:9px;transition:background .15s ease;}
+  #studioApp .sapp-brand:hover{background:var(--yt-surface);}
   #studioApp .sapp-brand img{width:26px;height:26px;border-radius:7px;}
-  #studioApp .sapp-modepill{font-size:12px;font-weight:700;color:#fff;background:linear-gradient(180deg,#ff4f45,#e5332a);border-radius:8px;padding:5px 12px;box-shadow:0 4px 14px rgba(255,59,48,.32);}
-  #studioApp .sapp-status{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8a8a94;background:#111116;border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:7px 12px;}
-  #studioApp .sapp-status.on{color:#ff5147;border-color:rgba(255,59,48,.42);background:rgba(255,59,48,.09);}
-  #studioApp .sapp-stop{border-radius:10px;padding:9px 18px;font-weight:800;box-shadow:0 6px 18px rgba(255,59,48,.32);}
-  #studioApp .sapp-close{border-radius:10px;padding:9px 15px;}
+  #studioApp .sapp-modepill{font-size:12px;font-weight:700;color:#fff;background:var(--red);border-radius:8px;padding:5px 12px;}
+  #studioApp .sapp-status{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--yt-dim);background:var(--yt-surface);border:1px solid var(--yt-border);border-radius:9px;padding:7px 12px;}
+  #studioApp .sapp-status.on{color:#fff;border-color:var(--red);background:rgba(255,0,0,.14);}
+  #studioApp .sapp-status.on .d{background:var(--red);box-shadow:0 0 0 4px rgba(255,0,0,.25);}
+  #studioApp .sapp-stop{border-radius:10px;padding:9px 18px;font-weight:700;background:var(--red);}
+  #studioApp .sapp-stop:hover{background:var(--red-dark);}
+  #studioApp .sapp-close{border-radius:10px;padding:9px 15px;font-weight:500;}
 
   /* body grid */
-  #studioApp .sapp-body{grid-template-columns:minmax(0,1.6fr) minmax(348px,.95fr);gap:22px;max-width:1340px;padding:24px 22px 64px;}
+  #studioApp .sapp-body{grid-template-columns:minmax(0,1.6fr) minmax(348px,.95fr);gap:24px;max-width:1340px;padding:24px 22px 64px;}
   @media(max-width:960px){#studioApp .sapp-body{grid-template-columns:1fr;}}
 
   /* stage */
-  #studioApp .stage{gap:14px;}
-  #studioApp .head2{font-size:11px;letter-spacing:.14em;color:#7c7c86;font-weight:800;text-transform:uppercase;}
-  #studioApp .videoframe{border-radius:16px;border:1px solid rgba(255,255,255,.10);background:#000;box-shadow:0 28px 64px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.02);}
-  #studioApp .livebadge{top:12px;left:12px;border-radius:8px;padding:5px 11px;font-size:11px;letter-spacing:.05em;box-shadow:0 4px 14px rgba(0,0,0,.4);}
-  #studioApp .liveinfo{border-radius:12px;padding:12px 15px;}
-  #studioApp .countdown{background:linear-gradient(180deg,#151519,#0f0f13);border:1px solid rgba(255,255,255,.10);border-radius:14px;padding:16px;}
-  #studioApp .countdown .t{font-size:34px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;}
-  #studioApp .countdown .l{font-size:12px;margin-top:3px;}
+  #studioApp .stage{gap:16px;}
+  #studioApp .head2{font-size:11px;letter-spacing:.1em;color:var(--yt-dim);font-weight:700;text-transform:uppercase;}
+  #studioApp .videoframe{border-radius:12px;border:1px solid var(--yt-border);background:#000;}
+  #studioApp .livebadge{top:12px;left:12px;border-radius:4px;padding:4px 10px;font-size:11px;font-weight:700;letter-spacing:.05em;background:var(--red);}
+  #studioApp .liveinfo{border-radius:10px;padding:12px 15px;background:rgba(255,0,0,.1);border:1px solid rgba(255,0,0,.3);}
+  #studioApp .countdown{background:var(--yt-surface);border:1px solid var(--yt-border);border-radius:12px;padding:16px;}
+  #studioApp .countdown .t{font-size:32px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;}
+  #studioApp .countdown .l{font-size:12px;margin-top:3px;color:var(--yt-dim);}
   #studioApp .statgrid{gap:12px;}
-  #studioApp .stat{background:linear-gradient(180deg,#151519,#0f0f13);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 14px;text-align:left;}
-  #studioApp .stat .k{font-size:10px;letter-spacing:.08em;color:#7c7c86;}
-  #studioApp .stat .v{font-size:18px;margin-top:4px;font-variant-numeric:tabular-nums;}
-  #studioApp .logwrap{border-radius:12px;}
+  #studioApp .stat{background:var(--yt-surface);border:1px solid var(--yt-border);border-radius:10px;padding:12px 14px;text-align:left;}
+  #studioApp .stat .k{font-size:10px;letter-spacing:.06em;color:var(--yt-dim);font-weight:700;}
+  #studioApp .stat .v{font-size:18px;font-weight:900;margin-top:4px;font-variant-numeric:tabular-nums;}
+  #studioApp .logwrap{border-radius:10px;background:var(--yt-surface);border:1px solid var(--yt-border);}
 
-  /* dock — stacked panels rather than one big box */
-  #studioApp .dock{background:transparent;border:0;padding:0;box-shadow:none;display:flex;flex-direction:column;gap:14px;align-self:start;}
-  #studioApp .sec{background:#131318;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px;box-shadow:0 1px 0 rgba(255,255,255,.02) inset;}
-  #studioApp .sec-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
-  #studioApp .sec-num{width:24px;height:24px;flex:none;border-radius:8px;font-size:13px;font-weight:800;color:#fff;background:linear-gradient(180deg,#ff4f45,#e5332a);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(255,59,48,.3);}
-  #studioApp .sec-title{margin:0;font-size:15px;font-weight:800;letter-spacing:-.01em;color:#fff;text-transform:none;}
-  #studioApp .lbl-sub{color:#7c7c86;font-weight:400;}
+  /* dock — stacked panels, one flat surface + radius throughout, spaced only by flex gap */
+  #studioApp .dock{background:transparent;border:0;padding:0;box-shadow:none;display:flex;flex-direction:column;gap:16px;align-self:start;}
+  #studioApp .authbox,#studioApp .beta,#studioApp .selslot,#studioApp details.resume{margin-bottom:0;}
+  #studioApp .beta,#studioApp .selslot,#studioApp details.resume{background:var(--yt-surface);border:1px solid var(--yt-border);border-radius:10px;}
+  #studioApp .beta{border-left:3px solid var(--red);}
+  #studioApp .selslot{color:var(--yt-dim);}
+  #studioApp .selslot b{color:#fff;}
+  #studioApp .selslot a{color:var(--red);font-weight:700;}
+  #studioApp .sec{background:var(--yt-surface);border:1px solid var(--yt-border);border-radius:12px;padding:20px;}
+  #studioApp .sec-head{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+  #studioApp .sec-num{width:22px;height:22px;flex:none;border-radius:6px;font-size:12px;font-weight:700;color:#fff;background:var(--red);display:flex;align-items:center;justify-content:center;}
+  #studioApp .sec-title{margin:0;font-size:16px;font-weight:700;letter-spacing:-.01em;color:#fff;text-transform:none;}
+  #studioApp .lbl-sub{color:var(--yt-dim);font-weight:400;}
 
   /* inputs / labels */
-  #studioApp label{font-weight:600;color:#c9c9d2;font-size:12.5px;margin:13px 0 6px;}
+  #studioApp label{font-weight:700;color:#f1f1f1;font-size:12.5px;margin:16px 0 6px;}
   #studioApp .sec > label:first-of-type{margin-top:0;}
-  #studioApp input[type=text],#studioApp input[type=email],#studioApp input[type=password]{background:#1c1c22;border:1px solid rgba(255,255,255,.14);border-radius:11px;padding:12px 13px;font-size:15px;}
-  #studioApp input[type=text]:focus,#studioApp input[type=email]:focus,#studioApp input[type=password]:focus{border-color:rgba(255,59,48,.7);background:#22222a;}
+  #studioApp input[type=text],#studioApp input[type=email],#studioApp input[type=password]{background:var(--yt-surface-2);border:1px solid var(--yt-border-2);border-radius:8px;padding:12px 13px;font-size:15px;font-family:inherit;}
+  #studioApp input[type=text]:focus,#studioApp input[type=email]:focus,#studioApp input[type=password]:focus{border-color:var(--red);background:#2f2f2f;}
 
   /* platform chips + mode tabs */
   #studioApp .platrow{gap:8px;}
-  #studioApp .chip{border-radius:10px;padding:9px 14px;background:#1c1c22;border:1px solid rgba(255,255,255,.12);}
-  #studioApp .chip:hover{border-color:rgba(255,255,255,.28);}
-  #studioApp .chip.active{background:rgba(255,59,48,.16);border-color:var(--red);color:#fff;}
-  #studioApp .modetabs{background:#0e0e12;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:5px;margin:0;}
-  #studioApp #singleDest,#studioApp #multiDest{margin-top:14px;}
+  #studioApp .chip{border-radius:8px;padding:9px 14px;font-weight:700;background:var(--yt-surface-2);border:1px solid var(--yt-border-2);}
+  #studioApp .chip:hover{border-color:rgba(255,255,255,.32);}
+  #studioApp .chip.active{background:var(--red);border-color:var(--red);color:#fff;}
+  #studioApp .modetabs{background:var(--yt-bg);border:1px solid var(--yt-border);border-radius:10px;padding:5px;margin:0;}
+  #studioApp .modetab.active{background:var(--red);}
+  #studioApp #singleDest,#studioApp #multiDest{margin-top:16px;}
 
   /* dropzone + loop toggle */
-  #studioApp .dropzone{background:#1a1a20;border-color:rgba(255,255,255,.18);border-radius:12px;}
-  #studioApp .dropzone:hover{border-color:rgba(255,59,48,.55);background:#20202a;}
-  #studioApp .toggle-row{background:#1a1a20;border-radius:12px;margin-top:16px;}
+  #studioApp .dropzone{background:var(--yt-surface-2);border-color:var(--yt-border-2);border-radius:10px;}
+  #studioApp .dropzone:hover{border-color:var(--red);background:#2f2f2f;}
+  #studioApp .dz-title{font-weight:700;}
+  #studioApp .dz-change{color:var(--red);font-weight:700;}
+  #studioApp .toggle-row{background:var(--yt-surface-2);border-radius:10px;margin-top:16px;}
+  #studioApp .toggle-title{font-weight:700;}
+  #studioApp .switch input:checked + .slider{background:var(--red);}
 
   /* go-live + manage */
-  #studioApp #startBtn{padding:16px;font-size:16px;font-weight:800;box-shadow:0 12px 28px rgba(255,59,48,.32);}
-  #studioApp #startBtn:hover{box-shadow:0 14px 34px rgba(255,59,48,.42);}
-  #studioApp .managebox{background:#0e0e12;border-radius:12px;}
+  #studioApp #startBtn{padding:16px;font-size:16px;font-weight:700;background:var(--red);box-shadow:0 8px 20px rgba(255,0,0,.28);}
+  #studioApp #startBtn:hover{background:var(--red-dark);box-shadow:0 10px 24px rgba(255,0,0,.36);}
+  #studioApp .managebox{background:var(--yt-surface);border:1px solid var(--yt-border);border-radius:10px;}
+  #studioApp .ml-label{font-weight:700;}
 
   /* responsive polish — keep Go Live reachable on phones */
   @media(max-width:600px){
-    #studioApp .sapp-body{padding:14px 12px 92px;gap:14px;}
-    #studioApp .sec{padding:15px;}
-    #studioApp .countdown .t{font-size:28px;}
-    #studioApp #goSec{position:sticky;bottom:10px;z-index:6;box-shadow:0 -8px 26px rgba(8,8,11,.85),0 16px 34px rgba(0,0,0,.5);}
+    #studioApp .sapp-body{padding:16px 14px 92px;gap:16px;}
+    #studioApp .sec{padding:16px;}
+    #studioApp .countdown .t{font-size:26px;}
   }
   </style>
 </head>
@@ -691,8 +723,8 @@
           <div id="gbtnWrap"><div id="gbtn"></div><div class="authhint">Sign in to save your videos and manage your subscription.</div></div>
           <div id="authUser" style="display:none;"></div>
         </div>
-        <div class="beta" id="betaNote"><b style="color:#fff;">Free 15-minute trial</b> — no payment needed to start. <b>Subscribe</b> to stream the full 24 hours.</div>
-        <div class="selslot" id="selSlot">Claiming the <b>next free slot</b></div>
+        <div class="beta" id="betaNote"><span><b>Free 15-minute trial</b> — no payment needed to start. <b>Subscribe</b> to stream the full 24 hours.</span></div>
+        <div class="selslot" id="selSlot"><span>Claiming the <b>next free slot</b> — or tap a specific slot above.</span></div>
         <details class="resume">
           <summary>Already streaming on another device? Resume it →</summary>
           <div class="resume-body">
@@ -770,7 +802,7 @@
         <button class="btn btn-primary btn-block" id="startBtn" style="margin-top:18px;">Go Live</button>
         <button class="btn btn-ghost btn-block" id="stopBtn" style="margin-top:18px;display:none;">Stop my stream</button>
         <div class="managebox" id="manageBox" style="display:none;">
-          <div class="ml-label">🔗 Your manage link — control this stream from any device</div>
+          <div class="ml-label">Your manage link — control this stream from any device</div>
           <div class="ml-row">
             <input type="text" id="manageLink" readonly />
             <button class="btn btn-ghost" id="copyLinkBtn">Copy</button>
@@ -883,7 +915,7 @@
   <div class="modal" id="trialModal">
     <div class="box">
       <img src="logo.svg" alt="Streamza" />
-      <h3>⏱️ Your free trial ended</h3>
+      <h3>Your free trial ended</h3>
       <p>Your 15-minute trial is up and the stream stopped. <b style="color:#fff;">Subscribe to keep streaming the full 24 hours</b>, non-stop — cancel anytime.</p>
       <button class="btn btn-primary btn-block" id="trialSubSingle">Subscribe — 24-hour streaming · <span id="trialPrice">$4.99/mo</span></button>
       <button class="btn btn-ghost btn-block" id="trialSubMulti" style="margin-top:10px;">Multistream — up to 3 platforms · <span id="trialPriceMulti">$9.99/mo</span></button>
@@ -934,7 +966,7 @@
       myEmail=u.email; window.IS_SUBSCRIBED=!!u.subscribed; try{localStorage.setItem("streamza_email",u.email);}catch(_){}
       const b=$("authBox"); if(b) b.style.display="block";
       const g=$("gbtnWrap"); if(g) g.style.display="none";
-      const a=$("authUser"); if(a){ a.style.display="flex"; a.innerHTML='👤 <b>'+escHtml(u.email)+'</b>'+(u.subscribed?(' · <span style="color:#34C759">✓ '+(u.multi?'Multistream':'Subscribed')+'</span>'):'')+' <a class="so" id="signout">Sign out</a>'; const so=$("signout"); if(so) so.onclick=signOut; }
+      const a=$("authUser"); if(a){ a.style.display="flex"; a.innerHTML='<span><b>'+escHtml(u.email)+'</b>'+(u.subscribed?(' · <span style="color:#10B981">✓ '+(u.multi?'Multistream':'Subscribed')+'</span>'):'')+'</span><a class="so" id="signout">Sign out</a>'; const so=$("signout"); if(so) so.onclick=signOut; }
       // header account chip + dropdown
       const h=$("hdrAuth");
       if(h){
@@ -1143,13 +1175,13 @@
       try{ r=await (await fetch("/myuploads?email="+encodeURIComponent(email))).json(); }catch(_){}
       if(!r.uploads || !r.uploads.length){
         if(r.subscribed){ wrap.style.display="none"; }
-        else { wrap.style.display="block"; list.innerHTML='<div class="recentHint">💡 <b>Subscribe</b> to save your videos and skip re-uploading every time.</div>'; }
+        else { wrap.style.display="block"; list.innerHTML='<div class="recentHint"><b>Subscribe</b> to save your videos and skip re-uploading every time.</div>'; }
         return;
       }
       wrap.style.display="block"; list.innerHTML="";
       r.uploads.forEach(u=>{
         const card=document.createElement("div"); card.className="recentCard"+(selectedFileId===u.id?" sel":"");
-        card.innerHTML='<div class="rc-name">📹 '+escHtml(u.name)+'</div><div class="rc-meta">'+fmtSize(u.size)+'</div><button class="rc-del" title="Delete">✕</button>';
+        card.innerHTML='<div class="rc-name">'+escHtml(u.name)+'</div><div class="rc-meta">'+fmtSize(u.size)+'</div><button class="rc-del" title="Delete">✕</button>';
         card.onclick=()=>selectRecent(u.id,card);
         card.querySelector(".rc-del").onclick=(e)=>{ e.stopPropagation(); deleteRecent(u.id,email); };
         list.appendChild(card);
@@ -1214,10 +1246,10 @@
     function updateSelLabel(){
       const el=$("selSlot"); if(!el) return;
       if(selectedSlot){
-        el.innerHTML = `Claiming <b>Slot ${selectedSlot}</b> — fill the form & go live. <a id="clearSel">change</a>`;
+        el.innerHTML = `<span>Claiming <b>Slot ${selectedSlot}</b> — fill the form &amp; go live. <a id="clearSel">Change</a></span>`;
         const c=$("clearSel"); if(c) c.onclick=()=>{ selectedSlot=null; updateSelLabel(); refreshSlots(); };
       } else {
-        el.innerHTML = `Claiming the <b>next free slot</b> — or tap a specific slot above.`;
+        el.innerHTML = `<span>Claiming the <b>next free slot</b> — or tap a specific slot above.</span>`;
       }
     }
 
@@ -1244,7 +1276,7 @@
         _wasTrial = !!s.trial;   // remember so we can prompt to subscribe when this trial ends
         const n=(s.dests&&s.dests.length)||1;
         $("liveInfo").style.display="block";
-        $("liveInfo").innerHTML='🔴 <b>LIVE</b> · streaming to '+n+' platform'+(n>1?'s':'')+' · live for <b>'+fmt(s.uptime)+'</b>';
+        $("liveInfo").innerHTML='<b>LIVE</b> · streaming to '+n+' platform'+(n>1?'s':'')+' · live for <b>'+fmt(s.uptime)+'</b>';
         $("cdSlot").textContent=s.slot;
         $("cdTime").textContent=fmt(s.secondsLeft);
         $("cdLabel").textContent = s.trial ? "remaining on your free trial" : "remaining on your 24-hour slot";
@@ -1355,7 +1387,7 @@
       window.IS_SUBSCRIBED = active;
       if(!active) return;
       const bn=$("betaNote");
-      if(bn) bn.innerHTML='<b style="color:#34C759;">✓ Subscribed'+(r.multi?" · Multistream":"")+'</b> — claim any free slot for a full <b>24-hour</b> stream'+(r.multi?" to up to 3 platforms":"")+'.';
+      if(bn){ bn.classList.add("is-sub"); bn.innerHTML='<span><b style="color:#10B981;">✓ Subscribed'+(r.multi?" · Multistream":"")+'</b> — claim any free slot for a full <b>24-hour</b> stream'+(r.multi?" to up to 3 platforms":"")+'.</span>'; }
       const ub=$("upgradeBtn"); if(ub) ub.style.display="none";           // in-stream upgrade CTA
       const ps=$("planSubscribe"); if(ps){ ps.textContent="✓ Subscribed"; ps.style.pointerEvents="none"; ps.style.opacity=".7"; }
       if(r.multi){ const pm=$("planSubscribeMulti"); if(pm){ pm.textContent="✓ Subscribed · Multistream"; pm.style.pointerEvents="none"; pm.style.opacity=".7"; } }
