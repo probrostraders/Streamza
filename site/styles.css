@@ -1,7 +1,9 @@
 /* ===========================================================================
    Streamza — website styles. Matches the app's iOS-style pure-black / system-red
-   palette exactly. Self-contained, no external dependencies.
+   palette exactly.
    =========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300..800&display=swap');
 
 :root {
   /* Palette pulled straight from the app (colors.xml) */
@@ -36,7 +38,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   line-height: 1.6;
   font-size: 17px;
   -webkit-font-smoothing: antialiased;
