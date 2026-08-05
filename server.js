@@ -513,8 +513,14 @@ app.post("/lemonsqueezy/webhook", (req, res) => {
   // tier: the purchased product/variant name is authoritative; fall back to the tier we tagged at checkout
   const pname = ((attrs.variant_name || "") + " " + (attrs.product_name || "")).toLowerCase();
   const tier = (/multi/.test(pname) || custom.tier === "multi") ? "multi" : "single";
+  // Only trust attrs.status as a SUBSCRIPTION status when the payload is actually a subscription
+  // object (data.type === "subscriptions"). subscription_payment_success carries a
+  // subscription-invoice instead, whose own "status" (e.g. "paid") means something different —
+  // treating it the same here was wiping out subscribers seconds after subscription_created had
+  // just correctly added them.
+  const isSubscriptionObject = evt.data && evt.data.type === "subscriptions";
   if (email) {
-    if (/^subscription_/.test(name)) {
+    if (/^subscription_/.test(name) && isSubscriptionObject) {
       const status = (attrs.status || "").toLowerCase(); // active, on_trial, paused, past_due, cancelled, expired, unpaid
       if (status === "active" || status === "on_trial") subscribers.set(email, tier);
       else subscribers.delete(email);
