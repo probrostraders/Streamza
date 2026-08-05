@@ -173,7 +173,7 @@ section { padding: 76px 0; }
 .site-footer { border-top: 1px solid var(--hairline); padding: 52px 0 32px; }
 .footer-grid { display: grid; grid-template-columns: minmax(200px, 1.6fr) repeat(auto-fit, minmax(110px, 1fr)); gap: 32px; margin-bottom: 32px; }
 .footer-grid .col h4 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted-2); margin: 0 0 14px; }
-.footer-grid .col a { display: block; color: var(--muted); font-size: 15px; margin-bottom: 10px; }
+.footer-grid .col a { display: block; color: var(--muted); font-size: 15px; margin-bottom: 10px; overflow-wrap: anywhere; }
 .footer-grid .col a:hover { color: var(--text); text-decoration: none; }
 .footer-bottom { border-top: 1px solid var(--hairline); padding-top: 22px; color: var(--muted-2); font-size: 13.5px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; align-items: center; }
 .footer-bottom a { color: var(--muted); }
