@@ -177,9 +177,9 @@ section { padding: 76px 0; }
 .footer-grid .col a:hover { color: var(--text); text-decoration: none; }
 .footer-bottom { border-top: 1px solid var(--hairline); padding-top: 22px; color: var(--muted-2); font-size: 13.5px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; align-items: center; }
 .footer-bottom a { color: var(--muted); }
-.store-badge { display: inline-block; border-radius: 8px; overflow: hidden; border: 1px solid var(--hairline); transition: border-color .15s ease, opacity .15s ease; }
+.store-badge { display: inline-block; max-width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid var(--hairline); transition: border-color .15s ease, opacity .15s ease; }
 .store-badge:hover { border-color: var(--muted-2); opacity: .9; }
-.store-badge img { display: block; width: 162px; height: 48px; }
+.store-badge img { display: block; width: 100%; max-width: 162px; height: auto; }
 .store-qr { display: inline-flex; align-items: center; gap: 10px; margin-top: 12px; padding: 8px; border: 1px solid var(--hairline); border-radius: 10px; background: #0a0a0c; transition: border-color .15s ease, opacity .15s ease; }
 .store-qr:hover { border-color: var(--muted-2); opacity: .9; }
 .store-qr img { display: block; width: 64px; height: 64px; border-radius: 4px; background: #fff; }
