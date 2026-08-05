@@ -60,7 +60,7 @@ a { color: var(--text); text-decoration: none; }
 .nav-links { display: flex; gap: 28px; align-items: center; }
 .nav-links a { color: var(--muted); font-size: 15px; font-weight: 500; }
 .nav-links a:hover { color: var(--text); text-decoration: none; }
-@media (max-width: 760px) { .nav-links { display: none; } }
+@media (max-width: 860px) { .nav-links { display: none; } }
 
 /* ---------- Buttons ---------- */
 .btn { display: inline-flex; align-items: center; gap: 9px; padding: 12px 22px; border-radius: 12px; font-weight: 600; font-size: 15px; border: 1px solid transparent; cursor: pointer; transition: background .15s ease, border-color .15s ease, opacity .15s ease; }
@@ -202,7 +202,7 @@ section { padding: 76px 0; }
 }
 
 /* ---------- Legal / document pages ---------- */
-.doc { padding: 56px 0 76px; }
+.doc { padding: 56px 0 76px; overflow-wrap: anywhere; }
 .doc-wrap { max-width: 800px; margin: 0 auto; }
 .doc h1 { font-size: clamp(30px, 5vw, 42px); margin: 0 0 8px; font-weight: 800; letter-spacing: -.02em; }
 .doc .updated { color: var(--muted-2); font-size: 15px; margin-bottom: 8px; }
@@ -221,9 +221,16 @@ section { padding: 76px 0; }
 .doc .note { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--red); border-radius: 10px; padding: 14px 18px; margin: 18px 0; color: var(--muted); }
 .doc .tldr { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; margin: 24px 0; }
 .doc .tldr strong { color: var(--text); }
-.doc table { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 15px; }
-.doc th, .doc td { text-align: left; padding: 11px 12px; border: 1px solid var(--border); vertical-align: top; }
-.doc th { background: var(--surface); color: var(--text); }
+/* Tables scroll horizontally on narrow viewports instead of overflowing the
+   page — display:block on <table> makes the outer box scrollable while rows/
+   cells still lay out as a table inside it. Covers both doc pages and guide
+   (.lp-prose) tables, which previously had no styling or overflow handling
+   at all and blew out the layout by up to 131px on mobile. */
+.doc table, .lp-prose table { display: block; width: 100%; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-collapse: collapse; margin: 18px 0; font-size: 15px; }
+.doc th, .doc td, .lp-prose th, .lp-prose td { text-align: left; padding: 11px 12px; border: 1px solid var(--border); vertical-align: top; white-space: nowrap; }
+.doc th, .lp-prose th { background: var(--surface); color: var(--text); }
+.lp-prose td, .lp-prose th { color: var(--muted); }
+.lp-prose td:first-child, .lp-prose th:first-child { color: var(--text); }
 .back-home { display: inline-block; margin-top: 36px; color: var(--muted); font-weight: 500; }
 .back-home:hover { color: var(--text); text-decoration: none; }
 
@@ -240,7 +247,7 @@ section { padding: 76px 0; }
 /* Mobile hamburger menu */
 .nav-toggle { display: none; background: transparent; border: 0; color: var(--text); cursor: pointer; padding: 6px; border-radius: 8px; }
 .nav-toggle svg { width: 26px; height: 26px; display: block; }
-@media (max-width: 760px) {
+@media (max-width: 860px) {
   .nav-toggle { display: inline-flex; }
   .nav-links { display: none; position: absolute; top: 64px; left: 0; right: 0; background: rgba(0,0,0,.98); border-bottom: 1px solid var(--hairline); flex-direction: column; gap: 0; padding: 6px 0; }
   .site-header.nav-open .nav-links { display: flex; }
@@ -388,7 +395,7 @@ section { padding: 76px 0; }
 
 /* Prose body for guide pages */
 .lp-body { padding: 56px 0; }
-.lp-prose { max-width: 780px; }
+.lp-prose { max-width: 780px; overflow-wrap: anywhere; }
 .lp-prose h2 { font-size: clamp(24px, 3.2vw, 31px); letter-spacing: -.02em; font-weight: 750; margin: 48px 0 14px; }
 .lp-prose h2:first-child { margin-top: 0; }
 .lp-prose h3 { font-size: 19px; font-weight: 650; margin: 30px 0 8px; }
