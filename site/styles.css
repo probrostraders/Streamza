@@ -148,6 +148,7 @@ section { padding: 76px 0; }
 .cta-inner img { width: 64px; height: 64px; margin-bottom: 20px; }
 .cta-inner h2 { font-size: clamp(26px, 4vw, 36px); margin: 0 0 12px; font-weight: 800; letter-spacing: -.02em; }
 .cta-inner p { color: var(--muted); margin: 0 0 26px; font-size: 18px; }
+.cta-inner .btn { margin: 0 6px 10px; }
 
 /* ---------- FAQ ---------- */
 .faq { max-width: 760px; margin: 0 auto; }
