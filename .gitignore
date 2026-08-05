@@ -3,3 +3,5 @@ uploads/
 data/
 *.log
 *.err
+.env
+.env.*
