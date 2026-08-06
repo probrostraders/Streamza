@@ -33,6 +33,12 @@ const RELAY_COPY = process.env.RELAY_COPY === "1";
 const RELAY_PRESET = process.env.RELAY_PRESET || "veryfast";    // x264 speed/CPU trade-off
 const RELAY_MAXH = Number(process.env.RELAY_MAXH) || 0;         // 0 = keep source height; e.g. 720 on a micro VM
 const RELAY_VBITRATE = process.env.RELAY_VBITRATE || "3500k";   // target video bitrate when re-encoding
+// Screen-recorded source files (OBS/Chrome capture etc.) are usually variable frame rate — a container
+// that says 60fps but only actually delivers ~30fps of real frames. Piped straight into an RTMP output
+// that irregular timing makes YouTube/Twitch sit on "Preparing..." forever instead of going live, since
+// the incoming feed never looks like a steady real-time signal. Forcing a constant output frame rate
+// fixes it regardless of what the source file does.
+const RELAY_FPS = Number(process.env.RELAY_FPS) || 30;
 // FFmpeg can die mid-stream on a transient RTMP hiccup (destination reconnect, network blip) even with
 // -stream_loop -1 looping the input — that's a process crash, not the loop ending. Auto-reconnect instead
 // of ending the slot, as long as it wasn't a manual stop and time remains on the slot.
@@ -448,10 +454,11 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
   if (RELAY_COPY) {
     args.push("-c", "copy");
   } else {
-    // Re-encode so YouTube gets a keyframe every 2s (the #1 cause of "not receiving enough video").
+    // Re-encode so YouTube gets a keyframe every 2s (the #1 cause of "not receiving enough video") and a
+    // constant frame rate (the #1 cause of a screen-recorded source getting stuck on "Preparing...").
     args.push(
-      "-c:v", "libx264", "-preset", RELAY_PRESET, "-pix_fmt", "yuv420p",
-      "-force_key_frames", "expr:gte(t,n_forced*2)", "-g", "120", "-sc_threshold", "0",
+      "-c:v", "libx264", "-preset", RELAY_PRESET, "-pix_fmt", "yuv420p", "-r", String(RELAY_FPS),
+      "-force_key_frames", "expr:gte(t,n_forced*2)", "-g", String(RELAY_FPS * 2), "-sc_threshold", "0",
       "-b:v", RELAY_VBITRATE, "-maxrate", RELAY_VBITRATE, "-bufsize", "7000k"
     );
     if (RELAY_MAXH > 0) args.push("-vf", `scale=-2:'min(${RELAY_MAXH},ih)'`);
@@ -501,6 +508,19 @@ app.get("/myuploads", (req, res) => {
         }))
     : [];
   res.json({ subscribed, signedIn, retentionDays, uploads });
+});
+
+// Stream back a saved video's bytes so re-using it actually shows a preview instead of the blank
+// placeholder (the browser has no local File object for a server-saved pick, unlike a fresh upload).
+// Same authorization as /myuploads — supports Range requests so the <video> element can seek/scrub.
+app.get("/myuploads/:id/file", (req, res) => {
+  const email = (req.query.email || "").trim();
+  const subscribed = isSubscribed(email);
+  const signedIn = !!email && readSession(req) === email.toLowerCase();
+  if (!subscribed && !signedIn) return res.status(403).end();
+  const u = libFor(email).find((x) => x.id === req.params.id);
+  if (!u) return res.status(404).end();
+  res.sendFile(libPath(u.id), { headers: { "Content-Type": "video/mp4" } });
 });
 
 // Remove a saved video (only the owner's, and not while it's streaming).

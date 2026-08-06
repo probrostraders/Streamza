@@ -1223,7 +1223,17 @@
     }
     function selectRecent(id,card){
       selectedFileId = (selectedFileId===id) ? null : id; // toggle
-      if(selectedFileId){ try{ $("video").value=""; }catch(_){} const v=$("preview"); if(v) v.style.display="none"; const ph=$("vplaceholder"); if(ph) ph.style.display=""; }
+      const v=$("preview"), ph=$("vplaceholder");
+      if(pUrl){ URL.revokeObjectURL(pUrl); pUrl=null; }
+      if(selectedFileId){
+        try{ $("video").value=""; }catch(_){}
+        const email=(($("email")&&$("email").value)||"").trim();
+        if(v){ v.src="/myuploads/"+encodeURIComponent(selectedFileId)+"/file?email="+encodeURIComponent(email); v.style.display="block"; v.load(); }
+        if(ph) ph.style.display="none";
+      } else {
+        if(v){ v.removeAttribute("src"); v.style.display="none"; }
+        if(ph) ph.style.display="";
+      }
       document.querySelectorAll("#recentList .recentCard").forEach(c=>c.classList.remove("sel"));
       if(selectedFileId && card) card.classList.add("sel");
     }
