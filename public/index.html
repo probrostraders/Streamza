@@ -473,8 +473,9 @@
   .dropzone.has-file{border-style:solid;border-color:rgba(52,199,89,.4);background:rgba(52,199,89,.06);}
   .dropzone.has-file .dz-empty{display:none;}
   .dropzone.has-file .dz-filled{display:flex;}
-  .dz-filled svg{color:var(--ok);flex:none;}
+  .dz-filled svg{color:#fff;flex:none;}
   .dz-filename{flex:1;text-align:left;font-size:13.5px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .dz-filename .dz-progress{color:var(--sub);font-weight:500;}
   .dz-change{font-size:12px;font-weight:700;color:var(--red);flex:none;}
 
   /* notice boxes: icon-led banners. Content is wrapped in ONE <span> (see markup/JS) so the
@@ -955,6 +956,19 @@
     </div>
   </div>
 
+  <!-- Choose your plan (shown when tapping Go Live, before a non-subscribed account starts streaming) -->
+  <div class="modal" id="planModal">
+    <div class="box">
+      <img src="logo.svg" alt="Streamza" />
+      <h3>Choose how to go live</h3>
+      <p>Pick a plan to start streaming — cancel anytime.</p>
+      <button class="btn btn-ghost btn-block trial-btn" id="planTrial"><span>Start free — 15-minute trial</span><b>$0</b></button>
+      <button class="btn btn-primary btn-block trial-btn" id="planSingle" style="margin-top:10px;"><span>Subscribe — 24-hour streaming</span><b id="planSinglePrice">$4.99/mo</b></button>
+      <button class="btn btn-ghost btn-block trial-btn" id="planMulti" style="margin-top:10px;"><span>Multistream — up to 3 platforms</span><b id="planMultiPrice">$9.99/mo</b></button>
+      <p class="secure"><a id="planCancel" style="cursor:pointer;">Cancel</a> · 🔒 Secure checkout by Lemon Squeezy</p>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script>
@@ -1172,7 +1186,9 @@
           try{ localStorage.setItem(EKEY, email); }catch(_){}  // remember so it stays recognised
           const token=localStorage.getItem(TKEY);
           if(token){ await fetch("/upgrade",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token})}); }
-          toast("Subscription active — you're now on a full 24-hour slot!"); refreshMine(); return;
+          if(PAY._autoGoLive){ PAY._autoGoLive=false; toast("Subscription active — going live…"); beginStream(); }
+          else toast("Subscription active — you're now on a full 24-hour slot!");
+          refreshMine(); return;
         }
       }catch(_){}
       setTimeout(()=>pollSubscribed(email,n+1),2000);
@@ -1184,18 +1200,45 @@
     // video preview
     let pUrl=null;
     let selectedFileId = null; // a saved (reused) video chosen instead of a new upload
-    $("video").addEventListener("change",()=>{
-      const f=$("video").files[0];
-      if(f){ selectedFileId=null; document.querySelectorAll("#recentList .recentCard").forEach(c=>c.classList.remove("sel")); } // a new upload replaces a saved pick
-      if(pUrl)URL.revokeObjectURL(pUrl);
-      if(f){pUrl=URL.createObjectURL(f);const v=$("preview");v.src=pUrl;v.style.display="block";$("vplaceholder").style.display="none";v.play().catch(()=>{});}
-    });
-    // dropzone visual state (purely cosmetic — doesn't affect the upload logic above)
+    // Auto-upload state: the file starts uploading the moment it's picked, so "Go Live" doesn't have
+    // to wait through the whole transfer — it just claims a slot against the already-uploaded file.
+    let pendingUploadId=null, pendingUploadXhr=null;
+    function cancelPendingUpload(){ if(pendingUploadXhr){ try{ pendingUploadXhr.abort(); }catch(_){} } pendingUploadXhr=null; pendingUploadId=null; }
+    function startPreUpload(f){
+      const fd=new FormData(); fd.append("video",f);
+      const xhr=new XMLHttpRequest(); pendingUploadXhr=xhr;
+      xhr.open("POST","/pending-upload"); xhr.timeout=900000;
+      xhr.upload.onprogress=(e)=>{
+        if(!e.lengthComputable || $("video").files[0]!==f) return;
+        const pct=Math.round(e.loaded/e.total*100);
+        $("dzFilename").innerHTML=escHtml(f.name)+' · <span class="dz-progress">uploading '+pct+'%…</span>';
+      };
+      xhr.onload=()=>{
+        if(pendingUploadXhr!==xhr) return; // superseded by a newer pick
+        pendingUploadXhr=null;
+        let j={}; try{ j=JSON.parse(xhr.responseText); }catch(_){}
+        if($("video").files[0]!==f) return; // user already picked something else
+        if(xhr.status>=200 && xhr.status<300 && j.ok){ pendingUploadId=j.uploadId; }
+        else if(j.error) toast(j.error); // Go Live still works — falls back to uploading the file itself
+        $("dzFilename").textContent=f.name+" · "+fmtSize(f.size);
+      };
+      xhr.onerror=()=>{ if(pendingUploadXhr===xhr) pendingUploadXhr=null; };
+      xhr.ontimeout=()=>{ if(pendingUploadXhr===xhr) pendingUploadXhr=null; };
+      xhr.send(fd);
+    }
     $("video").addEventListener("change",()=>{
       const f=$("video").files[0];
       const dz=$("dropzone");
-      if(f){ dz.classList.add("has-file"); $("dzFilename").textContent=f.name+" · "+fmtSize(f.size); }
-      else { dz.classList.remove("has-file"); }
+      cancelPendingUpload();
+      if(f){ selectedFileId=null; document.querySelectorAll("#recentList .recentCard").forEach(c=>c.classList.remove("sel")); } // a new upload replaces a saved pick
+      if(pUrl){ URL.revokeObjectURL(pUrl); pUrl=null; }
+      if(f){
+        pUrl=URL.createObjectURL(f); const v=$("preview"); v.src=pUrl; v.style.display="block"; $("vplaceholder").style.display="none"; v.play().catch(()=>{});
+        dz.classList.add("has-file"); $("dzFilename").textContent=f.name+" · "+fmtSize(f.size);
+        startPreUpload(f);
+      } else {
+        dz.classList.remove("has-file");
+      }
     });
     function fmtSize(b){ b=+b||0; if(b<1048576) return (b/1024).toFixed(0)+" KB"; if(b<1073741824) return (b/1048576).toFixed(1)+" MB"; return (b/1073741824).toFixed(2)+" GB"; }
     function escHtml(s){ return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
@@ -1224,9 +1267,11 @@
     function selectRecent(id,card){
       selectedFileId = (selectedFileId===id) ? null : id; // toggle
       const v=$("preview"), ph=$("vplaceholder");
+      cancelPendingUpload();
       if(pUrl){ URL.revokeObjectURL(pUrl); pUrl=null; }
       if(selectedFileId){
         try{ $("video").value=""; }catch(_){}
+        $("dropzone").classList.remove("has-file");
         const email=(($("email")&&$("email").value)||"").trim();
         if(v){ v.src="/myuploads/"+encodeURIComponent(selectedFileId)+"/file?email="+encodeURIComponent(email); v.style.display="block"; v.load(); }
         if(ph) ph.style.display="none";
@@ -1347,28 +1392,30 @@
       else{ $("sBitrate").textContent="—"; $("sSpeed").textContent="—"; $("sSpeed").className="v"; const li=$("liveInfo"); if(li) li.style.display="none"; }
     }
 
-    $("startBtn").onclick=async()=>{
+    // Actually claims a slot and goes live — used both for a direct trial start and after a plan is
+    // chosen/subscription confirmed. Uses the auto-uploaded file (pendingUploadId) when one's ready,
+    // so this is instant instead of re-uploading; falls back to uploading the raw file if it isn't.
+    async function beginStream(){
       const f=$("video").files[0];
-      if(!$("email").value) return toast("Enter your email.");
-      if(!f && !selectedFileId) return toast("Choose a video file (or tap one of your recent videos).");
-      const dests=collectDests();
-      if(!dests.length){ return toast(mode==="multi" ? "Add at least one platform (URL + key)." : "Enter your RTMP server URL."); }
-      if(!$("agree").checked) return toast("Confirm you have the rights to this content.");
       const fd=new FormData();
       fd.append("email",$("email").value);
-      if(f) fd.append("video",f); else fd.append("fileId",selectedFileId);   // reuse a saved video → no upload
-      fd.append("dests",JSON.stringify(dests));
+      if(pendingUploadId) fd.append("pendingUploadId",pendingUploadId);
+      else if(f) fd.append("video",f);
+      else fd.append("fileId",selectedFileId);   // reuse a saved video → no upload
+      fd.append("dests",JSON.stringify(collectDests()));
       fd.append("loop",$("loop").checked); fd.append("agree",$("agree").checked);
       if(selectedSlot) fd.append("slot",selectedSlot);
-      const btn=$("startBtn"); btn.disabled=true; btn.textContent = f ? "Uploading… 0%" : "Starting…";
+      const usingPending=!!pendingUploadId;
+      const btn=$("startBtn"); btn.disabled=true; btn.textContent = (f && !usingPending) ? "Uploading… 0%" : "Starting…";
       const done=(label)=>{ btn.disabled=false; btn.textContent=label||"Go Live"; };
       const xhr=new XMLHttpRequest();
       xhr.open("POST","/start"); xhr.timeout=900000; // 15 min
-      xhr.upload.onprogress=(e)=>{ if(e.lengthComputable){ const pct=Math.round(e.loaded/e.total*100); btn.textContent = pct<100 ? ("Uploading… "+pct+"%") : "Processing…"; } };
+      xhr.upload.onprogress=(e)=>{ if(e.lengthComputable && !usingPending){ const pct=Math.round(e.loaded/e.total*100); btn.textContent = pct<100 ? ("Uploading… "+pct+"%") : "Processing…"; } };
       xhr.onload=()=>{
         let j={}; try{ j=JSON.parse(xhr.responseText); }catch(_){}
         if(xhr.status>=200 && xhr.status<300 && j.ok){
           done("Go Live");
+          pendingUploadId=null;
           localStorage.setItem(TKEY,j.token); localStorage.setItem("streamza_email",($("email").value||"").trim()); selectedSlot=null; updateSelLabel();
           if(j.multistreamLimited) toast("Multistream is the $9.99 plan — going live to your first platform only. Subscribe to add more.");
           else toast("Slot "+j.slot+" claimed — live"+(j.destinations>1?(" to "+j.destinations+" platforms"):"")+"!");
@@ -1378,6 +1425,44 @@
       xhr.onerror=()=>{ done("Go Live"); toast("Upload failed — check your internet connection and try again."); };
       xhr.ontimeout=()=>{ done("Go Live"); toast("Upload timed out — try a smaller file or a better connection."); };
       xhr.send(fd);
+    }
+    // "Choose how to go live" — shown to non-subscribed accounts on tapping Go Live, offering the free
+    // trial (only if not already used) alongside both paid plans, instead of silently defaulting to trial.
+    function openPlanModal(trialAvailable){
+      const t=$("planTrial"); if(t) t.style.display = trialAvailable ? "flex" : "none";
+      const tm=$("planMulti"); if(tm) tm.style.display = PAY.multiEnabled ? "flex" : "none";
+      if(PAY.priceLabel){ const el=$("planSinglePrice"); if(el) el.textContent=PAY.priceLabel; }
+      if(PAY.priceLabelMulti){ const el=$("planMultiPrice"); if(el) el.textContent=PAY.priceLabelMulti; }
+      $("planModal").classList.add("show");
+    }
+    $("planTrial").onclick=()=>{ $("planModal").classList.remove("show"); beginStream(); };
+    $("planSingle").onclick=()=>{
+      $("planModal").classList.remove("show");
+      if(!PAY.enabled) return toast("Subscriptions aren't switched on yet.");
+      PAY._autoGoLive=true; openCheckout(($("email").value||"").trim(),"single");
+    };
+    $("planMulti").onclick=()=>{
+      $("planModal").classList.remove("show");
+      if(!PAY.enabled) return toast("The Multistream plan isn't switched on yet.");
+      PAY._autoGoLive=true; openCheckout(($("email").value||"").trim(),"multi");
+    };
+    $("planCancel").onclick=()=>$("planModal").classList.remove("show");
+    $("planModal").onclick=(e)=>{ if(e.target===$("planModal")) $("planModal").classList.remove("show"); };
+
+    $("startBtn").onclick=async()=>{
+      const f=$("video").files[0];
+      if(!$("email").value) return toast("Enter your email.");
+      if(!f && !selectedFileId && !pendingUploadId) return toast("Choose a video file (or tap one of your recent videos).");
+      const dests=collectDests();
+      if(!dests.length){ return toast(mode==="multi" ? "Add at least one platform (URL + key)." : "Enter your RTMP server URL."); }
+      if(!$("agree").checked) return toast("Confirm you have the rights to this content.");
+      if(window.IS_SUBSCRIBED) return beginStream();
+      const email=$("email").value.trim();
+      try{
+        const r=await (await fetch("/subscribed?email="+encodeURIComponent(email))).json();
+        if(r.active){ window.IS_SUBSCRIBED=true; return beginStream(); }
+        openPlanModal(!r.trialUsed);
+      }catch(_){ beginStream(); } // couldn't check status — don't block going live over a network hiccup
     };
     async function stopStream(){
       const token=localStorage.getItem(TKEY); if(!token) return;

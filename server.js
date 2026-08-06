@@ -88,6 +88,15 @@ function tierOf(email) { return subscribers.get((email || "").trim().toLowerCase
 function isSubscribed(email) { return !!tierOf(email); }            // any plan → full 24h
 function canMultistream(email) { return tierOf(email) === "multi"; } // only the $10 plan
 
+// Which emails have already used their one free 15-minute trial — lets the "choose your plan" screen
+// only offer the trial once per account instead of every time (the IP cooldown in /start is a separate,
+// short-window anti-abuse limit, not this).
+const TRIALS_FILE = path.join(DATA_DIR, "usedtrials.json");
+let usedTrials = new Set();
+try { usedTrials = new Set(JSON.parse(fs.readFileSync(TRIALS_FILE, "utf8")) || []); } catch (_) {}
+function saveUsedTrials() { try { fs.writeFileSync(TRIALS_FILE, JSON.stringify([...usedTrials])); } catch (_) {} }
+function hasUsedTrial(email) { return usedTrials.has((email || "").trim().toLowerCase()); }
+
 // Lemon Squeezy customer-portal links per email (captured from subscription webhooks) so a signed-in
 // user can cancel / update their card. Falls back to the generic LS "my orders" magic-link page.
 const PORTAL_FILE = path.join(DATA_DIR, "portals.json");
@@ -339,10 +348,12 @@ setInterval(() => {
       }
     }
     saveLib();
+    // drop pre-uploads nobody ever claimed with "Go Live" (picked a file, then walked away)
+    for (const [id, p] of pendingUploads) { if (now - p.createdAt > PENDING_UPLOAD_TTL_MS) { rm(p.path); pendingUploads.delete(id); } }
     // delete true orphans (files belonging to nothing) older than 30 min — failed/aborted uploads
     const known = new Set(library.map((u) => u.id));
     for (const f of fs.readdirSync(UPLOAD_DIR)) {
-      if (live.has(f) || known.has(f)) continue;
+      if (live.has(f) || known.has(f) || pendingUploads.has(f)) continue;
       const fp = path.join(UPLOAD_DIR, f);
       try { if (now - fs.statSync(fp).mtimeMs > 30 * 60 * 1000) fs.unlinkSync(fp); } catch (_) {}
     }
@@ -382,9 +393,27 @@ function probeCodecs(file) {
   });
 }
 
+// Auto-upload: the browser sends the file the moment it's picked (before the plan/destination is even
+// chosen), so "Go Live" just claims a slot against an already-uploaded file instead of waiting through
+// the whole transfer again. Validated (codec-checked) immediately, same as a normal fresh upload.
+const pendingUploads = new Map(); // uploadId -> { path, name, size, createdAt }
+const PENDING_UPLOAD_TTL_MS = 2 * 60 * 60 * 1000; // unclaimed pre-uploads older than this are swept
+
+app.post("/pending-upload", rateLimit(15, 60000), upload.single("video"), async (req, res) => {
+  const file = req.file;
+  if (!file) return res.status(400).json({ error: "No video file uploaded." });
+  const codecs = await probeCodecs(file.path);
+  if (codecs.video && codecs.video !== "h264") { rm(file.path); return res.status(400).json({ error: `Your video is ${codecs.video.toUpperCase()} — please export as MP4 with H.264 video so it can stream instantly (no re-encode).` }); }
+  if (codecs.audio && codecs.audio !== "aac") { rm(file.path); return res.status(400).json({ error: `Your audio is ${codecs.audio.toUpperCase()} — please use AAC audio (MP4 = H.264 + AAC).` }); }
+  const uploadId = path.basename(file.path);
+  pendingUploads.set(uploadId, { path: file.path, name: file.originalname, size: file.size, createdAt: Date.now() });
+  res.json({ ok: true, uploadId, name: file.originalname, size: file.size });
+});
+
 app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res) => {
   const file = req.file;
   const reuseId = (req.body.fileId || "").trim();
+  const pendingId = (req.body.pendingUploadId || "").trim();
   const email = (req.body.email || "").trim();
   const loop = req.body.loop === "true" || req.body.loop === "on";
   const bail = (code, error) => { if (file) rm(file.path); return res.status(code).json({ error }); };
@@ -392,10 +421,14 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
   if (!EMAIL_RE.test(email)) return bail(400, "Enter a valid email to claim a slot.");
   if (req.body.agree !== "true" && req.body.agree !== "on") return bail(400, "Please confirm you have the rights to stream this content.");
 
-  // Source = a fresh upload OR one of the subscriber's saved videos (no re-upload needed).
-  let srcPath, srcName, srcSize, isNew = false;
+  // Source = a fresh upload, an already pre-uploaded (auto-uploaded on file-select) video, or one of
+  // the account's saved videos (no re-upload needed either way).
+  let srcPath, srcName, srcSize, isNew = false, skipCodecCheck = false;
   if (file) {
     srcPath = file.path; srcName = file.originalname; srcSize = file.size; isNew = true;
+  } else if (pendingId && pendingUploads.has(pendingId)) {
+    const p = pendingUploads.get(pendingId);
+    srcPath = p.path; srcName = p.name; srcSize = p.size; isNew = true; skipCodecCheck = true;
   } else if (reuseId) {
     const u = libFor(email).find((x) => x.id === reuseId);
     if (!u) return res.status(400).json({ error: "That saved video is no longer available — please upload it again." });
@@ -427,8 +460,8 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
     .filter((d) => /^rtmps?:\/\//i.test(d.url));
   if (!norm.length) return bail(400, "Add at least one destination whose URL starts with rtmp:// or rtmps://");
 
-  // codec check — only for fresh uploads (saved/reused videos already passed at upload time)
-  if (isNew) {
+  // codec check — only for fresh uploads (pre-uploaded/saved/reused videos already passed at upload time)
+  if (isNew && !skipCodecCheck) {
     const codecs = await probeCodecs(srcPath);
     if (codecs.video && codecs.video !== "h264") return bail(400, `Your video is ${codecs.video.toUpperCase()} — please export as MP4 with H.264 video so it can stream instantly (no re-encode).`);
     if (codecs.audio && codecs.audio !== "aac") return bail(400, `Your audio is ${codecs.audio.toUpperCase()} — please use AAC audio (MP4 = H.264 + AAC).`);
@@ -441,6 +474,7 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
     : slots.find((s) => !s.busy);
   if (!slot) return bail(409, `All ${SLOT_COUNT} slots are full right now. Please wait for one to free up.`);
 
+  if (pendingId) pendingUploads.delete(pendingId); // now committed to a slot — no longer "pending"
   saveLead(email, "stream");
   const maxDests = canMultistream(email) ? MULTISTREAM_MAX : 1;  // multistream only on the $10 plan
   const limited = norm.length > maxDests;                        // user asked for more than their plan allows
@@ -479,7 +513,10 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
   // Subscribers' and signed-in users' videos are saved for reuse (appear under "Your recent videos");
   // reused ones refresh their spot instead of duplicating.
   if (paid || signedIn) { if (isNew) libAdd(email, path.basename(srcPath), srcName, srcSize, signedIn); else libTouch(reuseId, signedIn); }
-  if (!paid) trialCooldown.set(req.ip, Date.now());   // start this IP's free-trial cooldown
+  if (!paid) {
+    trialCooldown.set(req.ip, Date.now());   // start this IP's free-trial cooldown
+    if (!usedTrials.has(email.toLowerCase())) { usedTrials.add(email.toLowerCase()); saveUsedTrials(); }
+  }
   slog(slot, `Slot ${slot.id} claimed — ${paid ? "24h" : `free ${TRIAL_MS / 60000}-min trial`}${use.length > 1 ? ` · multistream ×${use.length}` : ""} ${loop ? "(loop) " : ""}${srcName}`);
   launchFfmpeg(slot, args);
   res.json({ ok: true, slot: slot.id, token, trial: slot.trial, expiresAt: slot.expiresAt, destinations: use.length, multistreamLimited: limited });
@@ -560,8 +597,13 @@ app.get("/pay/config", (_req, res) =>
     multiEnabled: !!LS_CHECKOUT_MULTI, maxDests: MULTISTREAM_MAX,
   }));
 
-// Studio polls this after checkout to know when the webhook has activated the subscription.
-app.get("/subscribed", (req, res) => { const t = tierOf(req.query.email || ""); res.json({ active: !!t, tier: t, multi: t === "multi" }); });
+// Studio polls this after checkout to know when the webhook has activated the subscription, and to
+// decide whether the "choose your plan" screen should still offer a free trial for this email.
+app.get("/subscribed", (req, res) => {
+  const email = req.query.email || "";
+  const t = tierOf(email);
+  res.json({ active: !!t, tier: t, multi: t === "multi", trialUsed: hasUsedTrial(email) });
+});
 
 // Lemon Squeezy webhook — verifies X-Signature, then adds/removes the subscriber by email.
 function verifyLsSig(req) {
