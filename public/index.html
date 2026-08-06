@@ -273,6 +273,11 @@
     .modal input:focus{outline:none;border-color:rgba(255,59,48,.6);}
     .modal .mrow{display:flex;gap:10px;} .modal .mrow .btn{flex:1;justify-content:center;}
     .modal .secure{font-size:11px;color:var(--sub);text-align:center;margin-top:12px;}
+    /* label + price as two flex children, not a bare text node beside a span — avoids the price
+       orphaning onto its own line when the button wraps at narrow widths */
+    .trial-btn{justify-content:space-between;text-align:left;gap:10px;}
+    .trial-btn span{flex:1;min-width:0;}
+    .trial-btn b{font-weight:800;white-space:nowrap;flex:none;}
 
     /* studio mode tabs + multistream destination cards */
     .modetabs{display:flex;gap:6px;background:#0c0c0f;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:5px;margin:0 0 16px;}
@@ -943,9 +948,9 @@
     <div class="box">
       <img src="logo.svg" alt="Streamza" />
       <h3>Your free trial ended</h3>
-      <p>Your 15-minute trial is up and the stream stopped. <b style="color:#fff;">Subscribe to keep streaming the full 24 hours</b>, non-stop — cancel anytime.</p>
-      <button class="btn btn-primary btn-block" id="trialSubSingle">Subscribe — 24-hour streaming · <span id="trialPrice">$4.99/mo</span></button>
-      <button class="btn btn-ghost btn-block" id="trialSubMulti" style="margin-top:10px;">Multistream — up to 3 platforms · <span id="trialPriceMulti">$9.99/mo</span></button>
+      <p>Your 15-minute trial is up and the stream stopped. <b style="color:#fff;">Subscribe to keep streaming the full 24 hours</b>, non-stop. Billed monthly — cancel anytime.</p>
+      <button class="btn btn-primary btn-block trial-btn" id="trialSubSingle"><span>Subscribe — 24-hour streaming</span><b id="trialPrice">$4.99/mo</b></button>
+      <button class="btn btn-ghost btn-block trial-btn" id="trialSubMulti" style="margin-top:10px;"><span>Multistream — up to 3 platforms</span><b id="trialPriceMulti">$9.99/mo</b></button>
       <p class="secure"><a id="trialLater" style="cursor:pointer;">Maybe later</a> · 🔒 Secure checkout by Lemon Squeezy</p>
     </div>
   </div>
