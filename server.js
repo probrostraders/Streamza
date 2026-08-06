@@ -33,6 +33,11 @@ const RELAY_COPY = process.env.RELAY_COPY === "1";
 const RELAY_PRESET = process.env.RELAY_PRESET || "veryfast";    // x264 speed/CPU trade-off
 const RELAY_MAXH = Number(process.env.RELAY_MAXH) || 0;         // 0 = keep source height; e.g. 720 on a micro VM
 const RELAY_VBITRATE = process.env.RELAY_VBITRATE || "3500k";   // target video bitrate when re-encoding
+// FFmpeg can die mid-stream on a transient RTMP hiccup (destination reconnect, network blip) even with
+// -stream_loop -1 looping the input — that's a process crash, not the loop ending. Auto-reconnect instead
+// of ending the slot, as long as it wasn't a manual stop and time remains on the slot.
+const FFMPEG_MAX_RESTARTS = Number(process.env.FFMPEG_MAX_RESTARTS) || 20;      // auto-reconnects before giving up
+const FFMPEG_RESTART_DELAY_MS = Number(process.env.FFMPEG_RESTART_DELAY_MS) || 3000; // backoff between reconnects
 // --- Lemon Squeezy (two subscription tiers) — set via env once your store is ready ---
 const LS_STORE = process.env.LS_STORE || "";                   // store subdomain, e.g. "streamza"
 const LS_VARIANT_ID = process.env.LS_VARIANT_ID || "";         // SINGLE plan variant ($4.99/mo, 1 platform)
@@ -224,40 +229,76 @@ function saveLead(email, source) {
 }
 function rm(p) { try { fs.unlinkSync(p); } catch (_) {} }
 
-// ---- saved videos (SUBSCRIBER perk: reuse an upload without re-uploading every time) ----
+// ---- saved videos (reuse an upload without re-uploading every time — subscribers, and any signed-in
+// Google account) ----
 const LIB_FILE = path.join(DATA_DIR, "library.json");
-const LIB_MAX_PER_USER = Number(process.env.LIB_MAX_PER_USER) || 5;             // newest N kept per subscriber
+const LIB_MAX_PER_USER = Number(process.env.LIB_MAX_PER_USER) || 5;             // newest N kept per user
 const LIB_MAX_TOTAL = (Number(process.env.LIB_MAX_TOTAL_GB) || 8) * 1024 ** 3;  // global disk budget
-const LIB_UNUSED_MS = (Number(process.env.LIB_UNUSED_DAYS) || 30) * 86400000;   // clean abandoned files
-let library = []; // [{ id, email, name, size, uploadedAt, lastUsedAt }]
+const LIB_UNUSED_MS = (Number(process.env.LIB_UNUSED_DAYS) || 30) * 86400000;        // subscriber retention
+const LIB_UNUSED_MS_FREE = (Number(process.env.LIB_UNUSED_DAYS_FREE) || 7) * 86400000; // signed-in (free) retention
+let library = []; // [{ id, email, name, size, uploadedAt, lastUsedAt, signedIn }]
 try { library = JSON.parse(fs.readFileSync(LIB_FILE, "utf8")) || []; } catch (_) { library = []; }
 const saveLib = () => { try { fs.writeFileSync(LIB_FILE, JSON.stringify(library)); } catch (_) {} };
 const libPath = (id) => path.join(UPLOAD_DIR, id);
 const libExists = (u) => { try { return fs.existsSync(libPath(u.id)); } catch (_) { return false; } };
 const libFor = (email) => { const e = (email || "").trim().toLowerCase(); return library.filter((u) => u.email === e && libExists(u)); };
-function libAdd(email, fileId, name, size) {
+const libRetentionMs = (email) => (isSubscribed(email) ? LIB_UNUSED_MS : LIB_UNUSED_MS_FREE);
+function libAdd(email, fileId, name, size, signedIn) {
   const e = (email || "").trim().toLowerCase();
   library = library.filter((u) => u.id !== fileId); // de-dupe (also refreshes lastUsedAt on reuse)
-  library.push({ id: fileId, email: e, name: name || "video.mp4", size: size || 0, uploadedAt: Date.now(), lastUsedAt: Date.now() });
+  library.push({ id: fileId, email: e, name: name || "video.mp4", size: size || 0, uploadedAt: Date.now(), lastUsedAt: Date.now(), signedIn: !!signedIn });
   const mine = library.filter((u) => u.email === e).sort((a, b) => b.lastUsedAt - a.lastUsedAt);
   mine.slice(LIB_MAX_PER_USER).forEach((u) => { rm(libPath(u.id)); library = library.filter((x) => x.id !== u.id); }); // keep newest N
   saveLib();
 }
-const libTouch = (fileId) => { const u = library.find((x) => x.id === fileId); if (u) { u.lastUsedAt = Date.now(); saveLib(); } };
+const libTouch = (fileId, signedIn) => { const u = library.find((x) => x.id === fileId); if (u) { u.lastUsedAt = Date.now(); if (signedIn) u.signedIn = true; saveLib(); } };
 
 // ---- 5 slots ----
 const slots = Array.from({ length: SLOT_COUNT }, (_, i) => ({
   id: i + 1, busy: false, trial: true, email: null, dest: null, dests: [], file: null, filePath: null, fileSize: 0,
   startedAt: 0, expiresAt: 0, proc: null, token: null, log: [],
+  stopping: false, restartCount: 0, ffmpegArgs: null, signedIn: false,
 }));
 function slog(s, line) { if (!line) return; s.log.push(line); if (s.log.length > 60) s.log.shift(); }
 function release(s) {
-  // Subscribers KEEP their video (reusable — no re-upload); free/trial uploads are removed.
+  // Signed-in users (subscriber or Google account) KEEP their video (reusable — no re-upload);
+  // anonymous free-trial uploads are removed.
   if (s.filePath) {
-    if (isSubscribed(s.email)) libAdd(s.email, path.basename(s.filePath), s.file, s.fileSize);
+    if (isSubscribed(s.email) || s.signedIn) libAdd(s.email, path.basename(s.filePath), s.file, s.fileSize, s.signedIn);
     else rm(s.filePath);
   }
-  Object.assign(s, { busy: false, trial: true, email: null, dest: null, dests: [], file: null, filePath: null, fileSize: 0, startedAt: 0, expiresAt: 0, proc: null, token: null, log: [] });
+  Object.assign(s, {
+    busy: false, trial: true, email: null, dest: null, dests: [], file: null, filePath: null, fileSize: 0,
+    startedAt: 0, expiresAt: 0, proc: null, token: null, log: [],
+    stopping: false, restartCount: 0, ffmpegArgs: null, signedIn: false,
+  });
+}
+// Spawns (or re-spawns) the ffmpeg relay process for a slot. If it dies unexpectedly mid-stream — an RTMP
+// hiccup, not a manual /stop or slot expiry — reconnect automatically instead of ending the whole slot,
+// so "Loop the video" really does keep streaming until the user stops it or the slot/trial runs out.
+function launchFfmpeg(slot, args) {
+  slot.ffmpegArgs = args;
+  const proc = spawn("ffmpeg", args);
+  slot.proc = proc;
+  proc.on("error", (e) => {
+    slog(slot, "FFmpeg failed to start: " + e.message);
+    console.log(`[slot ${slot.id}] ffmpeg spawn error: ${e.message}`);
+    release(slot);
+  });
+  proc.stderr.on("data", (d) => slog(slot, d.toString().trim().split("\n").pop()));
+  proc.on("exit", (code) => {
+    slog(slot, `FFmpeg stopped (exit ${code}).`);
+    if (code) console.log(`[slot ${slot.id}] ffmpeg exit ${code} → ${slot.log.slice(-5).join(" | ")}`);
+    const canReconnect = !slot.stopping && slot.busy && slot.expiresAt && Date.now() < slot.expiresAt
+      && slot.restartCount < FFMPEG_MAX_RESTARTS;
+    if (canReconnect) {
+      slot.restartCount++;
+      slog(slot, `Reconnecting… (attempt ${slot.restartCount}/${FFMPEG_MAX_RESTARTS})`);
+      setTimeout(() => { if (slot.busy && !slot.stopping) launchFfmpeg(slot, slot.ffmpegArgs); }, FFMPEG_RESTART_DELAY_MS);
+    } else {
+      release(slot);
+    }
+  });
 }
 
 // expiry watchdog: stop+free any slot past its 24h
@@ -266,17 +307,20 @@ setInterval(() => {
   for (const s of slots) {
     if (s.busy && s.expiresAt && now > s.expiresAt) {
       slog(s, s.trial ? "Free 15-minute trial ended — upgrade to 24 hours to keep streaming." : "Slot expired (24h) — stopping. Renew to continue.");
+      s.stopping = true;
       try { if (s.proc) s.proc.kill("SIGINT"); else release(s); } catch (_) { release(s); }
     }
   }
-  // saved-video cleanup: drop a library entry when the user is no longer subscribed, the file is gone,
-  // or it's been abandoned (unused 30d); never touch a file that's streaming right now.
+  // saved-video cleanup: drop a library entry once its owner is neither subscribed nor was signed in
+  // when it was saved, the file is gone, or it's passed its retention window (30d subscriber / 7d signed-in
+  // free — see LIB_UNUSED_MS / LIB_UNUSED_MS_FREE); never touch a file that's streaming right now.
   try {
     const live = new Set(slots.filter((s) => s.filePath).map((s) => path.basename(s.filePath)));
     library = library.filter((u) => {
       if (live.has(u.id)) return true;
       if (!libExists(u)) return false;
-      if (!isSubscribed(u.email) || now - u.lastUsedAt > LIB_UNUSED_MS) { rm(libPath(u.id)); return false; }
+      const eligible = isSubscribed(u.email) || u.signedIn;
+      if (!eligible || now - u.lastUsedAt > libRetentionMs(u.email)) { rm(libPath(u.id)); return false; }
       return true;
     });
     // global disk budget — evict the least-recently-used (non-live) saved videos until under the cap
@@ -416,42 +460,47 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
   if (targets.length === 1) args.push("-f", "flv", targets[0]);
   else args.push("-f", "tee", targets.map((t) => `[f=flv:onfail=ignore]${t}`).join("|")); // fan out to all platforms
 
+  // Signed in via Google (session cookie matches the claimed email), not just typed into the form —
+  // this, or an active subscription, is what earns the video a spot in "Your recent videos".
+  const signedIn = readSession(req) === email.toLowerCase();
   Object.assign(slot, {
     busy: true, trial: !paid, email, dests: use.map((d) => d.url), dest: use[0].url,
     file: srcName, filePath: srcPath, fileSize: srcSize,
     startedAt: Date.now(), expiresAt: Date.now() + (paid ? SLOT_MS : TRIAL_MS), token, log: [],
+    stopping: false, restartCount: 0, signedIn,
   });
-  // Subscribers' videos are saved for reuse (appear under "Your recent videos"); reused ones refresh.
-  if (paid) { if (isNew) libAdd(email, path.basename(srcPath), srcName, srcSize); else libTouch(reuseId); }
-  else trialCooldown.set(req.ip, Date.now());   // start this IP's free-trial cooldown
+  // Subscribers' and signed-in users' videos are saved for reuse (appear under "Your recent videos");
+  // reused ones refresh their spot instead of duplicating.
+  if (paid || signedIn) { if (isNew) libAdd(email, path.basename(srcPath), srcName, srcSize, signedIn); else libTouch(reuseId, signedIn); }
+  if (!paid) trialCooldown.set(req.ip, Date.now());   // start this IP's free-trial cooldown
   slog(slot, `Slot ${slot.id} claimed — ${paid ? "24h" : `free ${TRIAL_MS / 60000}-min trial`}${use.length > 1 ? ` · multistream ×${use.length}` : ""} ${loop ? "(loop) " : ""}${srcName}`);
-  slot.proc = spawn("ffmpeg", args);
-  slot.proc.on("error", (e) => { slog(slot, "FFmpeg failed to start: " + e.message); console.log(`[slot ${slot.id}] ffmpeg spawn error: ${e.message}`); release(slot); }); // don't crash on ENOENT etc.
-  slot.proc.stderr.on("data", (d) => slog(slot, d.toString().trim().split("\n").pop()));
-  slot.proc.on("exit", (code) => {
-    slog(slot, `FFmpeg stopped (exit ${code}).`);
-    if (code) console.log(`[slot ${slot.id}] ffmpeg exit ${code} → ${slot.log.slice(-5).join(" | ")}`); // log failures (not normal stops)
-    release(slot);
-  });
+  launchFfmpeg(slot, args);
   res.json({ ok: true, slot: slot.id, token, trial: slot.trial, expiresAt: slot.expiresAt, destinations: use.length, multistreamLimited: limited });
 });
 
 app.post("/stop", (req, res) => {
   const t = req.body.token || req.query.token;
   const s = slots.find((x) => x.token === t && x.busy);
-  if (s) { try { s.proc ? s.proc.kill("SIGINT") : release(s); } catch (_) { release(s); } }
+  if (s) { s.stopping = true; try { s.proc ? s.proc.kill("SIGINT") : release(s); } catch (_) { release(s); } }
   res.json({ ok: true });
 });
 
-// Saved videos (subscriber perk) — list this email's reusable uploads, newest first.
+// Saved videos — list this email's reusable uploads, newest first. Available to subscribers, and to any
+// signed-in Google account (verified by session, not just the typed email) for that account's own videos.
 app.get("/myuploads", (req, res) => {
   const email = (req.query.email || "").trim();
   const subscribed = isSubscribed(email);
-  const uploads = subscribed
+  const signedIn = !!email && readSession(req) === email.toLowerCase();
+  const retentionDays = Math.round(libRetentionMs(email) / 86400000);
+  const authorized = subscribed || signedIn;
+  const uploads = authorized
     ? libFor(email).sort((a, b) => b.lastUsedAt - a.lastUsedAt)
-        .map((u) => ({ id: u.id, name: u.name, size: u.size, uploadedAt: u.uploadedAt }))
+        .map((u) => ({
+          id: u.id, name: u.name, size: u.size, uploadedAt: u.uploadedAt,
+          expiresInDays: Math.max(0, Math.ceil((libRetentionMs(email) - (Date.now() - u.lastUsedAt)) / 86400000)),
+        }))
     : [];
-  res.json({ subscribed, uploads });
+  res.json({ subscribed, signedIn, retentionDays, uploads });
 });
 
 // Remove a saved video (only the owner's, and not while it's streaming).
@@ -600,7 +649,7 @@ app.post("/admin/api/stop", (req, res) => {
   if (!adminOk(req)) return res.status(401).json({ error: "Unauthorized" });
   const id = Number(req.query.slot || (req.body && req.body.slot));
   const s = slots.find((x) => x.id === id && x.busy);
-  if (s) { try { s.proc ? s.proc.kill("SIGINT") : release(s); } catch (_) { release(s); } }
+  if (s) { s.stopping = true; try { s.proc ? s.proc.kill("SIGINT") : release(s); } catch (_) { release(s); } }
   res.json({ ok: true });
 });
 

@@ -139,7 +139,7 @@
     .beta{background:#1a1a1f;border:1px solid #2a2a30;border-left:3px solid var(--red);border-radius:10px;padding:11px 13px;margin-bottom:18px;font-size:13px;color:#c9c9d2;}
     label{display:block;font-size:13px;color:var(--sub);margin:14px 0 6px;}
     label:first-of-type{margin-top:0;}
-    input[type=text],input[type=email],input[type=file]{width:100%;background:var(--card2);border:1px solid var(--line);color:#fff;border-radius:10px;padding:12px;font-size:15px;}
+    input[type=text],input[type=email],input[type=password],input[type=file]{width:100%;background:var(--card2);border:1px solid var(--line);color:#fff;border-radius:10px;padding:12px;font-size:15px;}
     .checkrow{display:flex;align-items:flex-start;gap:9px;margin-top:14px;font-size:13px;color:var(--sub);}
     .checkrow input{margin-top:3px;}
     /* platform presets */
@@ -549,7 +549,7 @@
   /* inputs / labels */
   #studioApp label{font-weight:700;color:#f1f1f1;font-size:12.5px;margin:16px 0 6px;}
   #studioApp .sec > label:first-of-type{margin-top:0;}
-  #studioApp input[type=text],#studioApp input[type=email],#studioApp input[type=password]{background:var(--yt-surface-2);border:1px solid var(--yt-border-2);border-radius:8px;padding:12px 13px;font-size:15px;font-family:inherit;}
+  #studioApp input[type=text],#studioApp input[type=email],#studioApp input[type=password]{background:var(--yt-surface-2);border:1px solid var(--yt-border-2);color:#fff;border-radius:8px;padding:12px 13px;font-size:15px;font-family:inherit;}
   #studioApp input[type=text]:focus,#studioApp input[type=email]:focus,#studioApp input[type=password]:focus{border-color:var(--red);background:#2f2f2f;}
 
   /* platform chips + mode tabs */
@@ -1001,6 +1001,7 @@
       if($("email")){ $("email").value=u.email; $("email").readOnly=true; $("email").style.opacity=".8"; $("email").dispatchEvent(new Event("input")); }
       if($("subEmail")) $("subEmail").value=u.email;
       if(typeof checkSub==="function") checkSub(u.email);
+      if(typeof loadRecent==="function") loadRecent(u.email);
     }
     async function signOut(){ try{ await fetch("/auth/logout",{method:"POST"}); }catch(_){} try{localStorage.removeItem("streamza_email");}catch(_){} location.reload(); }
 
@@ -1166,22 +1167,23 @@
     });
     function fmtSize(b){ b=+b||0; if(b<1048576) return (b/1024).toFixed(0)+" KB"; if(b<1073741824) return (b/1048576).toFixed(1)+" MB"; return (b/1073741824).toFixed(2)+" GB"; }
     function escHtml(s){ return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
-    // Saved-videos picker (subscriber perk): list this email's reusable uploads.
+    // Saved-videos picker: list this email's reusable uploads (subscribers, or any signed-in Google account).
     async function loadRecent(email){
       const wrap=$("recentWrap"), list=$("recentList"); if(!wrap||!list) return;
       email=(email||($("email")&&$("email").value)||"").trim();
       if(!email.includes("@")){ wrap.style.display="none"; return; }
-      let r={uploads:[],subscribed:false};
+      let r={uploads:[],subscribed:false,signedIn:false};
       try{ r=await (await fetch("/myuploads?email="+encodeURIComponent(email))).json(); }catch(_){}
       if(!r.uploads || !r.uploads.length){
-        if(r.subscribed){ wrap.style.display="none"; }
-        else { wrap.style.display="block"; list.innerHTML='<div class="recentHint"><b>Subscribe</b> to save your videos and skip re-uploading every time.</div>'; }
+        if(r.subscribed || r.signedIn){ wrap.style.display="none"; }
+        else { wrap.style.display="block"; list.innerHTML='<div class="recentHint">Sign in with Google to save your videos and skip re-uploading next time.</div>'; }
         return;
       }
       wrap.style.display="block"; list.innerHTML="";
       r.uploads.forEach(u=>{
         const card=document.createElement("div"); card.className="recentCard"+(selectedFileId===u.id?" sel":"");
-        card.innerHTML='<div class="rc-name">'+escHtml(u.name)+'</div><div class="rc-meta">'+fmtSize(u.size)+'</div><button class="rc-del" title="Delete">✕</button>';
+        const expiry=(typeof u.expiresInDays==="number") ? " · deletes in "+u.expiresInDays+"d" : "";
+        card.innerHTML='<div class="rc-name">'+escHtml(u.name)+'</div><div class="rc-meta">'+fmtSize(u.size)+expiry+'</div><button class="rc-del" title="Delete">✕</button>';
         card.onclick=()=>selectRecent(u.id,card);
         card.querySelector(".rc-del").onclick=(e)=>{ e.stopPropagation(); deleteRecent(u.id,email); };
         list.appendChild(card);
