@@ -251,6 +251,11 @@
     input[type=text]:hover,input[type=email]:hover,input[type=password]:hover{background:#2a2a33;}
     input[type=text]:focus,input[type=email]:focus,input[type=password]:focus,.dest-extra input:focus,.dest-extra select:focus,.resume-body input:focus{outline:none;background:#2a2a33;border-color:rgba(255,59,48,.7);}
     input::placeholder{color:#85858f;}
+    /* same autofill-background override as #studioApp, for inputs outside it (e.g. the subscribe modal) */
+    input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus{
+      -webkit-box-shadow:0 0 0 1000px #24242c inset;box-shadow:0 0 0 1000px #24242c inset;
+      -webkit-text-fill-color:#fff;caret-color:#fff;transition:background-color 9999s ease-in-out 0s;
+    }
     .slot{border-radius:14px;}
     .chip{border-radius:10px;}
     footer{border-top:1px solid rgba(255,255,255,.07);padding:40px 0;}
@@ -551,6 +556,14 @@
   #studioApp .sec > label:first-of-type{margin-top:0;}
   #studioApp input[type=text],#studioApp input[type=email],#studioApp input[type=password]{background:var(--yt-surface-2);border:1px solid var(--yt-border-2);color:#fff;border-radius:8px;padding:12px 13px;font-size:15px;font-family:inherit;}
   #studioApp input[type=text]:focus,#studioApp input[type=email]:focus,#studioApp input[type=password]:focus{border-color:var(--red);background:#2f2f2f;}
+  /* Chrome/Edge/Safari force a light background + dark text on autofilled fields (e.g. a saved stream
+     key) that can't be overridden via background-color — only this inset box-shadow trick works. */
+  #studioApp input[type=text]:-webkit-autofill,#studioApp input[type=email]:-webkit-autofill,#studioApp input[type=password]:-webkit-autofill,
+  #studioApp input[type=text]:-webkit-autofill:hover,#studioApp input[type=email]:-webkit-autofill:hover,#studioApp input[type=password]:-webkit-autofill:hover,
+  #studioApp input[type=text]:-webkit-autofill:focus,#studioApp input[type=email]:-webkit-autofill:focus,#studioApp input[type=password]:-webkit-autofill:focus{
+    -webkit-box-shadow:0 0 0 1000px var(--yt-surface-2) inset;box-shadow:0 0 0 1000px var(--yt-surface-2) inset;
+    -webkit-text-fill-color:#fff;caret-color:#fff;transition:background-color 9999s ease-in-out 0s;
+  }
 
   /* platform chips + mode tabs */
   #studioApp .platrow{gap:8px;}
