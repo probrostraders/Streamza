@@ -272,9 +272,18 @@ const libTouch = (fileId, signedIn) => { const u = library.find((x) => x.id === 
 const slots = Array.from({ length: SLOT_COUNT }, (_, i) => ({
   id: i + 1, busy: false, trial: true, email: null, dest: null, dests: [], file: null, filePath: null, fileSize: 0,
   startedAt: 0, expiresAt: 0, proc: null, token: null, log: [],
-  stopping: false, restartCount: 0, ffmpegArgs: null, signedIn: false,
+  stopping: false, restartCount: 0, ffmpegArgs: null, signedIn: false, everStreamed: false,
 }));
 function slog(s, line) { if (!line) return; s.log.push(line); if (s.log.length > 60) s.log.shift(); }
+
+// Why a slot most recently ended, keyed by its (now-cleared) token — release() wipes the slot object
+// itself, so /status needs this to tell a real "trial ended, subscribe to continue" from "we gave up
+// because we couldn't reach your RTMP destination", which look identical from the frontend's polling
+// otherwise and were both showing the same misleading subscribe prompt.
+const recentEndings = new Map(); // token -> { reason: "expired"|"stopped"|"connection_failed", message, at }
+const END_REASON_TTL_MS = 5 * 60 * 1000;
+function noteEnding(slot, reason, message) { if (slot.token) recentEndings.set(slot.token, { reason, message: message || null, at: Date.now() }); }
+
 function release(s) {
   // Signed-in users (subscriber or Google account) KEEP their video (reusable — no re-upload);
   // anonymous free-trial uploads are removed.
@@ -285,12 +294,14 @@ function release(s) {
   Object.assign(s, {
     busy: false, trial: true, email: null, dest: null, dests: [], file: null, filePath: null, fileSize: 0,
     startedAt: 0, expiresAt: 0, proc: null, token: null, log: [],
-    stopping: false, restartCount: 0, ffmpegArgs: null, signedIn: false,
+    stopping: false, restartCount: 0, ffmpegArgs: null, signedIn: false, everStreamed: false,
   });
 }
 // Spawns (or re-spawns) the ffmpeg relay process for a slot. If it dies unexpectedly mid-stream — an RTMP
 // hiccup, not a manual /stop or slot expiry — reconnect automatically instead of ending the whole slot,
 // so "Loop the video" really does keep streaming until the user stops it or the slot/trial runs out.
+// But if it never actually got a frame out (a bad stream key/URL, not a blip), retrying 20 times just
+// burns the user's trial time on a doomed connection — fail fast instead and say so clearly.
 function launchFfmpeg(slot, args) {
   slot.ffmpegArgs = args;
   const proc = spawn("ffmpeg", args);
@@ -298,19 +309,29 @@ function launchFfmpeg(slot, args) {
   proc.on("error", (e) => {
     slog(slot, "FFmpeg failed to start: " + e.message);
     console.log(`[slot ${slot.id}] ffmpeg spawn error: ${e.message}`);
+    noteEnding(slot, "connection_failed", "Couldn't start streaming — please double-check your RTMP URL and stream key.");
     release(slot);
   });
-  proc.stderr.on("data", (d) => slog(slot, d.toString().trim().split("\n").pop()));
+  proc.stderr.on("data", (d) => {
+    const text = d.toString();
+    if (/bitrate=/.test(text)) slot.everStreamed = true; // real encode progress = the connection is actually up
+    slog(slot, text.trim().split("\n").pop());
+  });
   proc.on("exit", (code) => {
     slog(slot, `FFmpeg stopped (exit ${code}).`);
     if (code) console.log(`[slot ${slot.id}] ffmpeg exit ${code} → ${slot.log.slice(-5).join(" | ")}`);
-    const canReconnect = !slot.stopping && slot.busy && slot.expiresAt && Date.now() < slot.expiresAt
-      && slot.restartCount < FFMPEG_MAX_RESTARTS;
+    const expired = slot.expiresAt && Date.now() >= slot.expiresAt;
+    const retryBudget = slot.everStreamed ? FFMPEG_MAX_RESTARTS : 2; // never connected once → fail fast
+    const canReconnect = !slot.stopping && slot.busy && !expired && slot.restartCount < retryBudget;
     if (canReconnect) {
       slot.restartCount++;
-      slog(slot, `Reconnecting… (attempt ${slot.restartCount}/${FFMPEG_MAX_RESTARTS})`);
+      slog(slot, `Reconnecting… (attempt ${slot.restartCount}/${retryBudget})`);
       setTimeout(() => { if (slot.busy && !slot.stopping) launchFfmpeg(slot, slot.ffmpegArgs); }, FFMPEG_RESTART_DELAY_MS);
     } else {
+      if (!slot.stopping) {
+        if (expired) noteEnding(slot, "expired", null);
+        else noteEnding(slot, "connection_failed", "Stream disconnected — couldn't reach your destination. Double-check the RTMP URL and stream key, then try again.");
+      }
       release(slot);
     }
   });
@@ -322,6 +343,7 @@ setInterval(() => {
   for (const s of slots) {
     if (s.busy && s.expiresAt && now > s.expiresAt) {
       slog(s, s.trial ? "Free 15-minute trial ended — upgrade to 24 hours to keep streaming." : "Slot expired (24h) — stopping. Renew to continue.");
+      noteEnding(s, "expired", null);
       s.stopping = true;
       try { if (s.proc) s.proc.kill("SIGINT"); else release(s); } catch (_) { release(s); }
     }
@@ -361,6 +383,7 @@ setInterval(() => {
   // prune stale rate-limit + trial-cooldown records
   for (const [ip, rec] of rlHits) { if (now > rec.reset) rlHits.delete(ip); }
   for (const [ip, t] of trialCooldown) { if (now - t > TRIAL_COOLDOWN_MS) trialCooldown.delete(ip); }
+  for (const [tok, rec] of recentEndings) { if (now - rec.at > END_REASON_TTL_MS) recentEndings.delete(tok); }
 }, 20000);
 
 // public availability board (no PII)
@@ -525,7 +548,7 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
 app.post("/stop", (req, res) => {
   const t = req.body.token || req.query.token;
   const s = slots.find((x) => x.token === t && x.busy);
-  if (s) { s.stopping = true; try { s.proc ? s.proc.kill("SIGINT") : release(s); } catch (_) { release(s); } }
+  if (s) { noteEnding(s, "stopped", null); s.stopping = true; try { s.proc ? s.proc.kill("SIGINT") : release(s); } catch (_) { release(s); } }
   res.json({ ok: true });
 });
 
@@ -645,8 +668,12 @@ app.post("/lemonsqueezy/webhook", (req, res) => {
 
 // owner's slot detail (by token)
 app.get("/status", (req, res) => {
-  const s = slots.find((x) => x.token === (req.query.token || "") && x.busy);
-  if (!s) return res.json({ running: false });
+  const token = req.query.token || "";
+  const s = slots.find((x) => x.token === token && x.busy);
+  if (!s) {
+    const r = recentEndings.get(token);
+    return res.json({ running: false, endReason: r ? r.reason : null, endMessage: r ? r.message : null });
+  }
   res.json({
     running: true, slot: s.id, file: s.file, dest: s.dest, dests: s.dests, trial: s.trial, email: s.email,
     uptime: Math.floor((Date.now() - s.startedAt) / 1000),
@@ -711,7 +738,7 @@ app.post("/admin/api/stop", (req, res) => {
   if (!adminOk(req)) return res.status(401).json({ error: "Unauthorized" });
   const id = Number(req.query.slot || (req.body && req.body.slot));
   const s = slots.find((x) => x.id === id && x.busy);
-  if (s) { s.stopping = true; try { s.proc ? s.proc.kill("SIGINT") : release(s); } catch (_) { release(s); } }
+  if (s) { noteEnding(s, "stopped", null); s.stopping = true; try { s.proc ? s.proc.kill("SIGINT") : release(s); } catch (_) { release(s); } }
   res.json({ ok: true });
 });
 

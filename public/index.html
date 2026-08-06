@@ -75,7 +75,11 @@
   <script src="https://app.lemonsqueezy.com/js/lemon.js" defer></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
-    :root{--red:#FF3B30;--red2:#FF2D55;--bg:#000;--card:#141417;--card2:#0c0c0e;--line:#26262c;--txt:#fff;--sub:#9b9ba3;--ok:#10B981;}
+    :root{--red:#FF3B30;--red2:#FF2D55;--bg:#000;--card:#141417;--card2:#0c0c0e;--line:#26262c;--txt:#fff;--sub:#9b9ba3;--ok:#10B981;--gold:#FFC940;}
+    .pro-badge{display:inline-flex;align-items:center;gap:3px;background:linear-gradient(135deg,#FFD75E,#FFB800);color:#241a00;font-size:10.5px;font-weight:800;letter-spacing:.04em;padding:2px 8px 2px 6px;border-radius:20px;text-transform:uppercase;vertical-align:middle;white-space:nowrap;}
+    .pro-badge svg{width:10px;height:10px;flex:none;}
+    .plan.your-plan{border-color:var(--gold)!important;box-shadow:0 0 0 1px var(--gold),0 14px 32px rgba(255,201,64,.18);}
+    .plan.your-plan .tag{background:linear-gradient(135deg,#FFD75E,#FFB800)!important;color:#241a00!important;}
     *{box-sizing:border-box;margin:0;padding:0;}
     html{scroll-behavior:smooth;}
     body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.6;}
@@ -485,8 +489,8 @@
   .beta,.selslot{display:flex;align-items:flex-start;gap:10px;line-height:1.5;}
   .beta > span,.selslot > span{flex:1;min-width:0;}
   .beta::before{content:"";flex:none;width:18px;height:18px;margin-top:1px;background:var(--red);-webkit-mask:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222%22><circle cx=%2212%22 cy=%2212%22 r=%2210%22/><path d=%22M12 8v5%22/><path d=%22M12 16h.01%22/></svg>') center/contain no-repeat;mask:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222%22><circle cx=%2212%22 cy=%2212%22 r=%2210%22/><path d=%22M12 8v5%22/><path d=%22M12 16h.01%22/></svg>') center/contain no-repeat;}
-  .beta.is-sub{border-left-color:#10B981;}
-  .beta.is-sub::before{background:#10B981;-webkit-mask:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222.5%22><path d=%22m5 13 4 4L19 7%22/></svg>') center/contain no-repeat;mask:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222.5%22><path d=%22m5 13 4 4L19 7%22/></svg>') center/contain no-repeat;}
+  .beta.is-sub{border-left-color:var(--gold);}
+  .beta.is-sub::before{background:var(--gold);-webkit-mask:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222.5%22><path d=%22m5 13 4 4L19 7%22/></svg>') center/contain no-repeat;mask:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222.5%22><path d=%22m5 13 4 4L19 7%22/></svg>') center/contain no-repeat;}
   .selslot::before{content:"";flex:none;width:16px;height:16px;margin-top:2px;background:#909090;-webkit-mask:url('data:image/svg+xml;utf8,<svg xmlns=%22www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222.2%22><path d=%22M13 2 3 14h7l-1 8 10-12h-7z%22/></svg>') center/contain no-repeat;mask:url('data:image/svg+xml;utf8,<svg xmlns=%22www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222.2%22><path d=%22M13 2 3 14h7l-1 8 10-12h-7z%22/></svg>') center/contain no-repeat;}
   details.resume summary{display:flex;align-items:center;gap:9px;}
   details.resume summary::before{content:"↻";color:var(--red);font-weight:800;}
@@ -710,6 +714,7 @@
       <div class="l">
         <span class="sapp-brand" id="sappLogo" title="Back to slots"><img src="logo.svg" alt="" />Streamza Studio</span>
         <span class="sapp-modepill" id="sappMode">Single stream</span>
+        <span id="sappProBadge" style="display:none;"></span>
       </div>
       <div class="sapp-r">
         <span class="sapp-status" id="sappStatus"><span class="d"></span><span id="sappStatusTxt">Idle</span></span>
@@ -867,7 +872,7 @@
           <a class="btn btn-ghost btn-block" href="#modes">Try it free</a>
         </div>
         <div class="plan feat">
-          <span class="tag">SINGLE</span>
+          <span class="tag" id="planTagSingle">SINGLE</span>
           <h3>Single</h3>
           <div class="pr" id="planPrice">$4.99 <small>/mo</small></div>
           <ul>
@@ -879,7 +884,7 @@
           <a class="btn btn-primary btn-block" href="#modes" id="planSubscribe">Subscribe</a>
         </div>
         <div class="plan">
-          <span class="tag">MULTISTREAM</span>
+          <span class="tag" id="planTagMulti">MULTISTREAM</span>
           <h3>Multistream</h3>
           <div class="pr" id="planPriceMulti">$9.99 <small>/mo</small></div>
           <ul>
@@ -992,6 +997,7 @@
       }catch(_){}
     })();
     function escHtml(s){ return String(s||"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+    function proBadge(label){ return '<span class="pro-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.9-5 4.8 1.3 6.9L12 17.6 5.9 20.9l1.3-6.9-5-4.8 6.9-.9z"/></svg>'+(label||"PRO")+'</span>'; }
     function waitGoogle(n){
       if(AUTH._rendered || !AUTH.enabled) return;
       if(window.google && google.accounts && google.accounts.id && AUTH.clientId){
@@ -1012,7 +1018,7 @@
       myEmail=u.email; window.IS_SUBSCRIBED=!!u.subscribed; try{localStorage.setItem("streamza_email",u.email);}catch(_){}
       const b=$("authBox"); if(b) b.style.display="block";
       const g=$("gbtnWrap"); if(g) g.style.display="none";
-      const a=$("authUser"); if(a){ a.style.display="flex"; a.innerHTML='<span><b>'+escHtml(u.email)+'</b>'+(u.subscribed?(' · <span style="color:#10B981">✓ '+(u.multi?'Multistream':'Subscribed')+'</span>'):'')+'</span><a class="so" id="signout">Sign out</a>'; const so=$("signout"); if(so) so.onclick=signOut; }
+      const a=$("authUser"); if(a){ a.style.display="flex"; a.innerHTML='<span><b>'+escHtml(u.email)+'</b>'+(u.subscribed?(' '+proBadge(u.multi?"Multistream":"Pro")):'')+'</span><a class="so" id="signout">Sign out</a>'; const so=$("signout"); if(so) so.onclick=signOut; }
       // header account chip + dropdown
       const h=$("hdrAuth");
       if(h){
@@ -1026,6 +1032,7 @@
           '<div class="hdrchip" id="hdrChip" title="Account">'+
             '<span class="av'+(live?' live':'')+'">'+escHtml(initial)+'</span>'+
             '<span class="em">'+escHtml(u.email)+'</span>'+
+            (u.subscribed?proBadge(u.multi?"Multistream":"Pro"):"")+
             '<span class="caret">▾</span>'+
             '<div class="hdrmenu" id="hdrMenu">'+
               '<div class="who"><div class="e">'+escHtml(u.email)+'</div><div class="p" style="color:'+(live?'#ff3b30':planCol)+'">'+planLine+'</div></div>'+
@@ -1350,11 +1357,13 @@
       if(!token){ setLive(false); return; }
       try{
         const s=await (await fetch("/status?token="+token)).json();
-        if(!s.running){ // trial ended or stopped
+        if(!s.running){ // trial ended, stopped, or the connection failed
           if(localStorage.getItem(TKEY)){
             localStorage.removeItem(TKEY);
-            // A free trial that just ran out → show the prominent subscribe card. Otherwise a quiet toast.
-            if(_wasTrial && !window.IS_SUBSCRIBED) showTrialEnded();
+            // A connection failure (bad RTMP URL/key, or the destination rejected us) is not a trial
+            // ending — say so plainly instead of pushing a subscribe card that wouldn't fix anything.
+            if(s.endReason==="connection_failed") toast(s.endMessage || "Stream disconnected — couldn't reach your destination. Check the RTMP URL and stream key, then try again.");
+            else if(_wasTrial && !window.IS_SUBSCRIBED) showTrialEnded();
             else toast("Your stream stopped.");
           }
           _wasTrial=false;
@@ -1516,10 +1525,15 @@
       window.IS_SUBSCRIBED = active;
       if(!active) return;
       const bn=$("betaNote");
-      if(bn){ bn.classList.add("is-sub"); bn.innerHTML='<span><b style="color:#10B981;">✓ Subscribed'+(r.multi?" · Multistream":"")+'</b> — claim any free slot for a full <b>24-hour</b> stream'+(r.multi?" to up to 3 platforms":"")+'.</span>'; }
+      if(bn){ bn.classList.add("is-sub"); bn.innerHTML='<span>'+proBadge(r.multi?"Multistream":"Pro")+' Claim any free slot for a full <b>24-hour</b> stream'+(r.multi?" to up to 3 platforms":"")+' — stream as often as you like.</span>'; }
       const ub=$("upgradeBtn"); if(ub) ub.style.display="none";           // in-stream upgrade CTA
       const ps=$("planSubscribe"); if(ps){ ps.textContent="✓ Subscribed"; ps.style.pointerEvents="none"; ps.style.opacity=".7"; }
       if(r.multi){ const pm=$("planSubscribeMulti"); if(pm){ pm.textContent="✓ Subscribed · Multistream"; pm.style.pointerEvents="none"; pm.style.opacity=".7"; } }
+      // Mark the actual active plan's card as "YOUR PLAN" in gold, instead of just fading the button.
+      const activeTagId = r.multi ? "planTagMulti" : "planTagSingle";
+      const tag=$(activeTagId);
+      if(tag){ tag.textContent="YOUR PLAN"; const card=tag.closest(".plan"); if(card) card.classList.add("your-plan"); }
+      const spb=$("sappProBadge"); if(spb){ spb.style.display="inline-flex"; spb.innerHTML=proBadge(r.multi?"Multistream":"Pro"); }
     }
     async function checkSub(email){
       if(!email) return;
