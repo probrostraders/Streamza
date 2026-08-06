@@ -177,8 +177,10 @@
     .livebadge{position:absolute;top:10px;left:10px;display:none;align-items:center;gap:6px;background:rgba(255,59,48,.92);color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:20px;}
     .livebadge.on{display:flex;} .livebadge i{width:7px;height:7px;border-radius:50%;background:#fff;animation:blink 1.2s infinite;}
     @keyframes blink{50%{opacity:.25;}}
-    .countdown{text-align:center;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:14px;}
-    .countdown .t{font-size:26px;font-weight:800;color:var(--red);} .countdown .l{font-size:12px;color:var(--sub);}
+    .countdown{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:14px;}
+    .countdown .cd-info{display:flex;align-items:center;gap:10px;}
+    .countdown .cd-icon{color:var(--red);flex:none;}
+    .countdown .t{font-size:22px;font-weight:800;color:var(--red);line-height:1;} .countdown .l{font-size:12px;color:var(--sub);margin-top:3px;}
     /* manage link + resume */
     .managebox{background:var(--card2);border:1px solid #3a3a44;border-radius:12px;padding:12px 13px;margin-top:12px;}
     .ml-label{font-size:12px;color:#d0d0d8;margin-bottom:8px;font-weight:600;}
@@ -528,9 +530,12 @@
   #studioApp .videoframe{border-radius:12px;border:1px solid var(--yt-border);background:#000;}
   #studioApp .livebadge{top:12px;left:12px;border-radius:4px;padding:4px 10px;font-size:11px;font-weight:700;letter-spacing:.05em;background:var(--red);}
   #studioApp .liveinfo{border-radius:10px;padding:12px 15px;background:rgba(255,0,0,.1);border:1px solid rgba(255,0,0,.3);}
-  #studioApp .countdown{background:var(--yt-surface);border:1px solid var(--yt-border);border-radius:12px;padding:16px;}
-  #studioApp .countdown .t{font-size:32px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;}
+  #studioApp .countdown{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:linear-gradient(180deg,rgba(255,0,0,.07),transparent 70%),var(--yt-surface);border:1px solid rgba(255,59,48,.3);border-radius:12px;padding:14px 18px;}
+  #studioApp .countdown .cd-info{display:flex;align-items:center;gap:12px;}
+  #studioApp .countdown .cd-icon{color:var(--red);flex:none;}
+  #studioApp .countdown .t{font-size:26px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1;}
   #studioApp .countdown .l{font-size:12px;margin-top:3px;color:var(--yt-dim);}
+  #studioApp .countdown #upgradeBtn{white-space:nowrap;}
   #studioApp .statgrid{gap:12px;}
   #studioApp .stat{background:var(--yt-surface);border:1px solid var(--yt-border);border-radius:10px;padding:12px 14px;text-align:left;}
   #studioApp .stat .k{font-size:10px;letter-spacing:.06em;color:var(--yt-dim);font-weight:700;}
@@ -593,7 +598,10 @@
   @media(max-width:600px){
     #studioApp .sapp-body{padding:16px 14px 92px;gap:16px;}
     #studioApp .sec{padding:16px;}
+    #studioApp .countdown{flex-direction:column;align-items:stretch;text-align:center;}
+    #studioApp .countdown .cd-info{justify-content:center;}
     #studioApp .countdown .t{font-size:26px;}
+    #studioApp .countdown #upgradeBtn{width:100%;justify-content:center;}
   }
   </style>
 </head>
@@ -718,8 +726,14 @@
         </div>
         <div class="liveinfo" id="liveInfo" style="display:none;"></div>
         <div class="countdown" id="cd" style="display:none;">
-          <div class="t" id="cdTime">15:00</div><div class="l"><span id="cdLabel">remaining on your free trial</span> (Slot <span id="cdSlot">–</span>)</div>
-          <button class="btn btn-primary btn-block" id="upgradeBtn" style="margin-top:12px;">Subscribe — stream 24 hours</button>
+          <div class="cd-info">
+            <svg class="cd-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+            <div>
+              <div class="t" id="cdTime">15:00</div>
+              <div class="l"><span id="cdLabel">remaining on your free trial</span> (Slot <span id="cdSlot">–</span>)</div>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="upgradeBtn">Subscribe — stream 24 hours</button>
         </div>
         <div class="head2" style="margin-top:2px;">Broadcast health</div>
         <div class="statgrid">
