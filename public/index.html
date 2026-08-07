@@ -90,8 +90,10 @@
     .btn-ghost{background:transparent;color:#fff;border:1px solid var(--line);}
     .btn-block{width:100%;justify-content:center;}
     .btn:disabled{opacity:.5;cursor:not-allowed;}
-    .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--sub);background:#141417;border:1px solid var(--line);padding:6px 14px;border-radius:30px;margin-bottom:20px;}
-    .live-dot{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 4px rgba(255,59,48,.2);}
+    .eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:13px;color:var(--sub);font-weight:500;background:linear-gradient(180deg,rgba(255,59,48,.10),rgba(255,59,48,.02));border:1px solid rgba(255,59,48,.25);padding:7px 16px 7px 12px;border-radius:30px;margin-bottom:20px;box-shadow:0 1px 0 rgba(255,255,255,.05) inset;}
+    .live-dot{position:relative;width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 0 3px rgba(255,59,48,.2);flex:none;}
+    .live-dot::before{content:"";position:absolute;inset:-5px;border-radius:50%;border:1px solid rgba(255,59,48,.55);animation:eyebrowPing 1.8s cubic-bezier(0,0,.2,1) infinite;}
+    @keyframes eyebrowPing{0%{transform:scale(.5);opacity:.8;}75%,100%{transform:scale(1.9);opacity:0;}}
     h1{font-size:clamp(30px,5vw,50px);line-height:1.1;letter-spacing:-.02em;}
     h2{font-size:clamp(24px,3.5vw,32px);letter-spacing:-.01em;}
     .red{color:var(--red);}
@@ -261,7 +263,6 @@
     .hero h1{font-weight:800;letter-spacing:-.03em;line-height:1.05;font-size:clamp(32px,5.5vw,56px);}
     .hero .red{color:var(--red);}
     .hero p.lead{font-size:18px;line-height:1.6;color:#a3a3ad;}
-    .eyebrow{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.10);}
     section{padding:64px 0;}
     .head h2{font-weight:800;letter-spacing:-.02em;font-size:clamp(26px,4vw,36px);}
     .head p{font-size:17px;color:#a3a3ad;}
@@ -466,7 +467,6 @@
   /* hero: two-column layout with a product mockup */
   .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:44px;align-items:center;}
   @media(max-width:900px){.hero-grid{grid-template-columns:1fr;} .hero-visual{order:-1;max-width:420px;margin:0 auto;}}
-  .hero-copy .eyebrow{box-shadow:0 1px 0 rgba(255,255,255,.03) inset;}
   .hero-copy h1{margin-top:18px;}
   .hero-cta{margin-top:28px;}
   .btn-primary{box-shadow:0 10px 26px rgba(255,59,48,.28);}
