@@ -129,6 +129,28 @@
     .slot.sel{border-color:var(--red);box-shadow:0 0 0 2px rgba(255,59,48,.35);}
     .selslot{background:rgba(255,59,48,.10);border:1px solid rgba(255,59,48,.4);border-radius:10px;padding:10px 13px;margin-bottom:14px;font-size:13px;color:#f0d0cd;}
     .selslot b{color:#fff;} .selslot a{color:var(--red);font-weight:700;text-decoration:underline;cursor:pointer;}
+    /* the signed-in-to-this-browser user's own live slot — enlarged + highlighted so it reads as
+       "yours" at a glance instead of blending into the anonymous public board. */
+    .slot.mine{border-color:var(--red);box-shadow:0 0 0 2px rgba(255,59,48,.4),0 10px 26px rgba(255,59,48,.18);transform:scale(1.08);cursor:pointer;position:relative;z-index:1;opacity:1;}
+    .slot.mine .ring{border-color:var(--red);color:var(--red);}
+    .slot.mine .st{color:var(--red);}
+    .slot.mine .left{color:var(--red);font-weight:700;}
+    /* "Your live stream" hero card — shown above the slot board whenever this browser holds an active
+       manage token, with a live snapshot (uptime, time left, health) and a one-tap way back into the
+       exact same studio session, so returning after closing the browser feels continuous, not reset. */
+    .mylive{display:none;align-items:center;gap:18px;flex-wrap:wrap;background:linear-gradient(135deg,rgba(255,59,48,.14),rgba(255,45,85,.05));border:1px solid rgba(255,59,48,.4);border-radius:18px;padding:20px 24px;margin-bottom:22px;box-shadow:0 14px 34px rgba(255,59,48,.14);}
+    .mylive .mlc-badge{display:inline-flex;align-items:center;gap:7px;background:var(--red);color:#fff;font-size:12px;font-weight:800;letter-spacing:.05em;padding:6px 12px;border-radius:20px;text-transform:uppercase;flex:none;}
+    .mylive .mlc-badge .dot{width:7px;height:7px;border-radius:50%;background:#fff;animation:mlcpulse 1.4s infinite;}
+    @keyframes mlcpulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+    .mylive .mlc-main{flex:1;min-width:220px;}
+    .mylive .mlc-title{font-size:17px;font-weight:800;letter-spacing:-.01em;margin-bottom:3px;}
+    .mylive .mlc-sub{font-size:13px;color:var(--sub);}
+    .mylive .mlc-stats{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--sub);}
+    .mylive .mlc-stats b{color:#fff;}
+    .mylive .mlc-stats b.good{color:var(--ok);}
+    .mylive .mlc-stats b.weak{color:var(--gold);}
+    .mylive .mlc-btn{flex:none;}
+    @media(max-width:560px){.mylive{padding:16px 18px;} .mylive .mlc-btn{width:100%;}}
     /* steps */
     .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
     @media(max-width:760px){.grid3{grid-template-columns:1fr;}}
@@ -675,6 +697,7 @@
   <section id="slots" style="padding-top:20px;">
     <div class="wrap">
       <div class="head"><p class="kicker">Live now</p><h2>10 streaming slots</h2><p>Each slot streams one video for 24 hours. Grab any free slot below.</p></div>
+      <div class="mylive" id="myLiveCard"></div>
       <div class="slotboard" id="slotboard"></div>
       <p class="availline" id="availLine">Checking availability…</p>
     </div>
@@ -999,6 +1022,7 @@
     let myEmail = "";        // the live stream's email (for resume + checkout)
     let resumeOpen = false;  // open the studio app on load if arriving via a manage link
     let _wasTrial = false;   // was the last live stream a free trial? (drives the trial-ended prompt)
+    let myLiveSlotId = null; // which slot (if any) this browser's manage token currently owns
     // Resume via a manage link (?s=token) — lets a user reclaim control from ANY device.
     (function(){ const p=new URLSearchParams(location.search); const t=p.get("s")||p.get("token"); if(t){ localStorage.setItem(TKEY, t.replace(/[^a-f0-9]/gi,"")); resumeOpen=true; history.replaceState(null,"","/studio"); } })();
 
@@ -1061,7 +1085,7 @@
         const chip=$("hdrChip"), menu=$("hdrMenu");
         if(chip&&menu){ chip.onclick=(e)=>{ e.stopPropagation(); menu.classList.toggle("show"); };
           document.addEventListener("click", ()=>menu.classList.remove("show")); }
-        if($("hdrResume")) $("hdrResume").onclick=()=>{ try{ if(u.slot&&u.slot.token) localStorage.setItem(TKEY,u.slot.token); }catch(_){} if(typeof openStudioApp==="function") openStudioApp("single"); if(typeof refreshMine==="function") refreshMine(); };
+        if($("hdrResume")) $("hdrResume").onclick=()=>{ if(u.slot&&u.slot.token&&typeof resumeFromToken==="function") resumeFromToken(u.slot.token); };
         if($("hdrStudio")) $("hdrStudio").onclick=()=>{ if(typeof openStudioApp==="function") openStudioApp("single"); };
         if($("hdrManage")) $("hdrManage").onclick=()=>{ window.open(u.portal||"https://app.lemonsqueezy.com/my-orders","_blank","noopener"); };
         if($("hdrUpgrade")) $("hdrUpgrade").onclick=()=>{ const t=$("subModal"); if(t) t.classList.add("show"); else location.hash="#pricing"; };
@@ -1288,6 +1312,7 @@
       }
     });
     function fmtSize(b){ b=+b||0; if(b<1048576) return (b/1024).toFixed(0)+" KB"; if(b<1073741824) return (b/1048576).toFixed(1)+" MB"; return (b/1073741824).toFixed(2)+" GB"; }
+    function fmtExpiry(min){ min=Math.max(1,+min||0); if(min>=1440) return Math.ceil(min/1440)+"d"; if(min>=60) return Math.ceil(min/60)+"h"; return min+"m"; }
     function escHtml(s){ return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
     // Saved-videos picker: list this email's reusable uploads (subscribers, or any signed-in Google account).
     async function loadRecent(email){
@@ -1305,7 +1330,7 @@
       r.uploads.forEach(u=>{
         const card=document.createElement("div"); card.className="recentCard"+(selectedFileId===u.id?" sel":"");
         card.dataset.name=u.name; card.dataset.size=u.size;
-        const expiry=(typeof u.expiresInDays==="number") ? " · deletes in "+u.expiresInDays+"d" : "";
+        const expiry=(typeof u.expiresInMinutes==="number") ? " · deletes in "+fmtExpiry(u.expiresInMinutes) : "";
         card.innerHTML='<div class="rc-name">'+escHtml(u.name)+'</div><div class="rc-meta">'+fmtSize(u.size)+expiry+'</div><button class="rc-del" title="Delete">✕</button>';
         card.onclick=()=>selectRecent(u.id,card);
         card.querySelector(".rc-del").onclick=(e)=>{ e.stopPropagation(); deleteRecent(u.id,email); };
@@ -1365,14 +1390,18 @@
     async function refreshSlots(){
       try{
         const d=await (await fetch("/slots")).json();
-        $("slotboard").innerHTML = d.slots.map(s=>`
-          <div class="slot ${s.busy?'busy':'free'}${(!s.busy&&s.id===selectedSlot)?' sel':''}" ${s.busy?'':`data-claim="${s.id}"`}>
+        $("slotboard").innerHTML = d.slots.map(s=>{
+          const mine = s.id===myLiveSlotId;
+          return `
+          <div class="slot ${s.busy?'busy':'free'}${(!s.busy&&s.id===selectedSlot)?' sel':''}${mine?' mine':''}" ${s.busy?'':`data-claim="${s.id}"`}>
             <div class="sid">Slot ${s.id}</div>
             <div class="ring">${s.busy?'●':'○'}</div>
-            <div class="st">${s.busy?'In use':'Free'}</div>
+            <div class="st">${mine?'Yours':(s.busy?'In use':'Free')}</div>
             <div class="left">${s.busy?(s.secondsLeft?fmtShort(s.secondsLeft)+' left':''):'Tap to claim'}</div>
-          </div>`).join("");
+          </div>`;
+        }).join("");
         document.querySelectorAll('#slotboard [data-claim]').forEach(el=>el.onclick=()=>selectSlot(+el.getAttribute('data-claim')));
+        document.querySelectorAll('#slotboard .slot.mine').forEach(el=>el.onclick=()=>resumeFromToken(localStorage.getItem(TKEY)));
         $("availLine").innerHTML = d.free>0 ? `<b>${d.free}</b> of ${d.total} slots free — tap a free slot to claim it` : `All ${d.total} slots are busy — check back soon`;
         $("heroAvail").textContent = `${d.free}/${d.total} slots free`;
         // if the slot we had selected just got taken, fall back to "next free"
@@ -1398,7 +1427,7 @@
     // owner's slot monitor (token)
     async function refreshMine(){
       const token=localStorage.getItem(TKEY);
-      if(!token){ setLive(false); return; }
+      if(!token){ setLive(false); myLiveSlotId=null; renderMyLiveCard(null); return; }
       try{
         const s=await (await fetch("/status?token="+token)).json();
         if(!s.running){ // trial ended, stopped, or the connection failed
@@ -1411,11 +1440,12 @@
             else toast("Your stream stopped.");
           }
           _wasTrial=false;
-          setLive(false); return;
+          setLive(false); myLiveSlotId=null; renderMyLiveCard(null); return;
         }
         setLive(true);
         myEmail = s.email || myEmail;
         _wasTrial = !!s.trial;   // remember so we can prompt to subscribe when this trial ends
+        myLiveSlotId = s.slot;
         const n=(s.dests&&s.dests.length)||1;
         $("liveInfo").style.display="block";
         $("liveInfo").innerHTML='<b>LIVE</b> · streaming to '+n+' platform'+(n>1?'s':'')+' · live for <b>'+fmt(s.uptime)+'</b>';
@@ -1429,6 +1459,7 @@
         $("sBitrate").textContent = st&&st.br!=null ? (st.br/1000).toFixed(2)+" Mbps":"—";
         $("sSpeed").textContent = st&&st.speed!=null ? (st.speed>=0.95?"Good":"Weak"):"—";
         $("sSpeed").className = "v"+(st&&st.speed>=0.95?" green":"");
+        renderMyLiveCard(s);
       }catch(_){}
     }
     function setLive(on){
@@ -1443,6 +1474,89 @@
       $("stopBtn").style.display=on?"flex":"none";
       if(on){ const tok=localStorage.getItem(TKEY)||""; $("manageLink").value=location.origin+"/studio?s="+tok; }
       else{ $("sBitrate").textContent="—"; $("sSpeed").textContent="—"; $("sSpeed").className="v"; const li=$("liveInfo"); if(li) li.style.display="none"; }
+    }
+
+    // "Your live stream" hero card on the landing page — a bigger, prominent readout of the browser's
+    // own active stream (live/not, uptime, time left, health) so it's obvious at a glance even before
+    // opening the studio, and one tap gets back in with everything restored.
+    function renderMyLiveCard(s){
+      const card=$("myLiveCard"); if(!card) return;
+      if(!s){ card.style.display="none"; card.innerHTML=""; return; }
+      const st=parseStats(s.log||[]);
+      const health = st&&st.speed!=null ? (st.speed>=0.95?"Good":"Weak") : "Connecting…";
+      const healthCls = health==="Good"?"good":health==="Weak"?"weak":"";
+      const n=(s.dests&&s.dests.length)||1;
+      card.style.display="flex";
+      card.innerHTML =
+        '<span class="mlc-badge"><span class="dot"></span>LIVE</span>'+
+        '<div class="mlc-main">'+
+          '<div class="mlc-title">Your stream — Slot '+s.slot+'</div>'+
+          '<div class="mlc-sub">'+escHtml(s.file||"video.mp4")+' · streaming to '+n+' platform'+(n>1?'s':'')+' · '+(s.trial?'free trial':'24-hour slot')+'</div>'+
+          '<div class="mlc-stats">'+
+            '<span>Live for <b>'+fmt(s.uptime)+'</b></span>'+
+            '<span><b>'+fmt(s.secondsLeft)+'</b> left</span>'+
+            '<span>Health: <b class="'+healthCls+'">'+health+'</b></span>'+
+          '</div>'+
+        '</div>'+
+        '<button class="btn btn-primary mlc-btn" id="mlcOpen">Manage stream →</button>';
+      const btn=$("mlcOpen"); if(btn) btn.onclick=()=>resumeFromToken(localStorage.getItem(TKEY));
+    }
+    // Best-effort match of a destination URL back to a known platform chip, so resuming re-selects the
+    // right one instead of leaving every chip unselected.
+    function guessPlatform(url){
+      const u=(url||"").toLowerCase();
+      for(const k of ["youtube","twitch","facebook"]){ if(PRESETS[k].url && u.startsWith(PRESETS[k].url.toLowerCase())) return k; }
+      return "custom";
+    }
+    // Rebuilds the studio exactly as the user left it — email, destinations (URL + key), loop toggle,
+    // and a live preview of the video that's actually streaming right now — instead of opening to a
+    // blank form with just a LIVE badge. Used by the landing-page card, the header's "Resume my
+    // stream", the paste-a-manage-link box, and arriving via a ?s= manage link.
+    function resumeIntoStudio(s){
+      const token=localStorage.getItem(TKEY);
+      const multi = s.destsFull && s.destsFull.length>1;
+      openStudioApp(multi?"multi":"single");
+      if($("email")) $("email").value = s.email||"";
+      const loopEl=$("loop"); if(loopEl) loopEl.checked = !!s.loop;
+      if(multi){
+        $("destList").innerHTML="";
+        s.destsFull.forEach(d=>{
+          addDestCard("");
+          const c=$("destList").lastElementChild; if(!c) return;
+          const plat=guessPlatform(d.url);
+          const sel=c.querySelector(".dPlat"); if(sel) sel.value=plat;
+          const uEl=c.querySelector(".dUrl"); if(uEl) uEl.value=d.url;
+          const kEl=c.querySelector(".dKey"); if(kEl) kEl.value=d.key||"";
+        });
+      } else if(s.destsFull && s.destsFull.length===1){
+        const d=s.destsFull[0];
+        pickPlatform(guessPlatform(d.url));
+        $("rtmpUrl").value=d.url;
+        $("streamKey").value=d.key||"";
+      }
+      if(s.fileId && token){
+        const v=$("preview");
+        if(v){ v.removeAttribute("src"); v.src="/live-preview?token="+encodeURIComponent(token); v.style.display="block"; v.muted=true; v.play().catch(()=>{}); }
+        const ph=$("vplaceholder"); if(ph) ph.style.display="none";
+        const dz=$("dropzone"); if(dz) dz.classList.add("has-file");
+        if($("dzFilename")) $("dzFilename").textContent = s.file||"video.mp4";
+        if($("dzSize")) $("dzSize").textContent = "";
+      }
+      setLive(true);
+      refreshMine();
+      if(s.email) loadRecent(s.email);
+      toast("Resumed — everything's exactly as you left it.");
+    }
+    // Looks up a manage token and, if it's still live, restores it into the studio. Shared by every
+    // "resume" entry point (landing card, header menu, pasted manage link, ?s= link on load).
+    async function resumeFromToken(token){
+      if(!token) return false;
+      try{
+        const s=await (await fetch("/status?token="+encodeURIComponent(token))).json();
+        if(s.running){ localStorage.setItem(TKEY,token); resumeIntoStudio(s); return true; }
+      }catch(_){}
+      toast("Couldn't find that stream — it may have already ended.");
+      return false;
     }
 
     // Actually claims a slot and goes live — used both for a direct trial start and after a plan is
@@ -1547,11 +1661,7 @@
       const raw=$("resumeInput").value.trim(); if(!raw) return toast("Paste your manage link or stream code.");
       const m=raw.match(/[?&](?:s|token)=([a-f0-9]+)/i); const tok=m?m[1]:raw.replace(/[^a-f0-9]/gi,"");
       if(!tok) return toast("That doesn't look like a valid code.");
-      try{
-        const s=await (await fetch("/status?token="+encodeURIComponent(tok))).json();
-        if(s.running){ localStorage.setItem(TKEY,tok); openStudioApp("single"); refreshMine(); toast("Found your stream — resumed!"); }
-        else { toast("No active stream found for that code — it may have already ended."); }
-      }catch(e){ toast("Couldn't resume right now."); }
+      await resumeFromToken(tok);
     };
     if($("waitBtn")) $("waitBtn").onclick=async()=>{
       const email=$("waitEmail").value; if(!email) return toast("Enter your email.");
@@ -1589,7 +1699,9 @@
     watchEmail("email"); watchEmail("subEmail");
 
     updateSelLabel(); refreshSlots(); refreshMine();
-    if(resumeOpen) openStudioApp("single"); // arrived via a manage link → open the studio
+    // arrived via a manage link (?s=) → resume straight into the studio with everything restored,
+    // not just an empty form with a LIVE badge
+    if(resumeOpen){ const tok=localStorage.getItem(TKEY); if(tok) resumeFromToken(tok); else openStudioApp("single"); }
     // poll only while the tab is visible — saves network/CPU and keeps it snappy
     setInterval(()=>{ if(!document.hidden) refreshSlots(); },5000);
     setInterval(()=>{ if(!document.hidden) refreshMine(); },2500);

@@ -170,7 +170,7 @@ app.use((req, res, next) => {
 // page has no business being indexed, and robots.txt alone doesn't deindex a URL
 // that other sites happen to link to — the header does.
 const NOINDEX_PREFIXES = ["/admin", "/auth", "/pay", "/owner", "/lemonsqueezy",
-  "/status", "/slots", "/start", "/stop", "/upgrade", "/subscribed",
+  "/status", "/slots", "/start", "/stop", "/upgrade", "/subscribed", "/live-preview",
   "/myuploads", "/deleteupload", "/waitlist", "/twitch-callback", "/studio-assets"];
 app.use((req, res, next) => {
   if (NOINDEX_PREFIXES.some((p) => req.path === p || req.path.startsWith(p + "/"))) {
@@ -249,8 +249,8 @@ function rm(p) { try { fs.unlinkSync(p); } catch (_) {} }
 const LIB_FILE = path.join(DATA_DIR, "library.json");
 const LIB_MAX_PER_USER = Number(process.env.LIB_MAX_PER_USER) || 5;             // newest N kept per user
 const LIB_MAX_TOTAL = (Number(process.env.LIB_MAX_TOTAL_GB) || 8) * 1024 ** 3;  // global disk budget
-const LIB_UNUSED_MS = (Number(process.env.LIB_UNUSED_DAYS) || 30) * 86400000;        // subscriber retention
-const LIB_UNUSED_MS_FREE = (Number(process.env.LIB_UNUSED_DAYS_FREE) || 7) * 86400000; // signed-in (free) retention
+const LIB_UNUSED_MS = (Number(process.env.LIB_UNUSED_DAYS) || 30) * 86400000;          // subscriber retention
+const LIB_UNUSED_MS_FREE = (Number(process.env.LIB_UNUSED_HOURS_FREE) || 1) * 3600000; // signed-in, never subscribed — a short grace window, not a real "save my videos" perk
 let library = []; // [{ id, email, name, size, uploadedAt, lastUsedAt, signedIn }]
 try { library = JSON.parse(fs.readFileSync(LIB_FILE, "utf8")) || []; } catch (_) { library = []; }
 const saveLib = () => { try { fs.writeFileSync(LIB_FILE, JSON.stringify(library)); } catch (_) {} };
@@ -270,7 +270,8 @@ const libTouch = (fileId, signedIn) => { const u = library.find((x) => x.id === 
 
 // ---- 5 slots ----
 const slots = Array.from({ length: SLOT_COUNT }, (_, i) => ({
-  id: i + 1, busy: false, trial: true, email: null, dest: null, dests: [], file: null, filePath: null, fileSize: 0,
+  id: i + 1, busy: false, trial: true, email: null, dest: null, dests: [], destsFull: [], loop: true,
+  file: null, filePath: null, fileSize: 0,
   startedAt: 0, expiresAt: 0, proc: null, token: null, log: [],
   stopping: false, restartCount: 0, ffmpegArgs: null, signedIn: false, everStreamed: false,
 }));
@@ -292,7 +293,8 @@ function release(s) {
     else rm(s.filePath);
   }
   Object.assign(s, {
-    busy: false, trial: true, email: null, dest: null, dests: [], file: null, filePath: null, fileSize: 0,
+    busy: false, trial: true, email: null, dest: null, dests: [], destsFull: [], loop: true,
+    file: null, filePath: null, fileSize: 0,
     startedAt: 0, expiresAt: 0, proc: null, token: null, log: [],
     stopping: false, restartCount: 0, ffmpegArgs: null, signedIn: false, everStreamed: false,
   });
@@ -528,7 +530,7 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
   // this, or an active subscription, is what earns the video a spot in "Your recent videos".
   const signedIn = readSession(req) === email.toLowerCase();
   Object.assign(slot, {
-    busy: true, trial: !paid, email, dests: use.map((d) => d.url), dest: use[0].url,
+    busy: true, trial: !paid, email, dests: use.map((d) => d.url), dest: use[0].url, destsFull: use, loop: !!loop,
     file: srcName, filePath: srcPath, fileSize: srcSize,
     startedAt: Date.now(), expiresAt: Date.now() + (paid ? SLOT_MS : TRIAL_MS), token, log: [],
     stopping: false, restartCount: 0, signedIn,
@@ -558,13 +560,16 @@ app.get("/myuploads", (req, res) => {
   const email = (req.query.email || "").trim();
   const subscribed = isSubscribed(email);
   const signedIn = !!email && readSession(req) === email.toLowerCase();
-  const retentionDays = Math.round(libRetentionMs(email) / 86400000);
+  const retentionMs = libRetentionMs(email);
+  const retentionDays = Math.round(retentionMs / 86400000);
   const authorized = subscribed || signedIn;
   const uploads = authorized
     ? libFor(email).sort((a, b) => b.lastUsedAt - a.lastUsedAt)
         .map((u) => ({
           id: u.id, name: u.name, size: u.size, uploadedAt: u.uploadedAt,
-          expiresInDays: Math.max(0, Math.ceil((libRetentionMs(email) - (Date.now() - u.lastUsedAt)) / 86400000)),
+          // minutes, not days — the free (never-subscribed) tier's window is only 1 hour, so day
+          // granularity would round that up to a misleading "deletes in 1d".
+          expiresInMinutes: Math.max(0, Math.ceil((retentionMs - (Date.now() - u.lastUsedAt)) / 60000)),
         }))
     : [];
   res.json({ subscribed, signedIn, retentionDays, uploads });
@@ -675,11 +680,22 @@ app.get("/status", (req, res) => {
     return res.json({ running: false, endReason: r ? r.reason : null, endMessage: r ? r.message : null });
   }
   res.json({
-    running: true, slot: s.id, file: s.file, dest: s.dest, dests: s.dests, trial: s.trial, email: s.email,
+    running: true, slot: s.id, file: s.file, fileId: s.filePath ? path.basename(s.filePath) : null,
+    dest: s.dest, dests: s.dests, destsFull: s.destsFull, loop: !!s.loop, trial: s.trial, email: s.email,
     uptime: Math.floor((Date.now() - s.startedAt) / 1000),
     secondsLeft: Math.max(0, Math.floor((s.expiresAt - Date.now()) / 1000)),
     log: s.log.slice(-14),
   });
+});
+
+// Stream back the slot's currently-playing video to its own owner (matching manage token = same trust
+// level /stop and /upgrade already require) — lets the studio show a real "what's actually live right
+// now" preview on resume, instead of an empty player that just says LIVE and leaves the user guessing.
+app.get("/live-preview", (req, res) => {
+  const token = req.query.token || "";
+  const s = slots.find((x) => x.token === token && x.busy);
+  if (!s || !s.filePath) return res.status(404).end();
+  res.sendFile(s.filePath, { headers: { "Content-Type": "video/mp4" } });
 });
 
 app.post("/waitlist", rateLimit(6, 60000), (req, res) => {
