@@ -3,29 +3,30 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Custom RTMP Streaming — Any URL &amp; Stream Key | Streamza</title>
-  <meta name="description" content="Stream a video to any RTMP or RTMPS server — Kick, Trovo, LinkedIn, X, Rumble, Restream or your own. Paste the URL and key and broadcast from the cloud." />
+  <title>Custom RTMP Streaming: Any URL &amp; Stream Key | Streamza</title>
+  <meta name="description" content="Stream a video to any RTMP or RTMPS server: Kick, Trovo, LinkedIn, X, Rumble, Restream or your own. Paste the URL and key and broadcast from the cloud." />
+  <meta name="keywords" content="custom RTMP streaming, RTMP URL and stream key, RTMPS streaming, stream to Kick, stream to Trovo, stream to LinkedIn Live, stream to Rumble, self hosted RTMP server, nginx-rtmp streaming, stream to Restream" />
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
   <meta name="theme-color" content="#000000" />
   <link rel="icon" type="image/svg+xml" href="logo.svg" />
   <link rel="canonical" href="https://streamza.live/custom-rtmp.html" />
 
   <meta property="og:site_name" content="Streamza" />
-  <meta property="og:title" content="Custom RTMP Streaming — Any URL &amp; Stream Key" />
-  <meta property="og:description" content="Stream a video to any RTMP or RTMPS server — Kick, Trovo, LinkedIn, X, Rumble, Restream or your own. Paste the URL and key and broadcast from the cloud." />
+  <meta property="og:title" content="Custom RTMP Streaming: Any URL &amp; Stream Key" />
+  <meta property="og:description" content="Stream a video to any RTMP or RTMPS server: Kick, Trovo, LinkedIn, X, Rumble, Restream or your own. Paste the URL and key and broadcast from the cloud." />
   <meta property="og:type" content="article" />
   <meta property="og:url" content="https://streamza.live/custom-rtmp.html" />
   <meta property="og:image" content="https://streamza.live/og-banner.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Custom RTMP Streaming — Any URL &amp; Stream Key" />
-  <meta name="twitter:description" content="Stream a video to any RTMP or RTMPS server — Kick, Trovo, LinkedIn, X, Rumble, Restream or your own. Paste the URL and key and broadcast from the cloud." />
+  <meta name="twitter:title" content="Custom RTMP Streaming: Any URL &amp; Stream Key" />
+  <meta name="twitter:description" content="Stream a video to any RTMP or RTMPS server: Kick, Trovo, LinkedIn, X, Rumble, Restream or your own. Paste the URL and key and broadcast from the cloud." />
   <meta name="twitter:image" content="https://streamza.live/og-banner.png" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -65,7 +66,7 @@
   <section class="lp-hero lp-wide">
     <div class="container">
       <span class="eyebrow"><span class="live"></span> Any destination</span>
-      <h1>Custom RTMP — stream a video to any server that takes a key.</h1>
+      <h1>Custom RTMP: stream a video to any server that takes a key.</h1>
       <p class="lp-lead">Kick, Trovo, LinkedIn Live, X, Rumble, Odysee, Restream, Vimeo, your company's Wowza box, a self-hosted nginx-rtmp server. If it gives you an RTMP or RTMPS URL and a stream key, Streamza can send your video to it from the cloud.</p>
       <div class="hero-cta">
         <a class="btn btn-primary btn-lg" href="/studio">Paste a custom RTMP URL →</a>
@@ -90,17 +91,17 @@
         <p><code>rtmp://live.example.com/app</code></p>
         <p>The <strong>stream key</strong> is the private name your broadcast publishes under, and it doubles as your password:</p>
         <p><code>live_123456789_AbCdEfGhIjKlMnOp</code></p>
-        <p>Some platforms hand you a single joined URL instead — <code>rtmp://live.example.com/app/live_123456789_AbCdEfGh</code>. If you get one of those, split it at the last slash: everything before it is the server URL, the last segment is the key.</p>
+        <p>Some platforms hand you a single joined URL instead: <code>rtmp://live.example.com/app/live_123456789_AbCdEfGh</code>. If you get one of those, split it at the last slash: everything before it is the server URL, the last segment is the key.</p>
 
         <div class="note">
-          <p class="mt-0"><strong>RTMP or RTMPS?</strong> RTMPS is the same protocol inside a TLS connection, usually on port 443. Use whichever your platform gives you — some, like Facebook, require RTMPS. Streamza supports both.</p>
+          <p class="mt-0"><strong>RTMP or RTMPS?</strong> RTMPS is the same protocol inside a TLS connection, usually on port 443. Use whichever your platform gives you. Some, like Facebook, require RTMPS. Streamza supports both.</p>
         </div>
 
         <h2 id="platforms">Where to find the URL and key on each platform</h2>
         <table>
           <thead><tr><th>Platform</th><th>Where to look</th></tr></thead>
           <tbody>
-            <tr><td><strong>Kick</strong></td><td>Creator Dashboard → Settings → Stream. Kick shows both a Stream URL and a Stream key — copy both, since the URL is account-specific.</td></tr>
+            <tr><td><strong>Kick</strong></td><td>Creator Dashboard → Settings → Stream. Kick shows both a Stream URL and a Stream key. Copy both, since the URL is account-specific.</td></tr>
             <tr><td><strong>Trovo</strong></td><td>Creator Center → Stream settings → copy the RTMP address and stream key.</td></tr>
             <tr><td><strong>LinkedIn Live</strong></td><td>Available to Pages and profiles with Live access. Create the event, choose a third-party encoder, and copy the ingest URL and key.</td></tr>
             <tr><td><strong>X (Twitter)</strong></td><td>Use X's producer tool to create a broadcast and copy the RTMP URL and key.</td></tr>
@@ -112,7 +113,7 @@
             <tr><td><strong>Self-hosted (nginx-rtmp, SRS, MediaMTX)</strong></td><td>The URL is <code>rtmp://your-server-ip/app</code> and the key is whatever stream name you choose. Make sure the port is reachable from the public internet.</td></tr>
           </tbody>
         </table>
-        <p>YouTube, Twitch and Facebook do not need this page — their ingest URLs are already built in. See <a href="/youtube-live-streaming.html">YouTube</a>, <a href="/twitch-streaming.html">Twitch</a> and <a href="/facebook-live-streaming.html">Facebook</a>.</p>
+        <p>YouTube, Twitch and Facebook do not need this page. Their ingest URLs are already built in. See <a href="/youtube-live-streaming.html">YouTube</a>, <a href="/twitch-streaming.html">Twitch</a> and <a href="/facebook-live-streaming.html">Facebook</a>.</p>
 
         <h2>How to stream to a custom RTMP destination</h2>
         <ol class="lp-steps">
@@ -126,7 +127,7 @@
           </li>
           <li>
             <h3>Upload your video and paste both values</h3>
-            <p>Server URL in the URL field, key in the key field. Watch for a stray space at either end — pasted keys pick them up constantly.</p>
+            <p>Server URL in the URL field, key in the key field. Watch for a stray space at either end. Pasted keys pick them up constantly.</p>
           </li>
           <li>
             <h3>Start the stream</h3>
@@ -137,18 +138,18 @@
         <h2>Self-hosted and enterprise destinations</h2>
         <p>Custom RTMP is not only for consumer platforms. It also covers cases where you control the receiving end:</p>
         <ul>
-          <li><strong>Your own media server</strong> — nginx-rtmp, SRS, MediaMTX or Owncast running on a VPS, where you then handle playback yourself.</li>
-          <li><strong>A CDN or OVP ingest</strong> — Wowza, Dacast, Vimeo, Muvi and similar all publish an RTMP endpoint for encoders.</li>
-          <li><strong>Internal corporate streaming</strong> — an all-hands recording pushed to the company's streaming appliance at the scheduled hour.</li>
-          <li><strong>A relay you already run</strong> — send once to your own distribution point and let it fan out from there.</li>
+          <li><strong>Your own media server:</strong> nginx-rtmp, SRS, MediaMTX or Owncast running on a VPS, where you then handle playback yourself.</li>
+          <li><strong>A CDN or OVP ingest:</strong> Wowza, Dacast, Vimeo, Muvi and similar all publish an RTMP endpoint for encoders.</li>
+          <li><strong>Internal corporate streaming:</strong> an all-hands recording pushed to the company's streaming appliance at the scheduled hour.</li>
+          <li><strong>A relay you already run:</strong> send once to your own distribution point and let it fan out from there.</li>
         </ul>
-        <p>The one requirement is that the endpoint is reachable from the public internet. A server behind a firewall or on a private network cannot receive our stream — open the RTMP port, or use a publicly routable ingest.</p>
+        <p>The one requirement is that the endpoint is reachable from the public internet. A server behind a firewall or on a private network cannot receive our stream. Open the RTMP port, or use a publicly routable ingest.</p>
 
         <h2>Troubleshooting custom RTMP</h2>
         <h3>Connection refused or immediate failure</h3>
         <p>Wrong host, wrong port, or the server is not accepting publishes. Check the URL character by character, and for self-hosted servers confirm the port is open from outside your network.</p>
         <h3>It connects, then drops straight away</h3>
-        <p>Usually authentication — an expired, mistyped or already-in-use stream key. Regenerate the key on the platform and try again.</p>
+        <p>Usually authentication: an expired, mistyped or already-in-use stream key. Regenerate the key on the platform and try again.</p>
         <h3>Nothing appears on the platform</h3>
         <p>The URL and key are probably swapped, or the key was pasted with the application path still attached. Split the joined URL at the last slash.</p>
         <h3>RTMPS fails but RTMP works</h3>
@@ -160,7 +161,7 @@
         <div class="faq" style="max-width:none;margin-top:22px">
           <details open>
             <summary>Which platforms work with custom RTMP?</summary>
-            <p>Any platform that accepts an RTMP or RTMPS publish — which in practice is all of them. Kick, Trovo, LinkedIn, X, Rumble, Odysee, Vimeo, Restream, DLive, VK, enterprise servers and self-hosted setups all work the same way.</p>
+            <p>Any platform that accepts an RTMP or RTMPS publish, which in practice is all of them. Kick, Trovo, LinkedIn, X, Rumble, Odysee, Vimeo, Restream, DLive, VK, enterprise servers and self-hosted setups all work the same way.</p>
           </details>
           <details>
             <summary>Can I stream to my own server?</summary>
@@ -176,7 +177,7 @@
           </details>
           <details>
             <summary>Can I send to several custom destinations at once?</summary>
-            <p>Yes, up to three simultaneously on the Multistream plan — and they can be any mix of built-in and custom endpoints. See <a href="/multistream.html">multistreaming</a>.</p>
+            <p>Yes, up to three simultaneously on the Multistream plan, and they can be any mix of built-in and custom endpoints. See <a href="/multistream.html">multistreaming</a>.</p>
           </details>
           <details>
             <summary>Is SRT or WebRTC supported?</summary>
@@ -223,7 +224,7 @@
       <div class="footer-grid">
         <div class="col wide">
           <a class="brand" href="/" style="margin-bottom:14px"><img class="logo-img" src="logo.svg" alt="" width="34" height="34" /><span>Stream<b>za</b></span></a>
-          <p style="color:var(--muted);font-size:15px;margin:0">Stream pre-recorded video live to any platform — from the cloud, with no device left running.</p>
+          <p style="color:var(--muted);font-size:15px;margin:0">Stream pre-recorded video live to any platform, from the cloud, with no device left running.</p>
         </div>
         <div class="col">
           <h3>Guides</h3>
@@ -304,7 +305,7 @@
         "@type": "WebPage",
         "@id": "https://streamza.live/custom-rtmp.html",
         "url": "https://streamza.live/custom-rtmp.html",
-        "name": "Custom RTMP Streaming — Any RTMP URL & Stream Key",
+        "name": "Custom RTMP Streaming: Any RTMP URL & Stream Key",
         "description": "How to stream a video to any RTMP or RTMPS destination, including Kick, Trovo, LinkedIn, X, Rumble, Restream and self-hosted servers.",
         "inLanguage": "en",
         "isPartOf": { "@type": "WebSite", "@id": "https://streamza.live/#website" },
@@ -314,7 +315,7 @@
       {
         "@type": "FAQPage",
         "mainEntity": [
-          { "@type": "Question", "name": "Which platforms work with custom RTMP?", "acceptedAnswer": { "@type": "Answer", "text": "Any platform that accepts an RTMP or RTMPS publish, which in practice is all of them — Kick, Trovo, LinkedIn, X, Rumble, Odysee, Vimeo, Restream, DLive, VK, enterprise servers and self-hosted setups." } },
+          { "@type": "Question", "name": "Which platforms work with custom RTMP?", "acceptedAnswer": { "@type": "Answer", "text": "Any platform that accepts an RTMP or RTMPS publish, which in practice is all of them: Kick, Trovo, LinkedIn, X, Rumble, Odysee, Vimeo, Restream, DLive, VK, enterprise servers and self-hosted setups." } },
           { "@type": "Question", "name": "Can I stream to my own server?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, as long as it is reachable from the public internet. Point Streamza at rtmp://your-server/app with whatever stream name you want as the key." } },
           { "@type": "Question", "name": "Does Streamza support RTMPS?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Paste an rtmps:// URL and it connects over TLS, typically on port 443." } },
           { "@type": "Question", "name": "My platform gave me one long URL instead of two fields. What now?", "acceptedAnswer": { "@type": "Answer", "text": "Split it at the last slash. Everything before it is the server URL and the final segment is the stream key." } },

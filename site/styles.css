@@ -1,7 +1,7 @@
 /* ===========================================================================
-   Streamza — website styles. Matches the app's iOS-style pure-black / system-red
+   Streamza website styles. Matches the app's iOS-style pure-black, system-red
    palette exactly.
-   Inter is loaded via <link> tags in each page's <head>, not @import here —
+   Roboto is loaded via <link> tags in each page's <head>, not @import here.
    @import nests the font fetch behind this stylesheet's own download+parse,
    which was flagged as a render-blocking chain (~550-1150ms) by PageSpeed.
    =========================================================================== */
@@ -39,7 +39,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Roboto', Arial, Helvetica, sans-serif; /* YouTube's actual font stack */
   line-height: 1.6;
   font-size: 17px;
   -webkit-font-smoothing: antialiased;

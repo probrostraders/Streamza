@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Stream Pre-Recorded Video to Facebook Live | Streamza</title>
   <meta name="description" content="Broadcast a recorded video to a Facebook Page or profile from the cloud. Upload an MP4, paste your Live Producer stream key, and go live. No OBS, no PC needed." />
+  <meta name="keywords" content="stream pre-recorded video to Facebook Live, Facebook Live Producer stream key, Facebook RTMPS URL, Facebook live streaming without OBS, stream mp4 to Facebook Page, Facebook live broadcast time limit, go live on Facebook from a video file" />
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
   <meta name="theme-color" content="#000000" />
   <link rel="icon" type="image/svg+xml" href="logo.svg" />
@@ -25,7 +26,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -66,7 +67,7 @@
     <div class="container">
       <span class="eyebrow"><span class="live"></span> Facebook Live</span>
       <h1>Stream a pre-recorded video to Facebook Live.</h1>
-      <p class="lp-lead">Upload the video, paste the stream key from Facebook Live Producer, and Streamza broadcasts it to your Page, profile or group as a real live video — with live reactions, comments and follower notifications. No OBS, no encoder, no machine left running.</p>
+      <p class="lp-lead">Upload the video, paste the stream key from Facebook Live Producer, and Streamza broadcasts it to your Page, profile or group as a real live video, with live reactions, comments and follower notifications. No OBS, no encoder, no machine left running.</p>
       <div class="hero-cta">
         <a class="btn btn-primary btn-lg" href="/studio">Go live on Facebook →</a>
         <a class="btn btn-ghost" href="#steps">Step-by-step</a>
@@ -90,14 +91,14 @@
           <tbody>
             <tr><td>Server URL</td><td><code>rtmps://live-api-s.facebook.com:443/rtmp/</code></td></tr>
             <tr><td>Stream key</td><td>From Live Producer → Streaming software</td></tr>
-            <tr><td>Protocol</td><td>RTMPS — Facebook requires the encrypted variant</td></tr>
+            <tr><td>Protocol</td><td>RTMPS: Facebook requires the encrypted variant</td></tr>
             <tr><td>Video codec</td><td>H.264</td></tr>
             <tr><td>Audio codec</td><td>AAC</td></tr>
             <tr><td>Keyframe interval</td><td>2 seconds</td></tr>
             <tr><td>Maximum broadcast length</td><td>8 hours per live session</td></tr>
           </tbody>
         </table>
-        <p>Streamza fills the RTMPS server URL in for you when you choose Facebook, so you only paste the key. Note the trailing slash — a URL missing it is one of the most common causes of a connection that silently fails.</p>
+        <p>Streamza fills the RTMPS server URL in for you when you choose Facebook, so you only paste the key. Note the trailing slash. A URL missing it is one of the most common causes of a connection that silently fails.</p>
 
         <h2 id="steps">How to stream a recorded video to Facebook</h2>
         <ol class="lp-steps">
@@ -120,13 +121,13 @@
         </ol>
 
         <div class="note">
-          <p class="mt-0"><strong>Two Facebook timers to know about.</strong> After your encoder starts sending, you have a limited window — around four hours — to actually click "Go live" before the session is discarded. And once live, a single broadcast is capped at <strong>8 hours</strong>, after which Facebook ends it automatically.</p>
+          <p class="mt-0"><strong>Two Facebook timers to know about.</strong> After your encoder starts sending, you have a limited window, around four hours, to actually click "Go live" before the session is discarded. And once live, a single broadcast is capped at <strong>8 hours</strong>, after which Facebook ends it automatically.</p>
         </div>
 
         <h2>Can you run a 24/7 stream on Facebook?</h2>
-        <p>Not as one unbroken broadcast. The 8-hour ceiling is a hard platform limit, so a permanently live Facebook channel would mean starting a fresh broadcast at least three times a day — a new post and a new comment thread each time.</p>
+        <p>Not as one unbroken broadcast. The 8-hour ceiling is a hard platform limit, so a permanently live Facebook channel would mean starting a fresh broadcast at least three times a day, with a new post and a new comment thread each time.</p>
         <p>Facebook is also the strictest major platform about looping content. Repetitive or unattended broadcasts that add nothing new get limited reach or removed, and Pages that do it repeatedly can lose live access altogether.</p>
-        <p>Practical advice: use Facebook for <strong>scheduled</strong> pre-recorded broadcasts — the edited service, the weekly show, the product launch — and put genuine always-on channels on <a href="/youtube-live-streaming.html">YouTube</a>, which is built for them. If you want both, <a href="/multistream.html">multistream</a> the same upload to Facebook for the 8-hour window and let YouTube carry the round-the-clock loop.</p>
+        <p>Practical advice: use Facebook for <strong>scheduled</strong> pre-recorded broadcasts (the edited service, the weekly show, the product launch) and put genuine always-on channels on <a href="/youtube-live-streaming.html">YouTube</a>, which is built for them. If you want both, <a href="/multistream.html">multistream</a> the same upload to Facebook for the 8-hour window and let YouTube carry the round-the-clock loop.</p>
 
         <h2>Page, profile or group?</h2>
         <table>
@@ -155,7 +156,7 @@
         <div class="faq" style="max-width:none;margin-top:22px">
           <details open>
             <summary>Can I stream a pre-recorded video to Facebook Live?</summary>
-            <p>Yes. Choose "Streaming software" as the source in Live Producer and Facebook accepts an RTMPS feed — it does not care whether the frames come from a camera or a file. Your own recorded content is fine; other people's is not.</p>
+            <p>Yes. Choose "Streaming software" as the source in Live Producer and Facebook accepts an RTMPS feed. It does not care whether the frames come from a camera or a file. Your own recorded content is fine; other people's is not.</p>
           </details>
           <details>
             <summary>How long can a Facebook live video run?</summary>
@@ -163,7 +164,7 @@
           </details>
           <details>
             <summary>Do I need a Page, or will my profile work?</summary>
-            <p>Both work. A Page is better for anything public-facing — you get insights, scheduling and a persistent stream key that saves re-copying it every time.</p>
+            <p>Both work. A Page is better for anything public-facing because you get insights, scheduling and a persistent stream key that saves re-copying it every time.</p>
           </details>
           <details>
             <summary>Why does Facebook need RTMPS instead of RTMP?</summary>
@@ -222,7 +223,7 @@
       <div class="footer-grid">
         <div class="col wide">
           <a class="brand" href="/" style="margin-bottom:14px"><img class="logo-img" src="logo.svg" alt="" width="34" height="34" /><span>Stream<b>za</b></span></a>
-          <p style="color:var(--muted);font-size:15px;margin:0">Stream pre-recorded video live to any platform — from the cloud, with no device left running.</p>
+          <p style="color:var(--muted);font-size:15px;margin:0">Stream pre-recorded video live to any platform, from the cloud, with no device left running.</p>
         </div>
         <div class="col">
           <h3>Guides</h3>

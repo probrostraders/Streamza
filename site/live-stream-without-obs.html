@@ -3,15 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Live Stream Without OBS — No Encoder, No PC | Streamza</title>
+  <title>Live Stream Without OBS: No Encoder, No PC | Streamza</title>
   <meta name="description" content="Go live without OBS, Streamlabs or any encoder. Upload a video, paste your stream key, and Streamza broadcasts it from the cloud. Nothing to install." />
+  <meta name="keywords" content="live stream without OBS, stream without an encoder, no download live streaming, live stream from phone no app, OBS alternative for pre-recorded video, stream a video without a computer, cloud based streaming software" />
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
   <meta name="theme-color" content="#000000" />
   <link rel="icon" type="image/svg+xml" href="logo.svg" />
   <link rel="canonical" href="https://streamza.live/live-stream-without-obs.html" />
 
   <meta property="og:site_name" content="Streamza" />
-  <meta property="og:title" content="Live Stream Without OBS — No Encoder, No PC" />
+  <meta property="og:title" content="Live Stream Without OBS: No Encoder, No PC" />
   <meta property="og:description" content="Go live without OBS, Streamlabs or any encoder. Upload a video, paste your stream key, and Streamza broadcasts it from the cloud. Nothing to install." />
   <meta property="og:type" content="article" />
   <meta property="og:url" content="https://streamza.live/live-stream-without-obs.html" />
@@ -19,13 +20,13 @@
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Live Stream Without OBS — No Encoder, No PC" />
+  <meta name="twitter:title" content="Live Stream Without OBS: No Encoder, No PC" />
   <meta name="twitter:description" content="Go live without OBS, Streamlabs or any encoder. Upload a video, paste your stream key, and Streamza broadcasts it from the cloud. Nothing to install." />
   <meta name="twitter:image" content="https://streamza.live/og-banner.png" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -65,7 +66,7 @@
     <div class="container">
       <span class="eyebrow"><span class="live"></span> Nothing to install</span>
       <h1>Go live without OBS, without an encoder, without a PC.</h1>
-      <p class="lp-lead">OBS is free, powerful and completely unnecessary if what you want is to broadcast a video you already have. Upload the file, paste your stream key, and Streamza does the encoding and the RTMP push on its own servers — from any browser, on any device, including a phone.</p>
+      <p class="lp-lead">OBS is free, powerful and completely unnecessary if what you want is to broadcast a video you already have. Upload the file, paste your stream key, and Streamza does the encoding and the RTMP push on its own servers, from any browser, on any device, including a phone.</p>
       <div class="hero-cta">
         <a class="btn btn-primary btn-lg" href="/studio">Go live in the browser →</a>
         <a class="btn btn-ghost" href="#compare">Cloud vs. OBS</a>
@@ -90,19 +91,19 @@
           <li><strong>There is no computer.</strong> Plenty of people work from a phone or a tablet, where OBS does not exist.</li>
           <li><strong>The upload connection is too slow or unstable.</strong> Live encoding needs sustained bandwidth for the entire broadcast; one hiccup and the stream stutters.</li>
           <li><strong>It has to run for days.</strong> Nobody wants to leave a desktop encoding around the clock for a <a href="/24-7-live-stream.html">24/7 channel</a>.</li>
-          <li><strong>The setup is too much.</strong> Scenes, sources, canvas resolution, rescale output, keyframe interval, x264 presets, rate control — a lot of configuration to press play on an MP4.</li>
+          <li><strong>The setup is too much.</strong> Scenes, sources, canvas resolution, rescale output, keyframe interval, x264 presets, rate control: a lot of configuration to press play on an MP4.</li>
         </ul>
         <p>If your goal is broadcasting a recorded video, every one of those problems disappears when the encoding moves off your machine.</p>
 
-        <h2>What OBS actually does — and what replaces each part</h2>
+        <h2>What OBS actually does (and what replaces each part)</h2>
         <p>OBS bundles four jobs into one program. Understanding the split makes it obvious which ones you still need:</p>
         <table>
           <thead><tr><th>OBS does this</th><th>Do you need it for a recorded video?</th></tr></thead>
           <tbody>
-            <tr><td><strong>Captures</strong> a camera, screen or window in real time</td><td>No — your video is already recorded.</td></tr>
-            <tr><td><strong>Composites</strong> scenes, overlays and transitions</td><td>No — that belongs in your video editor, where you have more control anyway.</td></tr>
+            <tr><td><strong>Captures</strong> a camera, screen or window in real time</td><td>No. Your video is already recorded.</td></tr>
+            <tr><td><strong>Composites</strong> scenes, overlays and transitions</td><td>No. That belongs in your video editor, where you have more control anyway.</td></tr>
             <tr><td><strong>Encodes</strong> to H.264/AAC</td><td>Yes, but your export is already encoded. Streamza passes it through.</td></tr>
-            <tr><td><strong>Pushes</strong> the result over RTMP to the platform</td><td>Yes — this is the part Streamza does for you, from the cloud.</td></tr>
+            <tr><td><strong>Pushes</strong> the result over RTMP to the platform</td><td>Yes. This is the part Streamza does for you, from the cloud.</td></tr>
           </tbody>
         </table>
         <p>So for pre-recorded content, OBS is doing one useful job: opening an RTMP connection and pumping frames into it. That job does not need to happen on your hardware.</p>
@@ -117,14 +118,14 @@
             <tr><td>Your upload bandwidth</td><td>Used continuously</td><td>Used once, during upload</td></tr>
             <tr><td>Your CPU/GPU</td><td>Used continuously</td><td>Not used</td></tr>
             <tr><td>Survives a power cut at home</td><td>No</td><td>Yes</td></tr>
-            <tr><td>Live camera and screen capture</td><td>Yes</td><td>No — recorded files only</td></tr>
+            <tr><td>Live camera and screen capture</td><td>Yes</td><td>No, recorded files only</td></tr>
             <tr><td>Scene switching mid-stream</td><td>Yes</td><td>No</td></tr>
             <tr><td>Setup time</td><td>Half an hour, first time</td><td>Under two minutes</td></tr>
           </tbody>
         </table>
 
         <div class="note">
-          <p class="mt-0"><strong>When you should still use OBS:</strong> if you need a live camera, live gameplay capture, real-time scene switching, guests, or overlays that react to what is happening right now, OBS is the right tool and Streamza is not a substitute. Streamza replaces OBS specifically for broadcasting video files — including the case where you use OBS to <em>record and edit</em> first, then hand the finished file to us to broadcast.</p>
+          <p class="mt-0"><strong>When you should still use OBS:</strong> if you need a live camera, live gameplay capture, real-time scene switching, guests, or overlays that react to what is happening right now, OBS is the right tool and Streamza is not a substitute. Streamza replaces OBS specifically for broadcasting video files, including the case where you use OBS to <em>record and edit</em> first, then hand the finished file to us to broadcast.</p>
         </div>
 
         <h2>How to go live with no software</h2>
@@ -139,7 +140,7 @@
           </li>
           <li>
             <h3>Upload the video and paste the key</h3>
-            <p>Drop in your MP4. The RTMP URL is pre-filled for YouTube, Twitch and Facebook — for anything else, paste the server URL too.</p>
+            <p>Drop in your MP4. The RTMP URL is pre-filled for YouTube, Twitch and Facebook. For anything else, paste the server URL too.</p>
           </li>
           <li>
             <h3>Press go, then close the tab</h3>
@@ -167,7 +168,7 @@
         <div class="faq" style="max-width:none;margin-top:22px">
           <details open>
             <summary>Can I really live stream with no software installed?</summary>
-            <p>Yes. Everything happens in the browser and on our servers. There is no download, no plugin and no extension — and because there is no local encoder, it works identically on Windows, macOS, Linux, Android and iOS.</p>
+            <p>Yes. Everything happens in the browser and on our servers. There is no download, no plugin and no extension. And because there is no local encoder, it works identically on Windows, macOS, Linux, Android and iOS.</p>
           </details>
           <details>
             <summary>Can I go live from my phone without an app?</summary>
@@ -183,7 +184,7 @@
           </details>
           <details>
             <summary>Can I stream my screen or webcam this way?</summary>
-            <p>Not through the web service — it broadcasts video files. For live camera and screen capture, use OBS on a desktop or the Streamza Android app on a phone.</p>
+            <p>Not through the web service, which broadcasts video files. For live camera and screen capture, use OBS on a desktop or the Streamza Android app on a phone.</p>
           </details>
           <details>
             <summary>Does it work with any platform OBS works with?</summary>
@@ -230,7 +231,7 @@
       <div class="footer-grid">
         <div class="col wide">
           <a class="brand" href="/" style="margin-bottom:14px"><img class="logo-img" src="logo.svg" alt="" width="34" height="34" /><span>Stream<b>za</b></span></a>
-          <p style="color:var(--muted);font-size:15px;margin:0">Stream pre-recorded video live to any platform — from the cloud, with no device left running.</p>
+          <p style="color:var(--muted);font-size:15px;margin:0">Stream pre-recorded video live to any platform, from the cloud, with no device left running.</p>
         </div>
         <div class="col">
           <h3>Guides</h3>
@@ -310,7 +311,7 @@
         "@type": "WebPage",
         "@id": "https://streamza.live/live-stream-without-obs.html",
         "url": "https://streamza.live/live-stream-without-obs.html",
-        "name": "Live Stream Without OBS — No Encoder, No Software, No PC",
+        "name": "Live Stream Without OBS: No Encoder, No Software, No PC",
         "description": "How to broadcast a video live without OBS, Streamlabs or any local encoder, using cloud streaming from any browser.",
         "inLanguage": "en",
         "isPartOf": { "@type": "WebSite", "@id": "https://streamza.live/#website" },
