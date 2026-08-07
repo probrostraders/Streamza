@@ -258,15 +258,15 @@ const libPath = (id) => path.join(UPLOAD_DIR, id);
 const libExists = (u) => { try { return fs.existsSync(libPath(u.id)); } catch (_) { return false; } };
 const libFor = (email) => { const e = (email || "").trim().toLowerCase(); return library.filter((u) => u.email === e && libExists(u)); };
 const libRetentionMs = (email) => (isSubscribed(email) ? LIB_UNUSED_MS : LIB_UNUSED_MS_FREE);
-function libAdd(email, fileId, name, size, signedIn) {
+function libAdd(email, fileId, name, size, signedIn, canCopy) {
   const e = (email || "").trim().toLowerCase();
   library = library.filter((u) => u.id !== fileId); // de-dupe (also refreshes lastUsedAt on reuse)
-  library.push({ id: fileId, email: e, name: name || "video.mp4", size: size || 0, uploadedAt: Date.now(), lastUsedAt: Date.now(), signedIn: !!signedIn });
+  library.push({ id: fileId, email: e, name: name || "video.mp4", size: size || 0, uploadedAt: Date.now(), lastUsedAt: Date.now(), signedIn: !!signedIn, canCopy: !!canCopy });
   const mine = library.filter((u) => u.email === e).sort((a, b) => b.lastUsedAt - a.lastUsedAt);
   mine.slice(LIB_MAX_PER_USER).forEach((u) => { rm(libPath(u.id)); library = library.filter((x) => x.id !== u.id); }); // keep newest N
   saveLib();
 }
-const libTouch = (fileId, signedIn) => { const u = library.find((x) => x.id === fileId); if (u) { u.lastUsedAt = Date.now(); if (signedIn) u.signedIn = true; saveLib(); } };
+const libTouch = (fileId, signedIn, canCopy) => { const u = library.find((x) => x.id === fileId); if (u) { u.lastUsedAt = Date.now(); if (signedIn) u.signedIn = true; if (typeof canCopy === "boolean") u.canCopy = canCopy; saveLib(); } };
 
 // ---- 5 slots ----
 const slots = Array.from({ length: SLOT_COUNT }, (_, i) => ({
@@ -418,6 +418,35 @@ function probeCodecs(file) {
   });
 }
 
+// Whether the source's own keyframe spacing is already tight enough (~2.2s or less) to go out with
+// -c copy instead of being re-encoded. This is the single biggest lever for quality on this box: a
+// compliant file streams at its ORIGINAL resolution/bitrate — true 4K stays 4K — for close to zero CPU,
+// instead of always being downscaled to fit what this VM's 2 vCPUs can re-encode in real time. Only
+// looks at the first ~12s of keyframes so it stays fast even on a large 4K file.
+function probeGopOk(file) {
+  return new Promise((resolve) => {
+    const p = spawn("ffprobe", [
+      "-v", "error", "-select_streams", "v:0", "-skip_frame", "nokey",
+      "-show_entries", "frame=pts_time", "-read_intervals", "%+12",
+      "-of", "csv=p=0", file,
+    ]);
+    let out = "";
+    p.stdout.on("data", (d) => (out += d));
+    p.on("close", () => {
+      const times = out.trim().split("\n").map(Number).filter((n) => Number.isFinite(n));
+      if (times.length < 2) return resolve(false); // couldn't confirm two keyframes — re-encode to be safe
+      let maxGap = 0;
+      for (let i = 1; i < times.length; i++) maxGap = Math.max(maxGap, times[i] - times[i - 1]);
+      resolve(maxGap <= 2.2);
+    });
+    p.on("error", () => resolve(false));
+  });
+}
+async function canStreamCopy(file, codecs) {
+  if (!codecs || codecs.video !== "h264" || codecs.audio !== "aac") return false;
+  return probeGopOk(file);
+}
+
 // Auto-upload: the browser sends the file the moment it's picked (before the plan/destination is even
 // chosen), so "Go Live" just claims a slot against an already-uploaded file instead of waiting through
 // the whole transfer again. Validated (codec-checked) immediately, same as a normal fresh upload.
@@ -430,8 +459,9 @@ app.post("/pending-upload", rateLimit(15, 60000), upload.single("video"), async 
   const codecs = await probeCodecs(file.path);
   if (codecs.video && codecs.video !== "h264") { rm(file.path); return res.status(400).json({ error: `Your video is ${codecs.video.toUpperCase()} — please export as MP4 with H.264 video so it can stream instantly (no re-encode).` }); }
   if (codecs.audio && codecs.audio !== "aac") { rm(file.path); return res.status(400).json({ error: `Your audio is ${codecs.audio.toUpperCase()} — please use AAC audio (MP4 = H.264 + AAC).` }); }
+  const canCopy = await canStreamCopy(file.path, codecs);
   const uploadId = path.basename(file.path);
-  pendingUploads.set(uploadId, { path: file.path, name: file.originalname, size: file.size, createdAt: Date.now() });
+  pendingUploads.set(uploadId, { path: file.path, name: file.originalname, size: file.size, createdAt: Date.now(), canCopy });
   res.json({ ok: true, uploadId, name: file.originalname, size: file.size });
 });
 
@@ -448,16 +478,18 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
 
   // Source = a fresh upload, an already pre-uploaded (auto-uploaded on file-select) video, or one of
   // the account's saved videos (no re-upload needed either way).
-  let srcPath, srcName, srcSize, isNew = false, skipCodecCheck = false;
+  let srcPath, srcName, srcSize, isNew = false, skipCodecCheck = false, srcCanCopy = null;
   if (file) {
     srcPath = file.path; srcName = file.originalname; srcSize = file.size; isNew = true;
   } else if (pendingId && pendingUploads.has(pendingId)) {
     const p = pendingUploads.get(pendingId);
     srcPath = p.path; srcName = p.name; srcSize = p.size; isNew = true; skipCodecCheck = true;
+    srcCanCopy = !!p.canCopy;
   } else if (reuseId) {
     const u = libFor(email).find((x) => x.id === reuseId);
     if (!u) return res.status(400).json({ error: "That saved video is no longer available — please upload it again." });
     srcPath = libPath(u.id); srcName = u.name; srcSize = u.size;
+    srcCanCopy = typeof u.canCopy === "boolean" ? u.canCopy : null; // null = saved before this existed — probe once below
   } else {
     return res.status(400).json({ error: "No video file uploaded." });
   }
@@ -485,11 +517,17 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
     .filter((d) => /^rtmps?:\/\//i.test(d.url));
   if (!norm.length) return bail(400, "Add at least one destination whose URL starts with rtmp:// or rtmps://");
 
-  // codec check — only for fresh uploads (pre-uploaded/saved/reused videos already passed at upload time)
+  // codec check — only for fresh uploads (pre-uploaded/saved/reused videos already passed at upload time).
+  // Also decides stream-copy vs re-encode here — this is what lets a compliant 4K+ upload go out at its
+  // original quality instead of always being downscaled to fit what this box can re-encode in real time.
   if (isNew && !skipCodecCheck) {
     const codecs = await probeCodecs(srcPath);
     if (codecs.video && codecs.video !== "h264") return bail(400, `Your video is ${codecs.video.toUpperCase()} — please export as MP4 with H.264 video so it can stream instantly (no re-encode).`);
     if (codecs.audio && codecs.audio !== "aac") return bail(400, `Your audio is ${codecs.audio.toUpperCase()} — please use AAC audio (MP4 = H.264 + AAC).`);
+    srcCanCopy = await canStreamCopy(srcPath, codecs);
+  } else if (srcCanCopy === null) {
+    // a saved video from before this feature existed — probe once now, then it's cached going forward
+    srcCanCopy = await canStreamCopy(srcPath, await probeCodecs(srcPath));
   }
 
   // honor the specific slot the user tapped, if it's still free; otherwise take the next free one.
@@ -507,10 +545,11 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
   const targets = use.map((d) => (d.key ? `${d.url}/${d.key}` : d.url));
 
   const token = crypto.randomBytes(12).toString("hex");
+  const useCopy = RELAY_COPY || !!srcCanCopy;
   const args = ["-re"];
   if (loop) args.push("-stream_loop", "-1");
   args.push("-i", srcPath, "-map", "0:v:0", "-map", "0:a:0?");
-  if (RELAY_COPY) {
+  if (useCopy) {
     args.push("-c", "copy");
   } else {
     // Re-encode so YouTube gets a keyframe every 2s (the #1 cause of "not receiving enough video") and a
@@ -537,12 +576,12 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
   });
   // Subscribers' and signed-in users' videos are saved for reuse (appear under "Your recent videos");
   // reused ones refresh their spot instead of duplicating.
-  if (paid || signedIn) { if (isNew) libAdd(email, path.basename(srcPath), srcName, srcSize, signedIn); else libTouch(reuseId, signedIn); }
+  if (paid || signedIn) { if (isNew) libAdd(email, path.basename(srcPath), srcName, srcSize, signedIn, srcCanCopy); else libTouch(reuseId, signedIn, srcCanCopy); }
   if (!paid) {
     trialCooldown.set(req.ip, Date.now());   // start this IP's free-trial cooldown
     if (!usedTrials.has(email.toLowerCase())) { usedTrials.add(email.toLowerCase()); saveUsedTrials(); }
   }
-  slog(slot, `Slot ${slot.id} claimed — ${paid ? "24h" : `free ${TRIAL_MS / 60000}-min trial`}${use.length > 1 ? ` · multistream ×${use.length}` : ""} ${loop ? "(loop) " : ""}${srcName}`);
+  slog(slot, `Slot ${slot.id} claimed — ${paid ? "24h" : `free ${TRIAL_MS / 60000}-min trial`}${use.length > 1 ? ` · multistream ×${use.length}` : ""} ${loop ? "(loop) " : ""}${srcName} [${useCopy ? "stream-copy, original quality" : "re-encoded"}]`);
   launchFfmpeg(slot, args);
   res.json({ ok: true, slot: slot.id, token, trial: slot.trial, expiresAt: slot.expiresAt, destinations: use.length, multistreamLimited: limited });
 });
