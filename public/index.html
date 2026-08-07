@@ -473,13 +473,20 @@
   .dz-empty svg{color:var(--sub);}
   .dz-title{font-size:14px;font-weight:700;color:#fff;}
   .dz-sub{font-size:12px;color:var(--sub);}
-  .dz-filled{display:none;flex-direction:row;gap:10px;width:100%;}
-  .dropzone.has-file{border-style:solid;border-color:rgba(52,199,89,.4);background:rgba(52,199,89,.06);}
+  .dz-filled{display:none;flex-direction:row;align-items:center;gap:12px;width:100%;}
+  .dropzone.has-file{border-style:solid;border-color:rgba(52,199,89,.4);background:rgba(52,199,89,.06);padding:14px 16px;}
   .dropzone.has-file .dz-empty{display:none;}
   .dropzone.has-file .dz-filled{display:flex;}
-  .dz-filled svg{color:#fff;flex:none;}
-  .dz-filename{flex:1;text-align:left;font-size:13.5px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .dz-filename .dz-progress{color:var(--sub);font-weight:500;}
+  .dz-thumb{width:60px;height:60px;border-radius:10px;background:#000;border:1px solid rgba(255,255,255,.14);flex:none;display:flex;align-items:center;justify-content:center;background-size:cover;background-position:center;overflow:hidden;}
+  .dz-thumb svg{color:rgba(255,255,255,.5);flex:none;}
+  .dz-thumb.has-frame svg{display:none;}
+  .dz-meta{flex:1;min-width:0;text-align:left;display:flex;flex-direction:column;gap:4px;}
+  .dz-filename{font-size:13.5px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .dz-size{font-size:11.5px;color:var(--sub);}
+  .dz-progress-wrap{display:flex;align-items:center;gap:8px;margin-top:2px;}
+  .dz-progress-bar{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,.14);overflow:hidden;}
+  .dz-progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--red),#ff7a5c);border-radius:3px;transition:width .2s ease;}
+  .dz-progress-label{font-size:11px;color:var(--sub);white-space:nowrap;flex:none;}
   .dz-change{font-size:12px;font-weight:700;color:var(--red);flex:none;}
 
   /* notice boxes: icon-led banners. Content is wrapped in ONE <span> (see markup/JS) so the
@@ -789,8 +796,17 @@
             <span class="dz-sub">MP4 · H.264 + AAC</span>
           </div>
           <div class="dz-filled" id="dzFilled">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="m9 8 5 3.5L9 15z"/></svg>
-            <span class="dz-filename" id="dzFilename">video.mp4</span>
+            <div class="dz-thumb" id="dzThumb">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="m9 8 5 3.5L9 15z"/></svg>
+            </div>
+            <div class="dz-meta">
+              <span class="dz-filename" id="dzFilename">video.mp4</span>
+              <span class="dz-size" id="dzSize"></span>
+              <div class="dz-progress-wrap" id="dzProgressWrap" style="display:none;">
+                <div class="dz-progress-bar"><div class="dz-progress-fill" id="dzProgressFill"></div></div>
+                <span class="dz-progress-label" id="dzProgressLabel">0%</span>
+              </div>
+            </div>
             <span class="dz-change">Change</span>
           </div>
         </label>
@@ -1214,34 +1230,58 @@
     function startPreUpload(f){
       const fd=new FormData(); fd.append("video",f);
       const xhr=new XMLHttpRequest(); pendingUploadXhr=xhr;
+      const wrap=$("dzProgressWrap"), fill=$("dzProgressFill"), label=$("dzProgressLabel");
+      if(wrap) wrap.style.display="flex";
+      if(fill) fill.style.width="0%";
+      if(label) label.textContent="0%";
       xhr.open("POST","/pending-upload"); xhr.timeout=900000;
       xhr.upload.onprogress=(e)=>{
         if(!e.lengthComputable || $("video").files[0]!==f) return;
         const pct=Math.round(e.loaded/e.total*100);
-        $("dzFilename").innerHTML=escHtml(f.name)+' · <span class="dz-progress">uploading '+pct+'%…</span>';
+        if(fill) fill.style.width=pct+"%";
+        if(label) label.textContent="Uploading "+pct+"%";
       };
       xhr.onload=()=>{
         if(pendingUploadXhr!==xhr) return; // superseded by a newer pick
         pendingUploadXhr=null;
         let j={}; try{ j=JSON.parse(xhr.responseText); }catch(_){}
         if($("video").files[0]!==f) return; // user already picked something else
+        if(wrap) wrap.style.display="none";
         if(xhr.status>=200 && xhr.status<300 && j.ok){ pendingUploadId=j.uploadId; }
         else if(j.error) toast(j.error); // Go Live still works — falls back to uploading the file itself
-        $("dzFilename").textContent=f.name+" · "+fmtSize(f.size);
       };
-      xhr.onerror=()=>{ if(pendingUploadXhr===xhr) pendingUploadXhr=null; };
-      xhr.ontimeout=()=>{ if(pendingUploadXhr===xhr) pendingUploadXhr=null; };
+      xhr.onerror=()=>{ if(pendingUploadXhr===xhr){ pendingUploadXhr=null; if(wrap) wrap.style.display="none"; } };
+      xhr.ontimeout=()=>{ if(pendingUploadXhr===xhr){ pendingUploadXhr=null; if(wrap) wrap.style.display="none"; } };
       xhr.send(fd);
+    }
+    // Draws the current frame of a loaded <video> onto the dropzone's thumbnail box, so a selected
+    // video reads as an actual video (a real preview frame) instead of a generic file-name row.
+    function captureThumb(videoEl,thumbEl){
+      if(!videoEl || !thumbEl) return;
+      const draw=()=>{
+        try{
+          const cw=videoEl.videoWidth, ch=videoEl.videoHeight;
+          if(!cw || !ch) return;
+          const canvas=document.createElement("canvas"); canvas.width=cw; canvas.height=ch;
+          canvas.getContext("2d").drawImage(videoEl,0,0,cw,ch);
+          thumbEl.style.backgroundImage="url("+canvas.toDataURL("image/jpeg",0.72)+")";
+          thumbEl.classList.add("has-frame");
+        }catch(_){ /* not decoded yet, or a cross-origin source — the icon stays as a fallback */ }
+      };
+      if(videoEl.readyState>=2) draw();
+      else videoEl.addEventListener("loadeddata",draw,{once:true});
     }
     $("video").addEventListener("change",()=>{
       const f=$("video").files[0];
-      const dz=$("dropzone");
+      const dz=$("dropzone"), thumb=$("dzThumb");
       cancelPendingUpload();
       if(f){ selectedFileId=null; document.querySelectorAll("#recentList .recentCard").forEach(c=>c.classList.remove("sel")); } // a new upload replaces a saved pick
       if(pUrl){ URL.revokeObjectURL(pUrl); pUrl=null; }
+      if(thumb){ thumb.classList.remove("has-frame"); thumb.style.backgroundImage=""; }
       if(f){
         pUrl=URL.createObjectURL(f); const v=$("preview"); v.src=pUrl; v.style.display="block"; $("vplaceholder").style.display="none"; v.play().catch(()=>{});
-        dz.classList.add("has-file"); $("dzFilename").textContent=f.name+" · "+fmtSize(f.size);
+        dz.classList.add("has-file"); $("dzFilename").textContent=f.name; $("dzSize").textContent=fmtSize(f.size);
+        captureThumb(v,thumb);
         startPreUpload(f);
       } else {
         dz.classList.remove("has-file");
@@ -1264,6 +1304,7 @@
       wrap.style.display="block"; list.innerHTML="";
       r.uploads.forEach(u=>{
         const card=document.createElement("div"); card.className="recentCard"+(selectedFileId===u.id?" sel":"");
+        card.dataset.name=u.name; card.dataset.size=u.size;
         const expiry=(typeof u.expiresInDays==="number") ? " · deletes in "+u.expiresInDays+"d" : "";
         card.innerHTML='<div class="rc-name">'+escHtml(u.name)+'</div><div class="rc-meta">'+fmtSize(u.size)+expiry+'</div><button class="rc-del" title="Delete">✕</button>';
         card.onclick=()=>selectRecent(u.id,card);
@@ -1273,18 +1314,21 @@
     }
     function selectRecent(id,card){
       selectedFileId = (selectedFileId===id) ? null : id; // toggle
-      const v=$("preview"), ph=$("vplaceholder");
+      const v=$("preview"), ph=$("vplaceholder"), dz=$("dropzone"), thumb=$("dzThumb");
       cancelPendingUpload();
       if(pUrl){ URL.revokeObjectURL(pUrl); pUrl=null; }
+      if(thumb){ thumb.classList.remove("has-frame"); thumb.style.backgroundImage=""; }
+      const pw=$("dzProgressWrap"); if(pw) pw.style.display="none";
       if(selectedFileId){
         try{ $("video").value=""; }catch(_){}
-        $("dropzone").classList.remove("has-file");
         const email=(($("email")&&$("email").value)||"").trim();
         if(v){ v.src="/myuploads/"+encodeURIComponent(selectedFileId)+"/file?email="+encodeURIComponent(email); v.style.display="block"; v.load(); }
         if(ph) ph.style.display="none";
+        if(dz && card){ dz.classList.add("has-file"); $("dzFilename").textContent=card.dataset.name||"video.mp4"; $("dzSize").textContent=fmtSize(card.dataset.size); captureThumb(v,thumb); }
       } else {
         if(v){ v.removeAttribute("src"); v.style.display="none"; }
         if(ph) ph.style.display="";
+        if(dz) dz.classList.remove("has-file");
       }
       document.querySelectorAll("#recentList .recentCard").forEach(c=>c.classList.remove("sel"));
       if(selectedFileId && card) card.classList.add("sel");
@@ -1462,6 +1506,7 @@
       const f=$("video").files[0];
       if(!$("email").value) return toast("Enter your email.");
       if(!f && !selectedFileId && !pendingUploadId) return toast("Choose a video file (or tap one of your recent videos).");
+      if(f && pendingUploadXhr && !pendingUploadId) return toast("Your video is still uploading — one moment, then try again.");
       const dests=collectDests();
       if(!dests.length){ return toast(mode==="multi" ? "Add at least one platform (URL + key)." : "Enter your RTMP server URL."); }
       if(!$("agree").checked) return toast("Confirm you have the rights to this content.");
