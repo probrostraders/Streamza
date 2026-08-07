@@ -354,16 +354,37 @@
     .hdrmenu a:hover{background:#222;}
     @media(max-width:560px){.hdrchip .em{display:none;} .hdrchip{padding:5px;}}
 
-    /* mode cards (under the slots) */
-    .modes{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:840px;margin:10px auto 0;}
-    @media(max-width:680px){.modes{grid-template-columns:1fr;}}
-    .modecard{text-align:left;background:#121216;border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:24px;cursor:pointer;transition:border-color .15s ease,transform .15s ease;display:flex;flex-direction:column;gap:7px;width:100%;font:inherit;color:inherit;}
-    .modecard:hover{border-color:var(--red);transform:translateY(-3px);}
-    .modecard .ic{width:46px;height:46px;border-radius:12px;background:rgba(255,59,48,.12);color:var(--red);display:flex;align-items:center;justify-content:center;margin-bottom:6px;}
-    .modecard .ic svg{width:24px;height:24px;}
-    .modecard h3{font-size:19px;font-weight:800;letter-spacing:-.01em;}
-    .modecard p{color:var(--sub);font-size:14px;line-height:1.5;}
-    .modecard .go{margin-top:8px;color:var(--red);font-weight:700;font-size:14px;}
+    /* mode cards — the primary gateway into the product, so this section carries more visual
+       weight than a plain feature list: a soft spotlight backdrop, roomier cards, a real feature
+       checklist per plan, and pill CTAs instead of a bare text link. */
+    #modes{position:relative;}
+    #modes::before{content:"";position:absolute;left:50%;top:6%;width:1000px;max-width:94%;height:460px;transform:translateX(-50%);background:radial-gradient(ellipse at center,rgba(255,59,48,.11),transparent 72%);pointer-events:none;z-index:0;}
+    #modes .wrap{position:relative;z-index:1;}
+    .modes{display:grid;grid-template-columns:1fr 1fr;gap:22px;max-width:920px;margin:16px auto 0;position:relative;}
+    @media(max-width:680px){.modes{grid-template-columns:1fr;gap:34px;}}
+    /* a small "or" divider centered between the two cards — reinforces this is a two-path choice */
+    .modes-or{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:38px;height:38px;border-radius:50%;background:#0c0c0f;border:1px solid rgba(255,255,255,.14);color:var(--sub);font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;z-index:2;box-shadow:0 6px 18px rgba(0,0,0,.4);}
+    @media(max-width:680px){.modes-or{top:calc(50% - 17px);}}
+    .modecard{text-align:left;background:linear-gradient(180deg,#141418,#101013);border:1px solid rgba(255,255,255,.09);border-radius:22px;padding:32px 28px;cursor:pointer;transition:border-color .2s ease,transform .2s ease,box-shadow .2s ease;display:flex;flex-direction:column;gap:9px;width:100%;font:inherit;color:inherit;}
+    .modecard:hover{border-color:var(--red);transform:translateY(-5px);}
+    .modecard .ic{width:54px;height:54px;border-radius:15px;background:rgba(255,59,48,.12);color:var(--red);display:flex;align-items:center;justify-content:center;margin-bottom:6px;transition:transform .2s ease;}
+    .modecard .ic svg{width:27px;height:27px;}
+    .modecard:hover .ic{transform:scale(1.08) rotate(-2deg);}
+    .modecard h3{font-size:22px;font-weight:800;letter-spacing:-.015em;}
+    .modecard p{color:var(--sub);font-size:14.5px;line-height:1.55;}
+    .modecard .mc-feat{list-style:none;margin:6px 0 4px;display:flex;flex-direction:column;gap:8px;}
+    .modecard .mc-feat li{display:flex;align-items:flex-start;gap:9px;font-size:13.5px;color:#d0d0d8;line-height:1.4;}
+    .modecard .mc-feat svg{flex:none;margin-top:2px;}
+    .modecard .mc-foot{margin-top:auto;padding-top:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid rgba(255,255,255,.08);}
+    /* two <span> children (label, amount), not bare text runs — a flex column container turns each
+       untagged text node into its own anonymous flex item, so mixed text+<b> would otherwise wrap
+       one word per line instead of reading as two sentences (see .beta/.selslot for the same fix). */
+    .modecard .cardprice{display:flex;flex-direction:column;gap:1px;font-size:12px;color:var(--sub);font-weight:600;}
+    .modecard .cardprice span{display:block;}
+    .modecard .cardprice b{font-size:19px;color:#fff;font-weight:800;letter-spacing:-.01em;}
+    .modecard .go{flex:none;display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:13.5px;padding:10px 16px;border-radius:11px;background:rgba(255,59,48,.12);color:var(--red);transition:background .2s ease,gap .2s ease;}
+    .modecard .go svg{transition:transform .2s ease;}
+    .modecard:hover .go svg{transform:translateX(3px);}
 
     /* full-screen studio app (OBS/Streamlabs style) */
     #studioApp{position:fixed;inset:0;z-index:200;background:#08080b;display:none;flex-direction:column;overflow:auto;}
@@ -392,20 +413,26 @@
     .dock #startBtn{padding:15px;font-size:16px;}
     .authbox{margin-bottom:14px;}
     .authhint{font-size:12px;color:var(--sub);margin-top:8px;}
-    #authUser{background:#1a1a1f;border:1px solid var(--line);border-radius:10px;padding:10px 13px;font-size:13px;color:#d0d0d8;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
-    #authUser b{color:#fff;}
-    #authUser .so{color:var(--red);cursor:pointer;font-weight:700;}
+    #authUser{background:#1a1a1f;border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:13px;color:#d0d0d8;display:flex;align-items:center;gap:11px;}
+    #authUser .au-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--red),#ff7a5c);color:#fff;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;flex:none;}
+    #authUser .au-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+    #authUser .au-email{font-size:13.5px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    #authUser .au-plan{font-size:11.5px;color:var(--sub);}
+    #authUser .so{color:var(--red);cursor:pointer;font-weight:700;flex:none;}
     .sapp-brand{cursor:pointer;}
 
     /* colour-coded mode cards */
-    .modecard{position:relative;gap:8px;}
+    .modecard{position:relative;}
     .modecard.single .ic{background:rgba(10,132,255,.14);color:#0A84FF;}
-    .modecard.single:hover{border-color:#0A84FF;}
-    .modecard.single .go{color:#0A84FF;}
-    .modecard.multi{border-color:rgba(255,59,48,.45);background:linear-gradient(180deg,rgba(255,59,48,.07),#121216);}
-    .modecard.multi:hover{border-color:var(--red);}
-    .cardprice{font-size:13px;font-weight:700;color:#fff;margin-top:2px;}
-    .cardbadge{position:absolute;top:14px;right:14px;background:var(--red);color:#fff;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:4px 10px;border-radius:20px;}
+    .modecard.single:hover{border-color:#0A84FF;box-shadow:0 20px 44px rgba(10,132,255,.16);}
+    .modecard.single .mc-feat svg{color:#0A84FF;}
+    .modecard.single .go{background:rgba(10,132,255,.14);color:#0A84FF;}
+    .modecard.single:hover .go{background:rgba(10,132,255,.24);}
+    .modecard.multi{border-color:rgba(255,59,48,.45);background:linear-gradient(180deg,rgba(255,59,48,.08),#121216 55%);box-shadow:0 20px 50px rgba(255,59,48,.12);}
+    .modecard.multi:hover{border-color:var(--red);box-shadow:0 24px 56px rgba(255,59,48,.22);}
+    .modecard.multi .mc-feat svg{color:var(--red);}
+    .modecard.multi:hover .go{background:rgba(255,59,48,.22);}
+    .cardbadge{position:absolute;top:-13px;right:24px;display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,var(--red),#ff5a4d);color:#fff;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:6px 13px;border-radius:20px;box-shadow:0 8px 18px rgba(255,59,48,.4);}
 
     /* responsive — studio app + cards on phones */
     @media(max-width:560px){
@@ -445,25 +472,301 @@
   .btn-primary{box-shadow:0 10px 26px rgba(255,59,48,.28);}
   .btn-primary:hover{box-shadow:0 12px 30px rgba(255,59,48,.36);}
 
-  .hmock{background:#111115;border:1px solid rgba(255,255,255,.10);border-radius:18px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.02);}
-  .hmock-bar{display:flex;align-items:center;gap:7px;padding:11px 14px;background:#0c0c0f;border-bottom:1px solid rgba(255,255,255,.07);}
-  .hdot{width:9px;height:9px;border-radius:50%;display:inline-block;}
-  .hdot.r{background:#ff5f57;} .hdot.y{background:#febc2e;} .hdot.g{background:#28c840;}
-  .hmock-url{margin-left:8px;display:flex;align-items:center;gap:6px;background:#1a1a1f;border-radius:7px;padding:5px 10px;font-size:11.5px;color:#9a9aa3;}
-  .hmock-body{padding:18px;}
-  .hmock-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
-  .hmock-live{background:rgba(255,59,48,.14);color:#ff6259;font-size:11px;font-weight:800;letter-spacing:.03em;padding:4px 10px;border-radius:20px;}
-  .hmock-plat{font-size:12px;color:var(--sub);font-weight:600;}
-  .hmock-frame{aspect-ratio:16/9;background:linear-gradient(155deg,#1c1c22,#0c0c0f);border:1px solid rgba(255,255,255,.07);border-radius:12px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.25);margin-bottom:14px;}
-  .hmock-stat-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:16px;}
-  .hmock-stat{background:#0c0c0f;border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:9px 12px;}
-  .hmock-stat span{display:block;font-size:10.5px;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
-  .hmock-stat b{font-size:14px;font-weight:700;}
-  .hmock-stat b.good{color:#34C759;}
-  .hmock-slots{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
-  .hs{height:16px;border-radius:5px;}
-  .hs.free{background:rgba(52,199,89,.20);border:1px solid rgba(52,199,89,.45);}
-  .hs.busy{background:rgba(255,59,48,.16);border:1px solid rgba(255,59,48,.4);}
+  /* Ultra-Professional Web Studio Mockup */
+  .hmock {
+    background: linear-gradient(165deg, #121218 0%, #09090d 100%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 
+      0 30px 80px rgba(0, 0, 0, 0.7),
+      0 0 40px rgba(255, 59, 48, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    position: relative;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .hmock:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      0 35px 90px rgba(0, 0, 0, 0.8),
+      0 0 50px rgba(255, 59, 48, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+  .hmock-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 16px;
+    background: rgba(14, 14, 18, 0.95);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+  }
+  .hmock-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .hdot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .hdot.r { background: #ff5f57; box-shadow: 0 0 6px rgba(255,95,87,0.4); }
+  .hdot.y { background: #febc2e; }
+  .hdot.g { background: #28c840; }
+  .hmock-url {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #a1a1aa;
+    letter-spacing: 0.01em;
+  }
+  .hmock-url svg { color: #34c759; }
+  .hmock-tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.04);
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+  .hmock-body { padding: 18px; }
+  
+  /* Video monitor area */
+  .hmock-frame {
+    aspect-ratio: 16/9;
+    background: radial-gradient(circle at center, #181822 0%, #0d0d12 100%);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 14px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+    box-shadow: inset 0 0 25px rgba(0,0,0,0.8);
+  }
+  .hmock-frame::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 24px 24px;
+    pointer-events: none;
+  }
+  .hmock-overlay-top {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 2;
+  }
+  .hmock-live-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 59, 48, 0.16);
+    border: 1px solid rgba(255, 59, 48, 0.4);
+    color: #ff6259;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    padding: 4px 10px;
+    border-radius: 20px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 0 12px rgba(255,59,48,0.25);
+  }
+  .hmock-live-dot {
+    width: 7px;
+    height: 7px;
+    background: #ff3b30;
+    border-radius: 50%;
+    animation: hpulse 1.8s infinite;
+  }
+  @keyframes hpulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); }
+    70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(255, 59, 48, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
+  }
+  .hmock-res-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #e4e4e7;
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 6px;
+    backdrop-filter: blur(8px);
+  }
+  .hmock-plat-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255, 0, 0, 0.12);
+    border: 1px solid rgba(255, 0, 0, 0.3);
+    color: #ff4d4d;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 6px;
+    backdrop-filter: blur(8px);
+  }
+  .hmock-play-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(255,59,48,0.9), rgba(220,38,38,0.9));
+    border: 1px solid rgba(255,255,255,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    box-shadow: 0 0 25px rgba(255, 59, 48, 0.5), inset 0 1px 0 rgba(255,255,255,0.4);
+    z-index: 2;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .hmock-frame:hover .hmock-play-btn {
+    transform: scale(1.08);
+    box-shadow: 0 0 35px rgba(255, 59, 48, 0.7), inset 0 1px 0 rgba(255,255,255,0.5);
+  }
+  /* Bottom Audio VU Waveform */
+  .hmock-vu-bars {
+    position: absolute;
+    bottom: 10px;
+    left: 14px;
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 16px;
+    z-index: 2;
+  }
+  .hmock-vu-bar {
+    width: 3px;
+    background: #34c759;
+    border-radius: 2px;
+    animation: vuAnim 1.2s ease-in-out infinite alternate;
+  }
+  .hmock-vu-bar:nth-child(2) { animation-delay: 0.2s; }
+  .hmock-vu-bar:nth-child(3) { animation-delay: 0.4s; }
+  .hmock-vu-bar:nth-child(4) { animation-delay: 0.1s; }
+  .hmock-vu-bar:nth-child(5) { animation-delay: 0.3s; }
+  @keyframes vuAnim {
+    0% { height: 4px; opacity: 0.5; }
+    100% { height: 16px; opacity: 1; }
+  }
+
+  /* Telemetry Stat Cards */
+  .hmock-stat-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .hmock-stat {
+    background: rgba(14, 14, 18, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 10px 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hmock-stat-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+  .hmock-stat span {
+    font-size: 10px;
+    color: #8e8e93;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+  }
+  .hmock-stat b {
+    font-size: 14.5px;
+    font-weight: 800;
+    color: #f4f4f5;
+    display: block;
+  }
+  .hmock-stat b.good { color: #34c759; }
+  .hmock-sparkline {
+    width: 100%;
+    height: 14px;
+    margin-top: 4px;
+  }
+
+  /* Server Engine Slot Matrix */
+  .hmock-matrix-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding: 0 2px;
+  }
+  .hmock-matrix-title span {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #71717a;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .hmock-matrix-title b {
+    font-size: 10.5px;
+    color: #34c759;
+    font-weight: 700;
+  }
+  .hmock-slots {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+  .hs {
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 8px;
+    font-size: 10px;
+    font-weight: 700;
+    transition: all 0.2s ease;
+  }
+  .hs.free {
+    background: rgba(52, 199, 89, 0.1);
+    border: 1px solid rgba(52, 199, 89, 0.35);
+    color: #34c759;
+  }
+  .hs.free:hover {
+    background: rgba(52, 199, 89, 0.2);
+    border-color: rgba(52, 199, 89, 0.6);
+    box-shadow: 0 0 10px rgba(52, 199, 89, 0.2);
+  }
+  .hs.busy {
+    background: rgba(255, 59, 48, 0.1);
+    border: 1px solid rgba(255, 59, 48, 0.3);
+    color: #ff6259;
+  }
+  .hs-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .hs.free .hs-dot { background: #34c759; box-shadow: 0 0 5px #34c759; }
+  .hs.busy .hs-dot { background: #ff3b30; box-shadow: 0 0 5px #ff3b30; }
 
   /* slot board — more premium than flat squares */
   .slot{position:relative;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease;}
@@ -584,7 +887,7 @@
   /* dock — stacked panels, one flat surface + radius throughout, spaced only by flex gap */
   #studioApp .dock{background:transparent;border:0;padding:0;box-shadow:none;display:flex;flex-direction:column;gap:16px;align-self:start;}
   #studioApp .authbox,#studioApp .beta,#studioApp .selslot,#studioApp details.resume{margin-bottom:0;}
-  #studioApp .beta,#studioApp .selslot,#studioApp details.resume{background:var(--yt-surface);border:1px solid var(--yt-border);border-radius:10px;}
+  #studioApp .beta,#studioApp .selslot,#studioApp details.resume,#studioApp #authUser{background:var(--yt-surface);border:1px solid var(--yt-border);border-radius:10px;}
   #studioApp .beta{border-left:3px solid var(--red);}
   #studioApp .selslot{color:var(--yt-dim);}
   #studioApp .selslot b{color:#fff;}
@@ -672,20 +975,74 @@
       <div class="hero-visual" aria-hidden="true">
         <div class="hmock">
           <div class="hmock-bar">
-            <span class="hdot r"></span><span class="hdot y"></span><span class="hdot g"></span>
-            <span class="hmock-url"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg> streamza.live/studio</span>
+            <div class="hmock-bar-left">
+              <span class="hdot r"></span><span class="hdot y"></span><span class="hdot g"></span>
+              <span class="hmock-url">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                streamza.live/studio
+              </span>
+            </div>
+            <span class="hmock-tag">PRO STUDIO</span>
           </div>
           <div class="hmock-body">
-            <div class="hmock-row"><span class="hmock-live">● LIVE</span><span class="hmock-plat">YouTube</span></div>
-            <div class="hmock-frame"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 5v14l11-7z"/></svg></div>
+            <div class="hmock-frame">
+              <div class="hmock-overlay-top">
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <span class="hmock-live-pill"><span class="hmock-live-dot"></span>LIVE</span>
+                  <span class="hmock-res-badge">1080p 60FPS</span>
+                </div>
+                <span class="hmock-plat-badge">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                  YouTube
+                </span>
+              </div>
+              <div class="hmock-play-btn">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              </div>
+              <div class="hmock-vu-bars">
+                <span class="hmock-vu-bar"></span>
+                <span class="hmock-vu-bar"></span>
+                <span class="hmock-vu-bar"></span>
+                <span class="hmock-vu-bar"></span>
+                <span class="hmock-vu-bar"></span>
+              </div>
+            </div>
             <div class="hmock-stat-row">
-              <div class="hmock-stat"><span>Bitrate</span><b>4.6 Mbps</b></div>
-              <div class="hmock-stat"><span>Health</span><b class="good">Good</b></div>
+              <div class="hmock-stat">
+                <div class="hmock-stat-head"><span>Bitrate</span></div>
+                <b>6.4 Mbps</b>
+                <svg class="hmock-sparkline" viewBox="0 0 100 20" fill="none">
+                  <path d="M0 15 L20 12 L40 16 L60 8 L80 10 L100 4" stroke="#34c759" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="hmock-stat">
+                <div class="hmock-stat-head"><span>Health</span></div>
+                <b class="good">99.8%</b>
+                <svg class="hmock-sparkline" viewBox="0 0 100 20" fill="none">
+                  <path d="M0 10 L25 10 L50 9 L75 10 L100 10" stroke="#34c759" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="hmock-stat">
+                <div class="hmock-stat-head"><span>Engine</span></div>
+                <b>60 FPS</b>
+                <span style="font-size:9.5px;color:#a1a1aa;font-weight:600;display:block;margin-top:2px;">12ms latency</span>
+              </div>
+            </div>
+            <div class="hmock-matrix-title">
+              <span>Broadcast Rack (10 Slots)</span>
+              <b>6 AVAILABLE</b>
             </div>
             <div class="hmock-slots">
-              <span class="hs busy"></span><span class="hs busy"></span><span class="hs free"></span><span class="hs free"></span>
-              <span class="hs busy"></span><span class="hs free"></span><span class="hs free"></span><span class="hs busy"></span>
-              <span class="hs free"></span><span class="hs free"></span>
+              <span class="hs busy">01 <i class="hs-dot"></i></span>
+              <span class="hs busy">02 <i class="hs-dot"></i></span>
+              <span class="hs free">03 <i class="hs-dot"></i></span>
+              <span class="hs free">04 <i class="hs-dot"></i></span>
+              <span class="hs busy">05 <i class="hs-dot"></i></span>
+              <span class="hs free">06 <i class="hs-dot"></i></span>
+              <span class="hs free">07 <i class="hs-dot"></i></span>
+              <span class="hs busy">08 <i class="hs-dot"></i></span>
+              <span class="hs free">09 <i class="hs-dot"></i></span>
+              <span class="hs free">10 <i class="hs-dot"></i></span>
             </div>
           </div>
         </div>
@@ -712,16 +1069,31 @@
           <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M8 5v14l11-7z"/></svg></span>
           <h3>Single stream</h3>
           <p>Stream your video to one platform — YouTube, Twitch, Facebook, Kick or any RTMP server.</p>
-          <span class="cardprice">Free trial, then $4.99/mo</span>
-          <span class="go">Open studio →</span>
+          <ul class="mc-feat">
+            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Free 15-minute trial, no card needed</li>
+            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Full 24-hour streaming once subscribed</li>
+            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Loop your video non-stop</li>
+          </ul>
+          <div class="mc-foot">
+            <span class="cardprice"><span>Free trial, then</span><span><b>$4.99</b>/mo</span></span>
+            <span class="go">Open studio<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          </div>
         </button>
+        <span class="modes-or">or</span>
         <button type="button" class="modecard multi" id="cardMulti">
-          <span class="cardbadge">Most popular</span>
+          <span class="cardbadge">★ Most popular</span>
           <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8.2 10.8 15.6 7.2M8.2 13.2l7.4 3.6"/></svg></span>
           <h3>Multistream</h3>
           <p>Broadcast one video to up to 3 platforms at once — e.g. YouTube + Twitch + Facebook together.</p>
-          <span class="cardprice">$9.99/mo</span>
-          <span class="go">Open studio →</span>
+          <ul class="mc-feat">
+            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Everything in Single, plus multi-platform</li>
+            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Up to 3 destinations at the same time</li>
+            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Cancel anytime</li>
+          </ul>
+          <div class="mc-foot">
+            <span class="cardprice"><span>Billed monthly</span><span><b>$9.99</b>/mo</span></span>
+            <span class="go">Open studio<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          </div>
         </button>
       </div>
     </div>
@@ -791,15 +1163,14 @@
           <div id="gbtnWrap"><div id="gbtn"></div><div class="authhint">Sign in to save your videos and manage your subscription.</div></div>
           <div id="authUser" style="display:none;"></div>
         </div>
-        <div class="beta" id="betaNote"><span><b>Free 15-minute trial</b> — no payment needed to start. <b>Subscribe</b> to stream the full 24 hours.</span></div>
-        <div class="selslot" id="selSlot"><span>Claiming the <b>next free slot</b> — or tap a specific slot above.</span></div>
-        <details class="resume">
+        <details class="resume" id="resumeDetails">
           <summary>Already streaming on another device? Resume it →</summary>
           <div class="resume-body">
             <input type="text" id="resumeInput" placeholder="Paste your manage link or stream code" />
             <button class="btn btn-ghost" id="resumeBtn">Resume</button>
           </div>
         </details>
+        <div class="beta" id="betaNote"><span><b>Free 15-minute trial</b> — no payment needed to start. <b>Subscribe</b> to stream the full 24 hours.</span></div>
 
         <!-- 1 · SOURCE -->
         <section class="sec">
@@ -875,6 +1246,7 @@
         <!-- 3 · GO LIVE -->
         <section class="sec" id="goSec">
           <div class="sec-head"><span class="sec-num">3</span><h3 class="sec-title">Go live</h3></div>
+          <div class="selslot" id="selSlot"><span>Claiming the <b>next free slot</b> — or tap a specific slot above.</span></div>
           <div class="checkrow"><input type="checkbox" id="agree" /><label style="margin:0;">I own or have the rights to stream this content and accept the fair-use terms.</label></div>
         <button class="btn btn-primary btn-block" id="startBtn" style="margin-top:18px;">Go Live</button>
         <button class="btn btn-ghost btn-block" id="stopBtn" style="margin-top:18px;display:none;">Stop my stream</button>
@@ -1058,13 +1430,21 @@
       myEmail=u.email; window.IS_SUBSCRIBED=!!u.subscribed; try{localStorage.setItem("streamza_email",u.email);}catch(_){}
       const b=$("authBox"); if(b) b.style.display="block";
       const g=$("gbtnWrap"); if(g) g.style.display="none";
-      const a=$("authUser"); if(a){ a.style.display="flex"; a.innerHTML='<span><b>'+escHtml(u.email)+'</b>'+(u.subscribed?(' '+proBadge(u.multi?"Multistream":"Pro")):'')+'</span><a class="so" id="signout">Sign out</a>'; const so=$("signout"); if(so) so.onclick=signOut; }
+      const initial=(u.email[0]||"U").toUpperCase();
+      const planTxt = u.subscribed ? (u.multi?"Multistream plan":"Subscribed") : "Free plan";
+      const a=$("authUser");
+      if(a){
+        a.style.display="flex";
+        a.innerHTML =
+          '<span class="au-av">'+escHtml(initial)+'</span>'+
+          '<span class="au-info"><span class="au-email">'+escHtml(u.email)+'</span><span class="au-plan">'+(u.subscribed?proBadge(u.multi?"Multistream":"Pro"):planTxt)+'</span></span>'+
+          '<a class="so" id="signout">Sign out</a>';
+        const so=$("signout"); if(so) so.onclick=signOut;
+      }
       // header account chip + dropdown
       const h=$("hdrAuth");
       if(h){
         h.style.display="flex";
-        const initial=(u.email[0]||"U").toUpperCase();
-        const planTxt = u.subscribed ? (u.multi?"Multistream plan":"Subscribed") : "Free plan";
         const planCol = u.subscribed ? "#34C759" : "var(--sub)";
         const live = u.slot && u.slot.live;
         const planLine = (live?'🔴 Live · Slot '+u.slot.id+' · ':'')+planTxt;
@@ -1472,6 +1852,12 @@
       const sp=$("sappStop"); if(sp) sp.style.display=on?"inline-flex":"none";
       $("startBtn").style.display=on?"none":"flex";
       $("stopBtn").style.display=on?"flex":"none";
+      // These three only make sense before going live (which slot you're about to claim, the free-trial
+      // pitch, resuming a DIFFERENT stream) — once this tab is already live they're just noise stacked
+      // above the controls, so fold them away instead of leaving dead prompts next to a Stop button.
+      const bn=$("betaNote"); if(bn) bn.style.display=on?"none":"";
+      const ssEl=$("selSlot"); if(ssEl) ssEl.style.display=on?"none":"";
+      const rd=$("resumeDetails"); if(rd) rd.style.display=on?"none":"";
       if(on){ const tok=localStorage.getItem(TKEY)||""; $("manageLink").value=location.origin+"/studio?s="+tok; }
       else{ $("sBitrate").textContent="—"; $("sSpeed").textContent="—"; $("sSpeed").className="v"; const li=$("liveInfo"); if(li) li.style.display="none"; }
     }
