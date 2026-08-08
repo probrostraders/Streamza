@@ -9,6 +9,7 @@ Disallow: /auth/
 Disallow: /pay/
 Disallow: /owner/
 Disallow: /lemonsqueezy/
+Disallow: /paddle/
 Disallow: /twitch-callback
 Disallow: /status
 Disallow: /slots

@@ -67,13 +67,11 @@
     ]
   }
   </script>
-  <link rel="preconnect" href="https://app.lemonsqueezy.com" crossorigin />
   <link rel="preconnect" href="https://cdn.paddle.com" crossorigin />
   <link rel="preconnect" href="https://accounts.google.com" crossorigin />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet" />
-  <script src="https://app.lemonsqueezy.com/js/lemon.js" defer></script>
   <script src="https://cdn.paddle.com/paddle/v2/paddle.js" defer></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
@@ -1346,7 +1344,7 @@
         <button class="btn btn-ghost" id="subCancel">Cancel</button>
         <button class="btn btn-primary" id="subGo">Continue →</button>
       </div>
-      <p class="secure">🔒 Secure checkout by Lemon Squeezy · cancel anytime</p>
+      <p class="secure">🔒 Secure checkout · cancel anytime</p>
     </div>
   </div>
 
@@ -1370,7 +1368,7 @@
       <p>Your 15-minute trial is up and the stream stopped. <b style="color:#fff;">Subscribe to keep streaming the full 24 hours</b>, non-stop. Billed monthly, cancel anytime.</p>
       <button class="btn btn-primary btn-block trial-btn" id="trialSubSingle"><span>Subscribe: 24-hour streaming</span><b id="trialPrice">$4.99/mo</b></button>
       <button class="btn btn-ghost btn-block trial-btn" id="trialSubMulti" style="margin-top:10px;"><span>Multistream: up to 3 platforms</span><b id="trialPriceMulti">$9.99/mo</b></button>
-      <p class="secure"><a id="trialLater" style="cursor:pointer;">Maybe later</a> · 🔒 Secure checkout by Lemon Squeezy</p>
+      <p class="secure"><a id="trialLater" style="cursor:pointer;">Maybe later</a> · 🔒 Secure checkout</p>
     </div>
   </div>
 
@@ -1383,7 +1381,7 @@
       <button class="btn btn-ghost btn-block trial-btn" id="planTrial"><span>Start free: 15-minute trial</span><b>$0</b></button>
       <button class="btn btn-primary btn-block trial-btn" id="planSingle" style="margin-top:10px;"><span>Subscribe: 24-hour streaming</span><b id="planSinglePrice">$4.99/mo</b></button>
       <button class="btn btn-ghost btn-block trial-btn" id="planMulti" style="margin-top:10px;"><span>Multistream: up to 3 platforms</span><b id="planMultiPrice">$9.99/mo</b></button>
-      <p class="secure"><a id="planCancel" style="cursor:pointer;">Cancel</a> · 🔒 Secure checkout by Lemon Squeezy</p>
+      <p class="secure"><a id="planCancel" style="cursor:pointer;">Cancel</a> · 🔒 Secure checkout</p>
     </div>
   </div>
 
@@ -1469,7 +1467,7 @@
           document.addEventListener("click", ()=>menu.classList.remove("show")); }
         if($("hdrResume")) $("hdrResume").onclick=()=>{ if(u.slot&&u.slot.token&&typeof resumeFromToken==="function") resumeFromToken(u.slot.token); };
         if($("hdrStudio")) $("hdrStudio").onclick=()=>{ if(typeof openStudioApp==="function") openStudioApp("single"); };
-        if($("hdrManage")) $("hdrManage").onclick=()=>{ window.open(u.portal||"https://app.lemonsqueezy.com/my-orders","_blank","noopener"); };
+        if($("hdrManage")) $("hdrManage").onclick=()=>{ if(u.portal) window.open(u.portal,"_blank","noopener"); else toast("To manage your subscription, email probrostraders@gmail.com"); };
         if($("hdrUpgrade")) $("hdrUpgrade").onclick=()=>{ const t=$("subModal"); if(t) t.classList.add("show"); else location.hash="#pricing"; };
         if($("hdrSignout")) $("hdrSignout").onclick=signOut;
       }

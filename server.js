@@ -110,14 +110,20 @@ try { usedTrials = new Set(JSON.parse(fs.readFileSync(TRIALS_FILE, "utf8")) || [
 function saveUsedTrials() { try { fs.writeFileSync(TRIALS_FILE, JSON.stringify([...usedTrials])); } catch (_) {} }
 function hasUsedTrial(email) { return usedTrials.has((email || "").trim().toLowerCase()); }
 
-// Lemon Squeezy customer-portal links per email (captured from subscription webhooks) so a signed-in
-// user can cancel / update their card. Falls back to the generic LS "my orders" magic-link page.
+// Customer-portal links per email (captured from Lemon Squeezy subscription webhooks) so a signed-in
+// user can cancel / update their card. Only falls back to LS's generic "my orders" page when Lemon
+// Squeezy is actually the active processor — otherwise an unmatched email gets no portal link rather
+// than being misdirected to the wrong company's billing page.
 const PORTAL_FILE = path.join(DATA_DIR, "portals.json");
 const LS_MY_ORDERS = process.env.LS_MY_ORDERS || "https://app.lemonsqueezy.com/my-orders";
 let portals = new Map();
 try { const raw = JSON.parse(fs.readFileSync(PORTAL_FILE, "utf8")) || {}; for (const [e, u] of Object.entries(raw)) portals.set(e, u); } catch (_) {}
 function savePortals() { try { fs.writeFileSync(PORTAL_FILE, JSON.stringify(Object.fromEntries(portals))); } catch (_) {} }
-function portalFor(email) { return portals.get((email || "").trim().toLowerCase()) || LS_MY_ORDERS; }
+function portalFor(email) {
+  const p = portals.get((email || "").trim().toLowerCase());
+  if (p) return p;
+  return PAY_PROVIDER === "lemonsqueezy" ? LS_MY_ORDERS : "";
+}
 // The signed-in user's currently active slot — lets them resume control of their stream from any device.
 function mySlot(email) {
   const e = (email || "").trim().toLowerCase();
