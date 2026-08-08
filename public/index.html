@@ -68,11 +68,13 @@
   }
   </script>
   <link rel="preconnect" href="https://app.lemonsqueezy.com" crossorigin />
+  <link rel="preconnect" href="https://cdn.paddle.com" crossorigin />
   <link rel="preconnect" href="https://accounts.google.com" crossorigin />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet" />
   <script src="https://app.lemonsqueezy.com/js/lemon.js" defer></script>
+  <script src="https://cdn.paddle.com/paddle/v2/paddle.js" defer></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     :root{--red:#FF3B30;--red2:#FF2D55;--bg:#000;--card:#141417;--card2:#0c0c0e;--line:#26262c;--txt:#fff;--sub:#9b9ba3;--ok:#10B981;--gold:#FFC940;}
@@ -1478,7 +1480,8 @@
     }
     async function signOut(){ try{ await fetch("/auth/logout",{method:"POST"}); }catch(_){} try{localStorage.removeItem("streamza_email");}catch(_){} location.reload(); }
 
-    // Subscription checkout (Lemon Squeezy): auto-enabled once store env vars are set on the server
+    // Subscription checkout: Paddle when the server has real credentials for it (the go-forward
+    // processor), Lemon Squeezy as a dormant fallback otherwise. /pay/config tells us which.
     let PAY = { enabled:false };
     (async function(){
       try{
@@ -1489,17 +1492,42 @@
     })();
     function lsReady(){
       if(!window.LemonSqueezy && typeof createLemonSqueezy==="function") createLemonSqueezy();
-      if(window.LemonSqueezy && !PAY._inited && LemonSqueezy.Setup){
+      if(window.LemonSqueezy && !PAY._lsInited && LemonSqueezy.Setup){
         LemonSqueezy.Setup({ eventHandler:(e)=>{ if(e && e.event==="Checkout.Success" && PAY._email){ toast("Payment received, activating your subscription…"); pollSubscribed(PAY._email,0); } } });
-        PAY._inited=true;
+        PAY._lsInited=true;
       }
       return !!window.LemonSqueezy;
     }
+    function paddleReady(){
+      if(!window.Paddle || !PAY.paddleClientToken) return false;
+      if(!PAY._paddleInited){
+        try{
+          Paddle.Environment.set(PAY.paddleEnv==="production" ? "production" : "sandbox");
+          Paddle.Initialize({
+            token: PAY.paddleClientToken,
+            eventCallback:(e)=>{ if(e && e.name==="checkout.completed" && PAY._email){ toast("Payment received, activating your subscription…"); pollSubscribed(PAY._email,0); } },
+          });
+          PAY._paddleInited=true;
+        }catch(_){ return false; }
+      }
+      return true;
+    }
     function openCheckout(email, plan){
-      const url0 = plan==="multi" ? PAY.checkoutMultiUrl : PAY.checkoutUrl;
-      if(!PAY.enabled || !url0){ toast(plan==="multi" ? "The Multistream plan isn't switched on yet." : "Subscriptions aren't switched on yet."); return; }
+      if(!PAY.enabled){ toast(plan==="multi" ? "The Multistream plan isn't switched on yet." : "Subscriptions aren't switched on yet."); return; }
       PAY._email = email;
       try{ localStorage.setItem("streamza_email", email); }catch(_){}
+      if(PAY.provider==="paddle"){
+        const priceId = plan==="multi" ? PAY.paddlePriceIdMulti : PAY.paddlePriceId;
+        if(!priceId || !paddleReady()){ toast("Checkout isn't ready yet — try again in a moment."); return; }
+        Paddle.Checkout.open({
+          items:[{ priceId, quantity:1 }],
+          customer:{ email },
+          customData:{ relay_email: email, tier: plan==="multi"?"multi":"single" },
+        });
+        return;
+      }
+      const url0 = plan==="multi" ? PAY.checkoutMultiUrl : PAY.checkoutUrl;
+      if(!url0){ toast(plan==="multi" ? "The Multistream plan isn't switched on yet." : "Subscriptions aren't switched on yet."); return; }
       const url = url0 + "?embed=1&media=0&checkout[email]=" + encodeURIComponent(email) + "&checkout[custom][relay_email]=" + encodeURIComponent(email) + "&checkout[custom][tier]=" + (plan==="multi"?"multi":"single");
       if(lsReady() && window.LemonSqueezy.Url){ LemonSqueezy.Url.Open(url); }
       else { window.open(url, "_blank"); pollSubscribed(email,0); }

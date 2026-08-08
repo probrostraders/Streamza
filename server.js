@@ -55,7 +55,20 @@ const MULTISTREAM_MAX = Number(process.env.MULTISTREAM_MAX) || 3;    // max simu
 const ckurl = (v) => (LS_STORE && v) ? `https://${LS_STORE}.lemonsqueezy.com/checkout/buy/${v}` : "";
 const LS_CHECKOUT = ckurl(LS_VARIANT_ID);
 const LS_CHECKOUT_MULTI = ckurl(LS_VARIANT_MULTI);
-const PAYMENTS_LIVE = !!(LS_CHECKOUT && LS_WEBHOOK_SECRET);     // on when the single-plan checkout + webhook are configured
+// --- Paddle (the go-forward processor — set via env once the seller account is approved) ---
+const PADDLE_ENV = process.env.PADDLE_ENV === "production" ? "production" : "sandbox"; // default sandbox until explicitly live
+const PADDLE_CLIENT_TOKEN = process.env.PADDLE_CLIENT_TOKEN || "";   // client-side token (Developer tools → Authentication)
+const PADDLE_PRICE_ID = process.env.PADDLE_PRICE_ID || "";           // Single plan price id, e.g. "pri_..."
+const PADDLE_PRICE_ID_MULTI = process.env.PADDLE_PRICE_ID_MULTI || ""; // Multistream plan price id
+const PADDLE_WEBHOOK_SECRET = process.env.PADDLE_WEBHOOK_SECRET || ""; // notification destination secret
+const PADDLE_PRICE_LABEL = process.env.PADDLE_PRICE_LABEL || "";
+const PADDLE_PRICE_LABEL_MULTI = process.env.PADDLE_PRICE_LABEL_MULTI || "";
+const PADDLE_ENABLED = !!(PADDLE_CLIENT_TOKEN && PADDLE_PRICE_ID && PADDLE_WEBHOOK_SECRET);
+const LS_ENABLED = !!(LS_CHECKOUT && LS_WEBHOOK_SECRET);
+// Paddle takes priority the moment it's configured; Lemon Squeezy stays as a dormant fallback so nothing
+// breaks mid-migration. Only one provider is ever active for checkout at a time.
+const PAY_PROVIDER = PADDLE_ENABLED ? "paddle" : (LS_ENABLED ? "lemonsqueezy" : null);
+const PAYMENTS_LIVE = !!PAY_PROVIDER;
 const BETA_FREE = !PAYMENTS_LIVE;     // admin label: paid subscriptions not enabled yet
 // --- Google Sign-In (optional accounts) — set GOOGLE_CLIENT_ID to enable ---
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || ""; // OAuth Web client id (…apps.googleusercontent.com)
@@ -169,7 +182,7 @@ app.use((req, res, next) => {
 // Keep app/API surfaces out of search results. Anything that isn't a marketing
 // page has no business being indexed, and robots.txt alone doesn't deindex a URL
 // that other sites happen to link to — the header does.
-const NOINDEX_PREFIXES = ["/admin", "/auth", "/pay", "/owner", "/lemonsqueezy",
+const NOINDEX_PREFIXES = ["/admin", "/auth", "/pay", "/owner", "/lemonsqueezy", "/paddle",
   "/status", "/slots", "/start", "/stop", "/upgrade", "/subscribed", "/live-preview",
   "/myuploads", "/deleteupload", "/waitlist", "/twitch-callback", "/studio-assets"];
 app.use((req, res, next) => {
@@ -655,13 +668,20 @@ app.post("/upgrade", rateLimit(15, 60000), (req, res) => {
   return res.json({ ok: false, needsCheckout: true }); // UI opens Paddle checkout, then retries
 });
 
-// Checkout config for the studio (the buy URL is public).
+// Checkout config for the studio (all values here are public/client-safe).
 app.get("/pay/config", (_req, res) =>
   res.json({
     enabled: PAYMENTS_LIVE,
-    checkoutUrl: LS_CHECKOUT, priceLabel: LS_PRICE_LABEL,
-    checkoutMultiUrl: LS_CHECKOUT_MULTI, priceLabelMulti: LS_PRICE_LABEL_MULTI,
-    multiEnabled: !!LS_CHECKOUT_MULTI, maxDests: MULTISTREAM_MAX,
+    provider: PAY_PROVIDER, // "paddle" | "lemonsqueezy" | null
+    maxDests: MULTISTREAM_MAX,
+    // Paddle (used when provider === "paddle")
+    paddleEnv: PADDLE_ENV, paddleClientToken: PADDLE_CLIENT_TOKEN,
+    paddlePriceId: PADDLE_PRICE_ID, paddlePriceIdMulti: PADDLE_PRICE_ID_MULTI,
+    priceLabel: PAY_PROVIDER === "paddle" ? PADDLE_PRICE_LABEL : LS_PRICE_LABEL,
+    priceLabelMulti: PAY_PROVIDER === "paddle" ? PADDLE_PRICE_LABEL_MULTI : LS_PRICE_LABEL_MULTI,
+    multiEnabled: PAY_PROVIDER === "paddle" ? !!PADDLE_PRICE_ID_MULTI : !!LS_CHECKOUT_MULTI,
+    // Lemon Squeezy (dormant fallback — used when provider === "lemonsqueezy")
+    checkoutUrl: LS_CHECKOUT, checkoutMultiUrl: LS_CHECKOUT_MULTI,
   }));
 
 // Studio polls this after checkout to know when the webhook has activated the subscription, and to
@@ -706,6 +726,38 @@ app.post("/lemonsqueezy/webhook", (req, res) => {
       const portalUrl = (attrs.urls && (attrs.urls.customer_portal || attrs.urls.update_payment_method)) || "";
       if (portalUrl) { portals.set(email, portalUrl); savePortals(); }
     } else if (name === "order_created") { subscribers.set(email, tier); saveSubs(); }
+  }
+  res.json({ ok: true });
+});
+
+// Paddle webhook — verifies the Paddle-Signature header (ts=...;h1=... over "ts:rawBody", HMAC-SHA256),
+// then adds/removes the subscriber by email. Paddle's subscription payloads carry a customer_id, not an
+// email, so the email travels in custom_data (set at checkout — see Paddle.Checkout.open in the studio).
+function verifyPaddleSig(req) {
+  if (!PADDLE_WEBHOOK_SECRET || !req.rawBody) return false;
+  try {
+    const header = req.get("Paddle-Signature") || "";
+    const parts = Object.fromEntries(header.split(";").map((p) => p.split("=")));
+    if (!parts.ts || !parts.h1) return false;
+    const signedPayload = `${parts.ts}:${req.rawBody.toString("utf8")}`;
+    const mac = crypto.createHmac("sha256", PADDLE_WEBHOOK_SECRET).update(signedPayload).digest("hex");
+    return mac.length === parts.h1.length && crypto.timingSafeEqual(Buffer.from(mac), Buffer.from(parts.h1));
+  } catch (_) { return false; }
+}
+app.post("/paddle/webhook", (req, res) => {
+  if (!verifyPaddleSig(req)) return res.status(401).send("bad signature");
+  const evt = req.body || {};
+  const type = evt.event_type || "";
+  const data = evt.data || {};
+  const custom = data.custom_data || {};
+  const email = ((custom.relay_email || "") + "").trim().toLowerCase();
+  const priceId = (data.items && data.items[0] && data.items[0].price && data.items[0].price.id) || "";
+  const tier = (custom.tier === "multi" || (PADDLE_PRICE_ID_MULTI && priceId === PADDLE_PRICE_ID_MULTI)) ? "multi" : "single";
+  if (email && /^subscription\./.test(type)) {
+    const status = (data.status || "").toLowerCase(); // active, trialing, paused, past_due, canceled
+    if (status === "active" || status === "trialing") subscribers.set(email, tier);
+    else subscribers.delete(email);
+    saveSubs();
   }
   res.json({ ok: true });
 });
