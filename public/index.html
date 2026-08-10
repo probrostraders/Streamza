@@ -220,10 +220,11 @@
     details.resume summary::-webkit-details-marker{display:none;}
     .resume-body{display:flex;gap:8px;padding:0 13px 12px;}
     .resume-body input{flex:1;background:#000;border:1px solid var(--line);color:#fff;border-radius:8px;padding:10px;font-size:14px;}
-    .statgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px;}
+    .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:10px;margin-top:12px;}
     .stat{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-align:center;}
     .stat .k{font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;}
     .stat .v{font-size:16px;font-weight:800;margin-top:2px;} .stat .v.green{color:var(--ok);}
+    .stat .v.warn{color:var(--red);} .stat .v.dim{color:var(--sub);font-size:13px;}
     details.logwrap{margin-top:12px;border:1px solid var(--line);border-radius:10px;background:var(--card2);}
     details.logwrap summary{padding:10px 14px;cursor:pointer;font-size:13px;color:var(--sub);list-style:none;}
     details.logwrap summary::-webkit-details-marker{display:none;}
@@ -1152,6 +1153,8 @@
         <div class="statgrid">
           <div class="stat"><div class="k">Status</div><div class="v" id="sStatus">Idle</div></div>
           <div class="stat"><div class="k">Bitrate</div><div class="v" id="sBitrate">-</div></div>
+          <div class="stat"><div class="k">FPS</div><div class="v" id="sFps">-</div></div>
+          <div class="stat"><div class="k">Dropped frames</div><div class="v" id="sDrop">-</div></div>
           <div class="stat"><div class="k">Health</div><div class="v" id="sSpeed">-</div></div>
         </div>
         <details class="logwrap"><summary>Technical log</summary><div class="logbox" id="log"></div></details>
@@ -1828,7 +1831,58 @@
       }
     }
 
-    function parseStats(log){for(let i=log.length-1;i>=0;i--){const l=log[i];if(l.includes("bitrate=")){const br=l.match(/bitrate=\s*([\d.]+)\s*kbits\/s/i);const sp=l.match(/speed=\s*([\d.]+)\s*x/i);return{br:br?+br[1]:null,speed:sp?+sp[1]:null};}}return null;}
+    // ffmpeg's own "speed=" is a CUMULATIVE average since the process started, so it always begins at
+    // 0x and takes ~10-15s to climb near 1x on every single stream — falsely reading as "Weak" right
+    // after going live even when nothing is wrong. liveSpeed instead compares the last two progress
+    // lines' encoded-time delta against their real elapsed-time delta, giving the actual current pace.
+    // dropDelta (recent dropped frames) is the real, standard health signal — the same thing YouTube/
+    // Twitch's own dashboards surface — rather than a single early drop permanently flagging "Weak".
+    function parseStats(log){
+      const rows=[];
+      for(let i=log.length-1;i>=0 && rows.length<2;i--){
+        const l=log[i];
+        if(!l.includes("bitrate=")) continue;
+        const br=l.match(/bitrate=\s*([\d.]+)\s*kbits\/s/i);
+        const sp=l.match(/speed=\s*([\d.]+)\s*x/i);
+        const fps=l.match(/fps=\s*([\d.]+)/i);
+        const drop=l.match(/drop=\s*(\d+)/i);
+        const tm=l.match(/(?:^|\s)time=\s*(\d+):(\d+):(\d+\.?\d*)/i);
+        const el=l.match(/elapsed=\s*(\d+):(\d+):(\d+\.?\d*)/i);
+        rows.push({
+          br: br?+br[1]:null, speed: sp?+sp[1]:null, fps: fps?+fps[1]:null, drop: drop?+drop[1]:null,
+          timeSec: tm ? (+tm[1]*3600 + +tm[2]*60 + +tm[3]) : null,
+          elapsedSec: el ? (+el[1]*3600 + +el[2]*60 + +el[3]) : null,
+        });
+      }
+      if(!rows.length) return null;
+      const latest=rows[0];
+      let liveSpeed=latest.speed, dropDelta=null;
+      if(rows.length===2){
+        if(rows[0].timeSec!=null && rows[1].timeSec!=null && rows[0].elapsedSec!=null && rows[1].elapsedSec!=null){
+          const dElapsed=rows[0].elapsedSec-rows[1].elapsedSec;
+          if(dElapsed>0.05) liveSpeed=(rows[0].timeSec-rows[1].timeSec)/dElapsed;
+        }
+        if(rows[0].drop!=null && rows[1].drop!=null) dropDelta=rows[0].drop-rows[1].drop;
+      }
+      return { br:latest.br, fps:latest.fps, drop:latest.drop, speed:latest.speed, liveSpeed, dropDelta };
+    }
+    // Shared health classification, used by both the studio's Broadcast Health panel and the landing
+    // page's "your live stream" card: a short grace period right after going live (the connection is
+    // still ramping up, not actually unhealthy), "Weak" only when frames are dropping right now or the
+    // encoder can't currently keep pace, "Good" otherwise.
+    function computeHealth(st,uptime){
+      if(!st) return {label:"-",ok:null};
+      if(uptime!=null && uptime<8) return {label:"Connecting…",ok:null};
+      const dropping = st.dropDelta!=null && st.dropDelta>0;
+      const slow = st.liveSpeed!=null && st.liveSpeed<0.9;
+      return (dropping||slow) ? {label:"Weak",ok:false} : {label:"Good",ok:true};
+    }
+    function applyHealth(el,st,uptime){
+      if(!el) return;
+      const h=computeHealth(st,uptime);
+      el.textContent=h.label;
+      el.className="v"+(h.ok===true?" green":h.ok===false?" warn":(h.label==="Connecting…"?" dim":""));
+    }
 
     // owner's slot monitor (token)
     async function refreshMine(){
@@ -1863,8 +1917,9 @@
         $("log").textContent=(s.log||[]).join("\n"); $("log").scrollTop=$("log").scrollHeight;
         const st=parseStats(s.log||[]);
         $("sBitrate").textContent = st&&st.br!=null ? (st.br/1000).toFixed(2)+" Mbps":"-";
-        $("sSpeed").textContent = st&&st.speed!=null ? (st.speed>=0.95?"Good":"Weak"):"-";
-        $("sSpeed").className = "v"+(st&&st.speed>=0.95?" green":"");
+        $("sFps").textContent = st&&st.fps!=null ? st.fps.toFixed(0) : "-";
+        $("sDrop").textContent = st&&st.drop!=null ? st.drop : "-";
+        applyHealth($("sSpeed"), st, s.uptime);
         renderMyLiveCard(s);
       }catch(_){}
     }
@@ -1885,7 +1940,7 @@
       const ssEl=$("selSlot"); if(ssEl) ssEl.style.display=on?"none":"";
       const rd=$("resumeDetails"); if(rd) rd.style.display=on?"none":"";
       if(on){ const tok=localStorage.getItem(TKEY)||""; $("manageLink").value=location.origin+"/studio?s="+tok; }
-      else{ $("sBitrate").textContent="-"; $("sSpeed").textContent="-"; $("sSpeed").className="v"; const li=$("liveInfo"); if(li) li.style.display="none"; }
+      else{ $("sBitrate").textContent="-"; $("sFps").textContent="-"; $("sDrop").textContent="-"; $("sSpeed").textContent="-"; $("sSpeed").className="v"; const li=$("liveInfo"); if(li) li.style.display="none"; }
     }
 
     // "Your live stream" hero card on the landing page: a bigger, prominent readout of the browser's
@@ -1895,8 +1950,9 @@
       const card=$("myLiveCard"); if(!card) return;
       if(!s){ card.style.display="none"; card.innerHTML=""; return; }
       const st=parseStats(s.log||[]);
-      const health = st&&st.speed!=null ? (st.speed>=0.95?"Good":"Weak") : "Connecting…";
-      const healthCls = health==="Good"?"good":health==="Weak"?"weak":"";
+      const h=computeHealth(st,s.uptime);
+      const health=h.label;
+      const healthCls = h.ok===true?"good":h.ok===false?"weak":"";
       const n=(s.dests&&s.dests.length)||1;
       card.style.display="flex";
       card.innerHTML =
