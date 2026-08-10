@@ -28,7 +28,7 @@ Streamza is operated by Probros (Sohaib Yasin), Punjab, Pakistan. Contact: probr
 
 ## Pricing model
 
-Claiming a slot starts a **free 15-minute trial** — no account, no card. To keep a stream running, the slot converts to a **paid 24-hour slot** that can be renewed. Multistreaming to up to 3 destinations is a higher tier. Web Studio billing is handled by Paddle as merchant of record. The separate Streamza Android app is billed through Google Play and is priced independently.
+Claiming a slot starts a **free 15-minute trial** — no account, no card. To keep a stream running, the slot converts to a **paid 24-hour slot** that can be renewed. Multistreaming to up to 3 destinations is a higher tier. Web Studio billing is handled by Lemon Squeezy as merchant of record. The separate Streamza Android app is billed through Google Play and is priced independently.
 
 ## Key pages
 
