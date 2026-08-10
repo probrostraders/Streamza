@@ -9,6 +9,7 @@
  * checkout is ready, set PAYMENTS_LIVE=true and implement verifyPayment() — that's the only change.
  */
 const express = require("express");
+const compression = require("compression");
 const multer = require("multer");
 const { spawn } = require("child_process");
 const crypto = require("crypto");
@@ -160,6 +161,7 @@ function sessionCookie(req, val, maxAge) {
 const upload = multer({ dest: UPLOAD_DIR, limits: { fileSize: 1.5 * 1024 * 1024 * 1024 } }); // 1.5 GB cap — the micro's disk is small
 const app = express();
 app.set("trust proxy", true); // behind Caddy — read the real client IP from X-Forwarded-For
+app.use(compression()); // gzip text responses (HTML/CSS/JS/JSON) — Caddy in front doesn't compress origin responses today
 app.use(express.json({ verify: (req, _res, buf) => { req.rawBody = buf; } })); // keep raw body for webhook signature checks
 
 // --- tiny in-memory per-IP rate limiter (abuse guard) ---

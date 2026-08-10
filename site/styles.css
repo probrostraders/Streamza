@@ -6,6 +6,38 @@
    which was flagged as a render-blocking chain (~550-1150ms) by PageSpeed.
    =========================================================================== */
 
+/* Self-hosted Roboto (variable font, latin subset) — one file serves every weight below,
+   avoiding the fonts.googleapis.com/fonts.gstatic.com round trips (extra DNS+TLS handshakes)
+   that a cross-origin Google Fonts request costs on every first visit. */
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('fonts/roboto-var.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('fonts/roboto-var.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('fonts/roboto-var.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url('fonts/roboto-var.woff2') format('woff2');
+}
+
 :root {
   /* Palette pulled straight from the app (colors.xml) */
   --bg: #000000;
@@ -37,7 +69,11 @@ html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
 
 body {
   margin: 0;
-  background: var(--bg);
+  background:
+    radial-gradient(1100px 620px at 50% -8%, rgba(255,59,48,.08), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, rgba(255,255,255,.035), transparent 55%),
+    var(--bg);
+  background-attachment: fixed;
   color: var(--text);
   font-family: 'Roboto', Arial, Helvetica, sans-serif; /* YouTube's actual font stack */
   line-height: 1.6;
@@ -54,32 +90,44 @@ a { color: var(--text); text-decoration: none; }
 .brand b { color: var(--red); font-weight: 800; }
 .logo-img { width: 34px; height: 34px; border-radius: 9px; display: block; }
 
-/* ---------- Header ---------- */
-.site-header { position: sticky; top: 0; z-index: 50; background: rgba(0,0,0,.72); backdrop-filter: saturate(180%) blur(16px); border-bottom: 1px solid var(--hairline); }
-.nav { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+/* ---------- Header (floating pill nav) ---------- */
+.site-header { position: sticky; top: 0; z-index: 50; padding: 14px 16px 0; background: linear-gradient(180deg, rgba(0,0,0,.9), transparent); }
+.nav {
+  display: flex; align-items: center; justify-content: space-between; height: 62px;
+  max-width: calc(var(--maxw) + 20px);
+  padding-left: 12px; padding-right: 12px;
+  background: rgba(20,20,22,.68);
+  backdrop-filter: saturate(180%) blur(18px);
+  -webkit-backdrop-filter: saturate(180%) blur(18px);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 999px;
+  box-shadow: 0 18px 40px rgba(0,0,0,.35);
+}
+.site-header.nav-open .nav { border-radius: 26px; }
 .nav-links { display: flex; gap: 28px; align-items: center; }
 .nav-links a { color: var(--muted); font-size: 15px; font-weight: 500; }
 .nav-links a:hover { color: var(--text); text-decoration: none; }
 @media (max-width: 860px) { .nav-links { display: none; } }
 
 /* ---------- Buttons ---------- */
-.btn { display: inline-flex; align-items: center; gap: 9px; padding: 12px 22px; border-radius: 12px; font-weight: 600; font-size: 15px; border: 1px solid transparent; cursor: pointer; transition: background .15s ease, border-color .15s ease, opacity .15s ease; }
-.btn:hover { text-decoration: none; }
-.btn-primary { background: var(--red-press); color: #fff; }
-.btn-primary:hover { background: var(--red); }
-.btn-ghost { background: transparent; color: var(--text); border-color: var(--hairline); }
-.btn-ghost:hover { border-color: var(--muted-2); }
-.btn-sm { padding: 9px 16px; font-size: 14px; border-radius: 10px; }
+.btn { display: inline-flex; align-items: center; gap: 9px; padding: 12px 24px; border-radius: 999px; font-weight: 600; font-size: 15px; border: 1px solid transparent; cursor: pointer; transition: background .15s ease, border-color .15s ease, opacity .15s ease, transform .15s ease, box-shadow .15s ease; }
+.btn:hover { text-decoration: none; transform: translateY(-2px); }
+.btn:active { transform: translateY(0); }
+.btn-primary { background: var(--red-press); color: #fff; box-shadow: 0 10px 26px rgba(255,59,48,.24); }
+.btn-primary:hover { background: var(--red); box-shadow: 0 14px 34px rgba(255,59,48,.4); }
+.btn-ghost { background: rgba(255,255,255,.03); color: var(--text); border-color: rgba(255,255,255,.14); }
+.btn-ghost:hover { border-color: var(--muted-2); background: rgba(255,255,255,.06); }
+.btn-sm { padding: 9px 18px; font-size: 14px; }
 
 /* ---------- Hero (classic two-column) ---------- */
-.hero { padding: 72px 0 48px; }
+.hero { padding: 96px 0 56px; }
 .hero-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 48px; align-items: center; }
 @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; gap: 36px; text-align: center; } }
 .eyebrow { display: inline-flex; align-items: center; gap: 9px; padding: 7px 16px 7px 12px; border: 1px solid rgba(255,59,48,.25); background: linear-gradient(180deg, rgba(255,59,48,.10), rgba(255,59,48,.02)); border-radius: 999px; color: var(--muted); font-size: 13px; font-weight: 500; box-shadow: 0 1px 0 rgba(255,255,255,.05) inset; margin-bottom: 22px; }
 .eyebrow .live { position: relative; width: 7px; height: 7px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 3px rgba(255,59,48,.18); flex: none; }
 .eyebrow .live::before { content: ""; position: absolute; inset: -5px; border-radius: 50%; border: 1px solid rgba(255,59,48,.55); animation: eyebrowPing 1.8s cubic-bezier(0,0,.2,1) infinite; }
 @keyframes eyebrowPing { 0% { transform: scale(.5); opacity: .8; } 75%, 100% { transform: scale(1.9); opacity: 0; } }
-.hero h1 { font-size: clamp(36px, 5.4vw, 58px); line-height: 1.04; margin: 0 0 18px; font-weight: 800; letter-spacing: -.03em; }
+.hero h1 { font-size: clamp(38px, 6vw, 68px); line-height: 1.02; margin: 0 0 20px; font-weight: 800; letter-spacing: -.035em; }
 .hero h1 .red { color: var(--red); }
 .hero .lead { font-size: clamp(17px, 2.2vw, 20px); color: var(--muted); max-width: 520px; margin: 0 0 28px; }
 @media (max-width: 880px) { .hero .lead { margin-left: auto; margin-right: auto; } }
@@ -91,8 +139,9 @@ a { color: var(--text); text-decoration: none; }
 .hero-meta svg { width: 15px; height: 15px; color: var(--red); }
 
 /* ---------- Phone mockup (mirrors the real app) ---------- */
-.device-wrap { display: flex; justify-content: center; }
-.device { width: 290px; border-radius: 42px; padding: 11px; background: #0a0a0b; border: 1px solid #2a2a2c; box-shadow: 0 40px 90px rgba(0,0,0,.6), inset 0 0 0 2px #161618; }
+.device-wrap { display: flex; justify-content: center; position: relative; }
+.device-wrap::before { content: ""; position: absolute; width: 340px; height: 340px; border-radius: 50%; background: radial-gradient(circle, rgba(255,59,48,.22), transparent 70%); filter: blur(10px); z-index: 0; }
+.device { position: relative; z-index: 1; width: 290px; border-radius: 42px; padding: 11px; background: #0a0a0b; border: 1px solid #2a2a2c; box-shadow: 0 40px 90px rgba(0,0,0,.6), inset 0 0 0 2px #161618; }
 .device-screen { background: #000; border-radius: 32px; overflow: hidden; position: relative; }
 .scr-notch { position: absolute; top: 9px; left: 50%; transform: translateX(-50%); width: 96px; height: 22px; background: #000; border-radius: 14px; z-index: 3; }
 .scr { padding: 30px 14px 14px; }
@@ -121,7 +170,7 @@ a { color: var(--text); text-decoration: none; }
 /* ---------- Sections ---------- */
 section { padding: 76px 0; }
 .section-head { max-width: 640px; margin: 0 auto 48px; text-align: center; }
-.section-head .kicker { color: var(--red); font-weight: 600; font-size: 14px; letter-spacing: .02em; margin: 0 0 10px; }
+.section-head .kicker { display: inline-block; color: var(--red); font-weight: 700; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; margin: 0 0 14px; padding: 5px 14px; border-radius: 999px; background: rgba(255,59,48,.1); border: 1px solid rgba(255,59,48,.22); }
 .section-head h2 { font-size: clamp(27px, 4vw, 38px); margin: 0 0 12px; font-weight: 800; letter-spacing: -.02em; }
 .section-head p { color: var(--muted); margin: 0; font-size: 18px; }
 
@@ -145,7 +194,7 @@ section { padding: 76px 0; }
 .step p { margin: 0; color: var(--muted); font-size: 15px; }
 
 /* ---------- CTA band ---------- */
-.cta-band { border-top: 1px solid var(--hairline); }
+.cta-band { border-top: 1px solid var(--hairline); background: radial-gradient(900px 420px at 50% 0%, rgba(255,59,48,.12), transparent 65%); }
 .cta-inner { text-align: center; max-width: 620px; margin: 0 auto; }
 .cta-inner img { width: 64px; height: 64px; margin-bottom: 20px; }
 .cta-inner h2 { font-size: clamp(26px, 4vw, 36px); margin: 0 0 12px; font-weight: 800; letter-spacing: -.02em; }
@@ -252,16 +301,22 @@ section { padding: 76px 0; }
 .nav-toggle svg { width: 26px; height: 26px; display: block; }
 @media (max-width: 860px) {
   .nav-toggle { display: inline-flex; }
-  .nav-links { display: none; position: absolute; top: 64px; left: 0; right: 0; background: rgba(0,0,0,.98); border-bottom: 1px solid var(--hairline); flex-direction: column; gap: 0; padding: 6px 0; }
+  .nav { position: relative; }
+  .nav-links { display: none; position: absolute; top: 74px; left: 0; right: 0; background: rgba(18,18,20,.98); border: 1px solid rgba(255,255,255,.08); border-radius: 22px; flex-direction: column; gap: 0; padding: 6px 0; box-shadow: 0 18px 40px rgba(0,0,0,.4); }
   .site-header.nav-open .nav-links { display: flex; }
   .nav-links a { padding: 14px 22px; font-size: 16px; width: 100%; }
 }
 
 /* Subtle brand glow behind the hero */
-.hero { background: radial-gradient(900px 440px at 12% -25%, rgba(255,59,48,.10), transparent 62%); }
+.hero {
+  background:
+    radial-gradient(900px 460px at 14% -20%, rgba(255,59,48,.16), transparent 60%),
+    radial-gradient(700px 420px at 92% 8%, rgba(255,255,255,.05), transparent 58%);
+  position: relative;
+}
 
 /* Bigger primary CTA + lift on feature cards */
-.btn-lg { padding: 15px 28px; font-size: 16px; border-radius: 14px; }
+.btn-lg { padding: 15px 30px; font-size: 16px; }
 .btn-lg.btn-primary { box-shadow: 0 12px 30px rgba(255,59,48,.28); }
 
 .btn-white { background: #fff; color: #17171c; font-weight: 800; box-shadow: 0 14px 34px rgba(0,0,0,.22); }
@@ -301,8 +356,8 @@ section { padding: 76px 0; }
   .ac-motif { width: 150px; height: 150px; opacity: .1; }
 }
 @media (prefers-reduced-motion: reduce) { .ac-track { transition: none; } }
-.feature { transition: transform .16s ease, border-color .16s ease; }
-.feature:hover { transform: translateY(-3px); border-color: var(--muted-2); }
+.feature { transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+.feature:hover { transform: translateY(-4px); border-color: rgba(255,59,48,.35); box-shadow: 0 16px 34px rgba(0,0,0,.35); }
 .step { transition: background .16s ease; }
 .step:hover { background: var(--surface); }
 
@@ -346,7 +401,8 @@ section { padding: 76px 0; }
 /* ---------- Pricing ---------- */
 .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; align-items: stretch; }
 @media (max-width: 860px) { .pricing-grid { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; } }
-.price-card { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 30px 26px; display: flex; flex-direction: column; }
+.price-card { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 30px 26px; display: flex; flex-direction: column; transition: transform .18s ease, border-color .18s ease; }
+.price-card:hover { transform: translateY(-4px); border-color: rgba(255,59,48,.35); }
 .price-card.featured { border-color: var(--red); box-shadow: 0 14px 34px rgba(255,59,48,.16); }
 .price-badge { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); background: var(--red-press); color: #fff; font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 999px; white-space: nowrap; }
 .price-card h3 { margin: 0 0 10px; font-size: 18px; font-weight: 700; }

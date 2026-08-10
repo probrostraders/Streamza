@@ -69,12 +69,13 @@
   </script>
   <link rel="preconnect" href="https://app.lemonsqueezy.com" crossorigin />
   <link rel="preconnect" href="https://accounts.google.com" crossorigin />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet" />
   <script src="https://app.lemonsqueezy.com/js/lemon.js" defer></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
+    @font-face{font-family:'Roboto';font-style:normal;font-weight:400;font-display:swap;src:url('/fonts/roboto-var.woff2') format('woff2');}
+    @font-face{font-family:'Roboto';font-style:normal;font-weight:500;font-display:swap;src:url('/fonts/roboto-var.woff2') format('woff2');}
+    @font-face{font-family:'Roboto';font-style:normal;font-weight:700;font-display:swap;src:url('/fonts/roboto-var.woff2') format('woff2');}
+    @font-face{font-family:'Roboto';font-style:normal;font-weight:900;font-display:swap;src:url('/fonts/roboto-var.woff2') format('woff2');}
     :root{--red:#FF3B30;--red2:#FF2D55;--bg:#000;--card:#141417;--card2:#0c0c0e;--line:#26262c;--txt:#fff;--sub:#9b9ba3;--ok:#10B981;--gold:#FFC940;}
     .pro-badge{display:inline-flex;align-items:center;gap:3px;background:linear-gradient(135deg,#FFD75E,#FFB800);color:#241a00;font-size:10.5px;font-weight:800;letter-spacing:.04em;padding:2px 8px 2px 6px;border-radius:20px;text-transform:uppercase;vertical-align:middle;white-space:nowrap;}
     .pro-badge svg{width:10px;height:10px;flex:none;}
@@ -82,7 +83,7 @@
     .plan.your-plan .tag{background:linear-gradient(135deg,#FFD75E,#FFB800)!important;color:#241a00!important;}
     *{box-sizing:border-box;margin:0;padding:0;}
     html{scroll-behavior:smooth;}
-    body{background:var(--bg);color:var(--txt);font-family:'Roboto',Arial,Helvetica,sans-serif;line-height:1.6;}
+    body{background:radial-gradient(1100px 620px at 50% -8%,rgba(255,59,48,.08),transparent 60%),radial-gradient(900px 500px at 100% 0%,rgba(255,255,255,.035),transparent 55%),var(--bg);background-attachment:fixed;color:var(--txt);font-family:'Roboto',Arial,Helvetica,sans-serif;line-height:1.6;}
     a{color:inherit;text-decoration:none;}
     .wrap{max-width:1080px;margin:0 auto;padding:0 20px;}
     .btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:30px;padding:13px 24px;font-size:15px;font-weight:700;cursor:pointer;transition:.15s;}
@@ -97,8 +98,8 @@
     h1{font-size:clamp(30px,5vw,50px);line-height:1.1;letter-spacing:-.02em;}
     h2{font-size:clamp(24px,3.5vw,32px);letter-spacing:-.01em;}
     .red{color:var(--red);}
-    header{position:sticky;top:0;z-index:50;background:rgba(0,0,0,.8);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);}
-    header .wrap{display:flex;align-items:center;justify-content:space-between;height:64px;}
+    header{position:sticky;top:0;z-index:50;padding:14px 16px 0;background:linear-gradient(180deg,rgba(0,0,0,.9),transparent);}
+    header .wrap{display:flex;align-items:center;justify-content:space-between;height:62px;max-width:1100px;padding-left:12px;padding-right:12px;background:rgba(20,20,22,.68);backdrop-filter:saturate(180%) blur(18px);-webkit-backdrop-filter:saturate(180%) blur(18px);border:1px solid rgba(255,255,255,.08);border-radius:999px;box-shadow:0 18px 40px rgba(0,0,0,.35);}
     .brand{display:flex;align-items:center;gap:9px;font-size:20px;font-weight:800;}
     .brand img{width:30px;height:30px;} .brand b{color:var(--red);}
     nav.links{display:flex;gap:24px;font-size:14px;color:var(--sub);}
