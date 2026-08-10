@@ -814,6 +814,10 @@
   .dz-progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--red),#ff7a5c);border-radius:3px;transition:width .2s ease;}
   .dz-progress-label{font-size:11px;color:var(--sub);white-space:nowrap;flex:none;}
   .dz-change{font-size:12px;font-weight:700;color:var(--red);flex:none;}
+  /* the dropzone label sets pointer-events:none on its contents so any click opens the file picker;
+     Delete needs to opt back in and stop that click reaching the label (see the JS handler). */
+  .dz-delete{font-size:12px;font-weight:700;color:var(--sub);flex:none;background:none;border:0;padding:0;margin-left:10px;cursor:pointer;pointer-events:auto;font-family:inherit;}
+  .dz-delete:hover{color:var(--red);}
 
   /* notice boxes: icon-led banners. Content is wrapped in ONE <span> (see markup/JS) so the
      whole sentence is a single flex item and wraps like a normal paragraph. Previously each
@@ -1205,6 +1209,7 @@
               </div>
             </div>
             <span class="dz-change">Change</span>
+            <button type="button" class="dz-delete" id="dzDelete" style="display:none;">Delete</button>
           </div>
         </label>
           <div class="toggle-row">
@@ -1711,6 +1716,7 @@
       if(f){ selectedFileId=null; document.querySelectorAll("#recentList .recentCard").forEach(c=>c.classList.remove("sel")); } // a new upload replaces a saved pick
       if(pUrl){ URL.revokeObjectURL(pUrl); pUrl=null; }
       if(thumb){ thumb.classList.remove("has-frame"); thumb.style.backgroundImage=""; }
+      { const del=$("dzDelete"); if(del) del.style.display="none"; } // a fresh upload isn't a saved video yet — nothing to delete
       if(f){
         pUrl=URL.createObjectURL(f); const v=$("preview"); v.src=pUrl; v.style.display="block"; $("vplaceholder").style.display="none"; v.play().catch(()=>{});
         dz.classList.add("has-file"); $("dzFilename").textContent=f.name; $("dzSize").textContent=fmtSize(f.size);
@@ -1759,10 +1765,12 @@
         if(v){ v.src="/myuploads/"+encodeURIComponent(selectedFileId)+"/file?email="+encodeURIComponent(email); v.style.display="block"; v.load(); }
         if(ph) ph.style.display="none";
         if(dz && card){ dz.classList.add("has-file"); $("dzFilename").textContent=card.dataset.name||"video.mp4"; $("dzSize").textContent=fmtSize(card.dataset.size); captureThumb(v,thumb); }
+        const del=$("dzDelete"); if(del) del.style.display="inline";
       } else {
         if(v){ v.removeAttribute("src"); v.style.display="none"; }
         if(ph) ph.style.display="";
         if(dz) dz.classList.remove("has-file");
+        const del=$("dzDelete"); if(del) del.style.display="none";
       }
       document.querySelectorAll("#recentList .recentCard").forEach(c=>c.classList.remove("sel"));
       if(selectedFileId && card) card.classList.add("sel");
@@ -1772,6 +1780,24 @@
       if(selectedFileId===id) selectedFileId=null;
       loadRecent(email);
     }
+    // Manual delete from the selected-video card itself, not just the recent-videos list — same
+    // request, but also resets the dropzone back to its empty state since the video it was showing
+    // is now gone. Stops the click from reaching the dropzone's <label for="video">, which would
+    // otherwise open the file picker (see .dz-delete's pointer-events:auto in the CSS).
+    { const del=$("dzDelete"); if(del) del.onclick=async(e)=>{
+      e.preventDefault(); e.stopPropagation();
+      if(!selectedFileId) return;
+      if(!confirm("Delete this saved video? This can't be undone.")) return;
+      const id=selectedFileId, email=(($("email")&&$("email").value)||"").trim();
+      await deleteRecent(id,email);
+      const v=$("preview"), ph=$("vplaceholder"), dz=$("dropzone"), thumb=$("dzThumb");
+      if(v){ v.removeAttribute("src"); v.style.display="none"; }
+      if(ph) ph.style.display="";
+      if(dz) dz.classList.remove("has-file");
+      if(thumb){ thumb.classList.remove("has-frame"); thumb.style.backgroundImage=""; }
+      del.style.display="none";
+      toast("Video deleted.");
+    }; }
 
     // platform presets: auto-fill the RTMP URL + key help
     const PRESETS={
