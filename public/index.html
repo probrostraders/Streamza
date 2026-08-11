@@ -37,12 +37,10 @@
         "applicationCategory": "MultimediaApplication",
         "operatingSystem": "Any (web browser)",
         "browserRequirements": "Requires a modern web browser",
-        "description": "Upload a pre-recorded video, paste your RTMP URL and stream key, and Streamza streams it to YouTube, Twitch, Facebook, Kick or any RTMP server, looping 24/7 from the cloud, no software or PC required.",
+        "description": "Upload a pre-recorded video, paste your RTMP URL and stream key, and Streamza streams it to YouTube, Twitch, Facebook, Kick or any RTMP server, looping 24/7 from the cloud, no software or PC required. Free during beta.",
         "url": "https://streamza.live/studio",
         "offers": [
-          { "@type": "Offer", "name": "Free trial", "price": "0", "priceCurrency": "USD" },
-          { "@type": "Offer", "name": "Single platform", "price": "4.99", "priceCurrency": "USD" },
-          { "@type": "Offer", "name": "Multistream", "price": "9.99", "priceCurrency": "USD" }
+          { "@type": "Offer", "name": "Free — 24-hour streaming, up to 3 platforms at once", "price": "0", "priceCurrency": "USD" }
         ]
       },
       {
@@ -50,9 +48,9 @@
         "name": "How to stream a pre-recorded video with a stream key",
         "description": "Stream any video file to YouTube, Twitch, Facebook, Kick or a custom RTMP server using just a stream key, no software or PC needed.",
         "step": [
-          { "@type": "HowToStep", "name": "Tap a free slot", "text": "No payment needed. Every slot starts a free 15-minute trial." },
+          { "@type": "HowToStep", "name": "Tap a free slot", "text": "No payment, no account. Every slot streams a full 24 hours, free." },
           { "@type": "HowToStep", "name": "Upload & paste your key", "text": "Pick an MP4 (H.264 + AAC), choose your platform and paste your RTMP URL and stream key." },
-          { "@type": "HowToStep", "name": "Go live", "text": "Your trial streams instantly, looping non-stop if you turn on Loop the video. Subscribe anytime to keep streaming the full 24 hours." }
+          { "@type": "HowToStep", "name": "Go live", "text": "Your stream goes live instantly for a full 24 hours, looping non-stop if you turn on Loop the video." }
         ]
       },
       {
@@ -970,9 +968,9 @@
   <section class="hero">
     <div class="wrap hero-grid">
       <div class="hero-copy">
-        <span class="eyebrow"><span class="live-dot"></span> <span id="heroAvail">10 live slots</span> · free 15-min trial</span>
+        <span class="eyebrow"><span class="live-dot"></span> <span id="heroAvail">10 live slots</span> · 100% free</span>
         <h1>Claim a slot, stream any video <span class="red">24 hours non-stop.</span></h1>
-        <p class="lead">Grab one of 10 live slots, upload a video, paste your stream key, and Streamza broadcasts it to YouTube, Twitch, Facebook or any RTMP server. Start with a <b style="color:#fff;">free 15-minute trial</b>, then subscribe to stream 24 hours non-stop.</p>
+        <p class="lead">Grab one of 10 live slots, upload a video, paste your stream key, and Streamza broadcasts it to YouTube, Twitch, Facebook or any RTMP server — <b style="color:#fff;">free for the full 24 hours</b>, no card, no account, up to 3 platforms at once.</p>
         <div class="hero-cta">
           <a class="btn btn-primary" href="#modes">Start streaming →</a>
           <a class="btn btn-ghost" href="#slots">See live slots</a>
@@ -1069,19 +1067,19 @@
   <!-- CHOOSE MODE -->
   <section id="modes" style="padding-top:10px;">
     <div class="wrap">
-      <div class="head"><p class="kicker">Start streaming</p><h2>Pick how you want to broadcast</h2><p>Open the studio, upload a video and go live, starting with a free 15-minute trial.</p></div>
+      <div class="head"><p class="kicker">Start streaming</p><h2>Pick how you want to broadcast</h2><p>Open the studio, upload a video and go live — free for the full 24 hours.</p></div>
       <div class="modes">
         <button type="button" class="modecard single" id="cardSingle">
           <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M8 5v14l11-7z"/></svg></span>
           <h3>Single stream</h3>
           <p>Stream your video to one platform: YouTube, Twitch, Facebook, Kick or any RTMP server.</p>
           <ul class="mc-feat">
-            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Free 15-minute trial, no card needed</li>
-            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Full 24-hour streaming once subscribed</li>
+            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>100% free, no card, no account</li>
+            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Full 24-hour streaming, every time</li>
             <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Loop your video non-stop</li>
           </ul>
           <div class="mc-foot">
-            <span class="cardprice"><span>Free trial, then</span><span><b>$4.99</b>/mo</span></span>
+            <span class="cardprice"><span>Always</span><span><b>Free</b></span></span>
             <span class="go">Open studio<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
           </div>
         </button>
@@ -1094,10 +1092,10 @@
           <ul class="mc-feat">
             <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Everything in Single, plus multi-platform</li>
             <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Up to 3 destinations at the same time</li>
-            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Cancel anytime</li>
+            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>No card, no account, no catch</li>
           </ul>
           <div class="mc-foot">
-            <span class="cardprice"><span>Billed monthly</span><span><b>$9.99</b>/mo</span></span>
+            <span class="cardprice"><span>Always</span><span><b>Free</b></span></span>
             <span class="go">Open studio<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
           </div>
         </button>
@@ -1109,9 +1107,9 @@
     <div class="wrap">
       <div class="head"><p class="kicker">How it works</p><h2>Live in 3 steps</h2></div>
       <div class="grid3">
-        <div class="step"><div class="n">1</div><h3>Tap a free slot</h3><p>No payment needed. Every slot starts a free 15-minute trial.</p></div>
+        <div class="step"><div class="n">1</div><h3>Tap a free slot</h3><p>No payment, no account. Every slot streams a full 24 hours, free.</p></div>
         <div class="step"><div class="n">2</div><h3>Upload &amp; paste your key</h3><p>Pick an MP4 (H.264+AAC), choose your platform and paste your stream key.</p></div>
-        <div class="step"><div class="n">3</div><h3>Go live free for 15 min</h3><p>Your trial streams instantly. Subscribe anytime to keep streaming the full 24 hours.</p></div>
+        <div class="step"><div class="n">3</div><h3>Go live for 24 hours</h3><p>Your stream goes live instantly and runs the full 24 hours, free.</p></div>
       </div>
     </div>
   </section>
@@ -1149,7 +1147,7 @@
             <svg class="cd-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
             <div>
               <div class="t" id="cdTime">15:00</div>
-              <div class="l"><span id="cdLabel">remaining on your free trial</span> (Slot <span id="cdSlot">–</span>)</div>
+              <div class="l"><span id="cdLabel">remaining on your 24-hour slot</span> (Slot <span id="cdSlot">–</span>)</div>
             </div>
           </div>
           <button class="btn btn-primary" id="upgradeBtn">Subscribe: stream 24 hours</button>
@@ -1178,7 +1176,7 @@
             <button class="btn btn-ghost" id="resumeBtn">Resume</button>
           </div>
         </details>
-        <div class="beta" id="betaNote"><span><b>Free 15-minute trial</b>, no payment needed to start. <b>Subscribe</b> to stream the full 24 hours.</span></div>
+        <div class="beta" id="betaNote"><span><b>100% free</b> — every slot streams the full 24 hours, no card, no account, no catch.</span></div>
 
         <!-- 1 · SOURCE -->
         <section class="sec">
@@ -1227,7 +1225,7 @@
           <div class="sec-head"><span class="sec-num">2</span><h3 class="sec-title">Destination</h3></div>
           <div class="modetabs" id="modeTabs">
           <button type="button" class="modetab active" data-mode="single">Single stream</button>
-          <button type="button" class="modetab" data-mode="multi">Multistream <span class="mtag">$9.99/mo</span></button>
+          <button type="button" class="modetab" data-mode="multi">Multistream <span class="mtag">Free</span></button>
         </div>
         <div id="singleDest">
           <div class="platrow" id="platrow">
@@ -1246,7 +1244,7 @@
           </div>
         </div>
         <div id="multiDest" style="display:none;">
-          <p class="modehint">Broadcast to up to <b>3 platforms at once</b>, the Multistream plan (<b>$9.99/mo</b>).</p>
+          <p class="modehint">Broadcast to up to <b>3 platforms at once</b>, free.</p>
           <div id="destList"></div>
           <button type="button" class="btn btn-ghost btn-block" id="addDest2">+ Add a platform</button>
         </div>
@@ -1278,42 +1276,19 @@
   <!-- PRICING -->
   <section id="pricing" style="background:#08080a;">
     <div class="wrap">
-      <div class="head"><p class="kicker">Pricing</p><h2>Start free, upgrade when you need more</h2><p>Free 15-minute trial on every slot. Subscribe for full 24-hour streaming, add Multistream to broadcast to several platforms at once.</p></div>
-      <div class="price-grid price-grid-3">
-        <div class="plan">
-          <span class="tag" style="background:#2c2c33;">FREE</span>
-          <h3>Free Trial</h3>
+      <div class="head"><p class="kicker">Pricing</p><h2>Free. Actually free.</h2><p>Every slot streams the full 24 hours, up to 3 platforms at once, no card and no account required.</p></div>
+      <div class="price-grid price-grid-3" style="max-width:420px;margin:0 auto;">
+        <div class="plan feat">
+          <span class="tag">FREE</span>
+          <h3>Everything, free</h3>
           <div class="pr">$0</div>
           <ul>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>15-minute trial on any slot</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>No card needed to start</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>One platform (YouTube, Twitch…)</li>
-          </ul>
-          <a class="btn btn-ghost btn-block" href="#modes">Try it free</a>
-        </div>
-        <div class="plan feat">
-          <span class="tag" id="planTagSingle">SINGLE</span>
-          <h3>Single</h3>
-          <div class="pr" id="planPrice">$4.99 <small>/mo</small></div>
-          <ul>
             <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Full <b>24-hour</b> streaming slots</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Stream as often as you like</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>One platform · 24/7 looping</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Cancel anytime</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Stream to <b>up to 3 platforms</b> at once</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>24/7 non-stop looping</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>No card, no account, stream as often as you like</li>
           </ul>
-          <a class="btn btn-primary btn-block" href="#modes" id="planSubscribe">Subscribe</a>
-        </div>
-        <div class="plan">
-          <span class="tag" id="planTagMulti">MULTISTREAM</span>
-          <h3>Multistream</h3>
-          <div class="pr" id="planPriceMulti">$9.99 <small>/mo</small></div>
-          <ul>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Everything in Single, plus:</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Stream to <b>up to 3 platforms</b> at once</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>e.g. YouTube + Twitch + Facebook together</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Cancel anytime</li>
-          </ul>
-          <a class="btn btn-primary btn-block" href="#modes" id="planSubscribeMulti">Go Multistream</a>
+          <a class="btn btn-primary btn-block" href="#modes">Start streaming</a>
         </div>
       </div>
     </div>
@@ -1322,11 +1297,11 @@
   <section id="faq">
     <div class="wrap">
       <div class="head"><p class="kicker">FAQ</p><h2>Questions, answered</h2></div>
-      <details class="faq" open><summary>How do the 10 slots work?</summary><p>There are 10 streaming slots. Tap any free slot to start a free 15-minute trial. To keep streaming, subscribe for full 24-hour slots. When all 10 are busy, you wait for one to free up.</p></details>
-      <details class="faq"><summary>What does it cost?</summary><p>Every slot is free for the first 15 minutes, no card needed. To stream the full 24 hours, subscribe monthly and stream as often as you like. Cancel anytime.</p></details>
+      <details class="faq" open><summary>How do the 10 slots work?</summary><p>There are 10 streaming slots. Tap any free slot and it streams your video for a full 24 hours. When all 10 are busy, you wait for one to free up.</p></details>
+      <details class="faq"><summary>What does it cost?</summary><p>Nothing. Streamza is completely free right now, including 24-hour streaming and multistream to up to 3 platforms at once. No card, no account.</p></details>
       <details class="faq"><summary>Which platforms can I stream to?</summary><p>YouTube, Twitch, Facebook, Kick, Restream, and any service with a Custom RTMP / RTMPS key.</p></details>
       <details class="faq"><summary>What video format do I need?</summary><p>An MP4 with H.264 video + AAC audio (the default export from most tools). We stream-copy it, no re-encode, so it goes live instantly.</p></details>
-      <details class="faq"><summary>What happens after the free trial?</summary><p>At 15 minutes the stream stops and the slot frees for others. <b>Subscribe</b> while you're live to switch to a full 24-hour slot and keep streaming non-stop.</p></details>
+      <details class="faq"><summary>What happens after 24 hours?</summary><p>The stream stops and the slot frees up. Just tap a free slot again to start another 24-hour stream, no limit on how often.</p></details>
       <details class="faq"><summary>Can I stream a pre-recorded video using just a URL and stream key?</summary><p>Yes. Upload your video file, paste the RTMP URL and stream key from YouTube, Twitch, Facebook, Kick or any custom RTMP server, and it goes live immediately.</p></details>
       <details class="faq"><summary>Do I need OBS or any software installed?</summary><p>No. Streamza Web Studio runs entirely in your browser and streams from the cloud. No OBS, no software install, and no PC needs to stay on.</p></details>
       <details class="faq"><summary>Can the video loop 24/7 automatically?</summary><p>Yes. Turn on <b>Loop the video</b> and Streamza replays it seamlessly, non-stop, for as long as your slot or subscription is active.</p></details>
@@ -1364,7 +1339,7 @@
       <h3>Stream <span id="mmSlot">this slot</span></h3>
       <p>How do you want to broadcast? You can switch inside the studio too.</p>
       <button class="btn btn-primary btn-block" id="mmSingle">Single stream: one platform</button>
-      <button class="btn btn-ghost btn-block" id="mmMulti" style="margin-top:10px;">Multistream: up to 3 platforms · $9.99/mo</button>
+      <button class="btn btn-ghost btn-block" id="mmMulti" style="margin-top:10px;">Multistream: up to 3 platforms — free</button>
       <p class="secure"><a id="mmCancel" style="cursor:pointer;">Cancel</a></p>
     </div>
   </div>
@@ -1440,13 +1415,13 @@
       const b=$("authBox"); if(b) b.style.display="block";
       const g=$("gbtnWrap"); if(g) g.style.display="none";
       const initial=(u.email[0]||"U").toUpperCase();
-      const planTxt = u.subscribed ? (u.multi?"Multistream plan":"Subscribed") : "Free plan";
+      const planTxt = "Free · full access";
       const a=$("authUser");
       if(a){
         a.style.display="flex";
         a.innerHTML =
           '<span class="au-av">'+escHtml(initial)+'</span>'+
-          '<span class="au-info"><span class="au-email">'+escHtml(u.email)+'</span><span class="au-plan">'+(u.subscribed?proBadge(u.multi?"Multistream":"Pro"):planTxt)+'</span></span>'+
+          '<span class="au-info"><span class="au-email">'+escHtml(u.email)+'</span><span class="au-plan">'+proBadge("Free")+'</span></span>'+
           '<a class="so" id="signout">Sign out</a>';
         const so=$("signout"); if(so) so.onclick=signOut;
       }
@@ -1454,20 +1429,18 @@
       const h=$("hdrAuth");
       if(h){
         h.style.display="flex";
-        const planCol = u.subscribed ? "#34C759" : "var(--sub)";
         const live = u.slot && u.slot.live;
         const planLine = (live?'🔴 Live · Slot '+u.slot.id+' · ':'')+planTxt;
         h.innerHTML =
           '<div class="hdrchip" id="hdrChip" title="Account">'+
             '<span class="av'+(live?' live':'')+'">'+escHtml(initial)+'</span>'+
             '<span class="em">'+escHtml(u.email)+'</span>'+
-            (u.subscribed?proBadge(u.multi?"Multistream":"Pro"):"")+
+            proBadge("Free")+
             '<span class="caret">▾</span>'+
             '<div class="hdrmenu" id="hdrMenu">'+
-              '<div class="who"><div class="e">'+escHtml(u.email)+'</div><div class="p" style="color:'+(live?'#ff3b30':planCol)+'">'+planLine+'</div></div>'+
+              '<div class="who"><div class="e">'+escHtml(u.email)+'</div><div class="p" style="color:'+(live?'#ff3b30':'#34C759')+'">'+planLine+'</div></div>'+
               (u.slot?'<a id="hdrResume">▶ Resume my stream, Slot '+u.slot.id+'</a>':'')+
               '<a id="hdrStudio">Open studio</a>'+
-              (u.subscribed?'<a id="hdrManage">Manage subscription</a>':'<a id="hdrUpgrade">Upgrade plan</a>')+
               '<a id="hdrSignout">Sign out</a>'+
             '</div>'+
           '</div>';
@@ -1476,8 +1449,6 @@
           document.addEventListener("click", ()=>menu.classList.remove("show")); }
         if($("hdrResume")) $("hdrResume").onclick=()=>{ if(u.slot&&u.slot.token&&typeof resumeFromToken==="function") resumeFromToken(u.slot.token); };
         if($("hdrStudio")) $("hdrStudio").onclick=()=>{ if(typeof openStudioApp==="function") openStudioApp("single"); };
-        if($("hdrManage")) $("hdrManage").onclick=()=>{ if(u.portal) window.open(u.portal,"_blank","noopener"); else toast("To manage your subscription, email probrostraders@gmail.com"); };
-        if($("hdrUpgrade")) $("hdrUpgrade").onclick=()=>{ const t=$("subModal"); if(t) t.classList.add("show"); else location.hash="#pricing"; };
         if($("hdrSignout")) $("hdrSignout").onclick=signOut;
       }
       if($("email")){ $("email").value=u.email; $("email").readOnly=true; $("email").style.opacity=".8"; $("email").dispatchEvent(new Event("input")); }
@@ -2079,7 +2050,7 @@
           done("Go Live");
           pendingUploadId=null;
           localStorage.setItem(TKEY,j.token); localStorage.setItem("streamza_email",($("email").value||"").trim()); selectedSlot=null; updateSelLabel();
-          if(j.multistreamLimited) toast("Multistream is the $9.99 plan, going live to your first platform only. Subscribe to add more.");
+          if(j.multistreamLimited) toast("Free plan streams to up to 3 platforms at once — going live to the first 3, the rest were skipped.");
           else toast("Slot "+j.slot+" claimed, live"+(j.destinations>1?(" to "+j.destinations+" platforms"):"")+"!");
         } else { done("Go Live"); toast(j.error || ("Couldn't start (error "+xhr.status+"). Make sure the file is an MP4 with H.264 video + AAC audio.")); }
         refreshMine(); refreshSlots(); loadRecent($("email").value);
@@ -2175,15 +2146,9 @@
       window.IS_SUBSCRIBED = active;
       if(!active) return;
       const bn=$("betaNote");
-      if(bn){ bn.classList.add("is-sub"); bn.innerHTML='<span>'+proBadge(r.multi?"Multistream":"Pro")+' Claim any free slot for a full <b>24-hour</b> stream'+(r.multi?" to up to 3 platforms":"")+', stream as often as you like.</span>'; }
+      if(bn){ bn.classList.add("is-sub"); bn.innerHTML='<span>'+proBadge("Free")+' Claim any free slot for a full <b>24-hour</b> stream to up to 3 platforms, stream as often as you like.</span>'; }
       const ub=$("upgradeBtn"); if(ub) ub.style.display="none";           // in-stream upgrade CTA
-      const ps=$("planSubscribe"); if(ps){ ps.textContent="✓ Subscribed"; ps.style.pointerEvents="none"; ps.style.opacity=".7"; }
-      if(r.multi){ const pm=$("planSubscribeMulti"); if(pm){ pm.textContent="✓ Subscribed · Multistream"; pm.style.pointerEvents="none"; pm.style.opacity=".7"; } }
-      // Mark the actual active plan's card as "YOUR PLAN" in gold, instead of just fading the button.
-      const activeTagId = r.multi ? "planTagMulti" : "planTagSingle";
-      const tag=$(activeTagId);
-      if(tag){ tag.textContent="YOUR PLAN"; const card=tag.closest(".plan"); if(card) card.classList.add("your-plan"); }
-      const spb=$("sappProBadge"); if(spb){ spb.style.display="inline-flex"; spb.innerHTML=proBadge(r.multi?"Multistream":"Pro"); }
+      const spb=$("sappProBadge"); if(spb){ spb.style.display="inline-flex"; spb.innerHTML=proBadge("Free"); }
     }
     async function checkSub(email){
       if(!email) return;

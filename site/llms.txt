@@ -10,7 +10,7 @@ Streamza is operated by Probros (Sohaib Yasin), Punjab, Pakistan. Contact: probr
 - **Runs entirely in the cloud.** Once the stream starts, the user can close the browser tab, shut the laptop or turn the phone off. The broadcast keeps running on Streamza's servers.
 - **Loops 24/7.** A single video can be looped continuously for an always-on channel (lo-fi music, radio, ambient, info boards, product showcases).
 - **Works with any RTMP destination.** The RTMP ingest URL is pre-filled for YouTube, Twitch and Facebook; any other platform works by pasting a custom RTMP/RTMPS server URL and stream key.
-- **Multistreams to up to 3 platforms at once** on the Multistream plan — one upload, several destinations simultaneously.
+- **Multistreams to up to 3 platforms at once**, free — one upload, several destinations simultaneously.
 - **Needs no account to try.** Claiming a free slot requires no sign-up and no card.
 
 ## What it is not
@@ -28,7 +28,7 @@ Streamza is operated by Probros (Sohaib Yasin), Punjab, Pakistan. Contact: probr
 
 ## Pricing model
 
-Claiming a slot starts a **free 15-minute trial** — no account, no card. To keep a stream running, the slot converts to a **paid 24-hour slot** that can be renewed. Multistreaming to up to 3 destinations is a higher tier. Web Studio billing is handled by Lemon Squeezy as merchant of record. The separate Streamza Android app is billed through Google Play and is priced independently.
+Web Studio is completely free during its current beta — no account, no card. Claiming a slot streams the full 24 hours, and multistreaming to up to 3 destinations is included at no charge. The separate Streamza Android app is billed through Google Play and is priced independently.
 
 ## Key pages
 

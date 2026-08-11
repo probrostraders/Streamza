@@ -1,12 +1,12 @@
 /**
  * Streamza Relay — "claim a slot, upload a video -> stream to RTMP" (Node + FFmpeg `-c copy`).
  *
- * Model: SLOT_COUNT concurrent slots. Tapping a free slot starts a free 15-minute TRIAL (no payment).
- * "Upgrade to 24 hours" extends it (SLOT_MS). Each claim returns a private manage-token (stored in the
- * browser) to monitor/stop/upgrade that slot. The expiry watchdog stops trials/slots when they run out.
+ * Model: SLOT_COUNT concurrent slots. Tapping a free slot claims the full 24h (SLOT_MS), multistream
+ * included — see the BETA note on tierOf() below for why. Each claim returns a private manage-token
+ * (stored in the browser) to monitor/stop that slot. The expiry watchdog stops slots when they run out.
  *
- * Payment: PAYMENTS_LIVE=false → /upgrade just records interest ("coming soon"). When the Paddle
- * checkout is ready, set PAYMENTS_LIVE=true and implement verifyPayment() — that's the only change.
+ * Payment: PAYMENTS_LIVE=false → /upgrade just records interest ("coming soon"). When a processor is
+ * approved and PAYMENTS_LIVE=true, revert tierOf() to read the real `subscribers` map again.
  */
 const express = require("express");
 const compression = require("compression");
@@ -98,7 +98,12 @@ try {
   else for (const [e, t] of Object.entries(raw)) subscribers.set(e, t);
 } catch (_) {}
 function saveSubs() { try { fs.writeFileSync(SUBS_FILE, JSON.stringify(Object.fromEntries(subscribers))); } catch (_) {} }
-function tierOf(email) { return subscribers.get((email || "").trim().toLowerCase()) || null; }
+// BETA — everything is free. Lemon Squeezy's re-approval was rejected and Paddle's seller application
+// has gone unanswered, so there is no working payment processor right now. Rather than gate signups
+// behind a paywall nobody can actually pay into, every account gets full 24h streaming + multistream,
+// no card, no account. `subscribers` and the webhook handlers below are left in place, untouched, so
+// flipping real billing back on later is just reverting this one function.
+function tierOf(_email) { return "multi"; }
 function isSubscribed(email) { return !!tierOf(email); }            // any plan → full 24h
 function canMultistream(email) { return tierOf(email) === "multi"; } // only the $10 plan
 
@@ -865,4 +870,4 @@ app.use((req, res) => res.status(404).type("html").set("X-Robots-Tag", "noindex"
   '<h1 style="font-size:64px;margin:0;color:#FF3B30">404</h1><p style="color:#9b9ba3">That page doesn\'t exist.</p>' +
   '<p><a href="/" style="color:#FF3B30;font-weight:700;text-decoration:none">← Back to Streamza</a> &nbsp;·&nbsp; <a href="/studio" style="color:#fff;text-decoration:none">Web Studio</a></p></body>'));
 
-app.listen(PORT, "0.0.0.0", () => console.log(`Streamza Relay (${SLOT_COUNT} slots, ${TRIAL_MS / 60000}-min trial) listening on :${PORT}`));
+app.listen(PORT, "0.0.0.0", () => console.log(`Streamza Relay (${SLOT_COUNT} slots, free 24h streaming — beta) listening on :${PORT}`));
