@@ -300,11 +300,6 @@
     .modal input:focus{outline:none;border-color:rgba(255,59,48,.6);}
     .modal .mrow{display:flex;gap:10px;} .modal .mrow .btn{flex:1;justify-content:center;}
     .modal .secure{font-size:11px;color:var(--sub);text-align:center;margin-top:12px;}
-    /* label + price as two flex children, not a bare text node beside a span, avoids the price
-       orphaning onto its own line when the button wraps at narrow widths */
-    .trial-btn{justify-content:space-between;text-align:left;gap:10px;}
-    .trial-btn span{flex:1;min-width:0;}
-    .trial-btn b{font-weight:800;white-space:nowrap;flex:none;}
 
     /* studio mode tabs + multistream destination cards */
     .modetabs{display:flex;gap:6px;background:#0c0c0f;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:5px;margin:0 0 16px;}
@@ -881,7 +876,6 @@
   #studioApp .countdown .cd-icon{color:var(--red);flex:none;}
   #studioApp .countdown .t{font-size:26px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1;}
   #studioApp .countdown .l{font-size:12px;margin-top:3px;color:var(--yt-dim);}
-  #studioApp .countdown #upgradeBtn{white-space:nowrap;}
   #studioApp .statgrid{gap:12px;}
   #studioApp .stat{background:var(--yt-surface);border:1px solid var(--yt-border);border-radius:10px;padding:12px 14px;text-align:left;}
   #studioApp .stat .k{font-size:10px;letter-spacing:.06em;color:var(--yt-dim);font-weight:700;}
@@ -947,7 +941,6 @@
     #studioApp .countdown{flex-direction:column;align-items:stretch;text-align:center;}
     #studioApp .countdown .cd-info{justify-content:center;}
     #studioApp .countdown .t{font-size:26px;}
-    #studioApp .countdown #upgradeBtn{width:100%;justify-content:center;}
   }
   </style>
 </head>
@@ -956,7 +949,7 @@
   <header>
     <div class="wrap">
       <a class="brand" href="/"><img src="logo.svg" alt="Streamza" /><span class="bname">Streamza</span><span class="bbadge">Studio</span></a>
-      <nav class="links"><a href="#slots">Slots</a><a href="#how">How it works</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a></nav>
+      <nav class="links"><a href="#slots">Slots</a><a href="#how">How it works</a><a href="#faq">FAQ</a></nav>
       <div class="hcta">
         <div id="hdrAuth" class="hdrauth" style="display:none;"><div id="hdrGbtn"></div></div>
         <a class="btn btn-ghost hide-sm" href="/">Main site</a>
@@ -1150,7 +1143,6 @@
               <div class="l"><span id="cdLabel">remaining on your 24-hour slot</span> (Slot <span id="cdSlot">–</span>)</div>
             </div>
           </div>
-          <button class="btn btn-primary" id="upgradeBtn">Subscribe: stream 24 hours</button>
         </div>
         <div class="head2" style="margin-top:2px;">Broadcast health</div>
         <div class="statgrid">
@@ -1273,27 +1265,6 @@
     </div>
   </div>
 
-  <!-- PRICING -->
-  <section id="pricing" style="background:#08080a;">
-    <div class="wrap">
-      <div class="head"><p class="kicker">Pricing</p><h2>Free. Actually free.</h2><p>Every slot streams the full 24 hours, up to 3 platforms at once, no card and no account required.</p></div>
-      <div class="price-grid price-grid-3" style="max-width:420px;margin:0 auto;">
-        <div class="plan feat">
-          <span class="tag">FREE</span>
-          <h3>Everything, free</h3>
-          <div class="pr">$0</div>
-          <ul>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Full <b>24-hour</b> streaming slots</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Stream to <b>up to 3 platforms</b> at once</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>24/7 non-stop looping</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>No card, no account, stream as often as you like</li>
-          </ul>
-          <a class="btn btn-primary btn-block" href="#modes">Start streaming</a>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <section id="faq">
     <div class="wrap">
       <div class="head"><p class="kicker">FAQ</p><h2>Questions, answered</h2></div>
@@ -1344,30 +1315,6 @@
     </div>
   </div>
 
-  <!-- Trial-ended → subscribe prompt (shown when the free 15-min trial runs out) -->
-  <div class="modal" id="trialModal">
-    <div class="box">
-      <img src="logo.svg" alt="Streamza" />
-      <h3>Your free trial ended</h3>
-      <p>Your 15-minute trial is up and the stream stopped. <b style="color:#fff;">Subscribe to keep streaming the full 24 hours</b>, non-stop. Billed monthly, cancel anytime.</p>
-      <button class="btn btn-primary btn-block trial-btn" id="trialSubSingle"><span>Subscribe: 24-hour streaming</span><b id="trialPrice">$4.99/mo</b></button>
-      <button class="btn btn-ghost btn-block trial-btn" id="trialSubMulti" style="margin-top:10px;"><span>Multistream: up to 3 platforms</span><b id="trialPriceMulti">$9.99/mo</b></button>
-      <p class="secure"><a id="trialLater" style="cursor:pointer;">Maybe later</a> · 🔒 Secure checkout</p>
-    </div>
-  </div>
-
-  <!-- Choose your plan (shown when tapping Go Live, before a non-subscribed account starts streaming) -->
-  <div class="modal" id="planModal">
-    <div class="box">
-      <img src="logo.svg" alt="Streamza" />
-      <h3>Choose how to go live</h3>
-      <p>Pick a plan to start streaming, cancel anytime.</p>
-      <button class="btn btn-ghost btn-block trial-btn" id="planTrial"><span>Start free: 15-minute trial</span><b>$0</b></button>
-      <button class="btn btn-primary btn-block trial-btn" id="planSingle" style="margin-top:10px;"><span>Subscribe: 24-hour streaming</span><b id="planSinglePrice">$4.99/mo</b></button>
-      <button class="btn btn-ghost btn-block trial-btn" id="planMulti" style="margin-top:10px;"><span>Multistream: up to 3 platforms</span><b id="planMultiPrice">$9.99/mo</b></button>
-      <p class="secure"><a id="planCancel" style="cursor:pointer;">Cancel</a> · 🔒 Secure checkout</p>
-    </div>
-  </div>
 
   <div class="toast" id="toast"></div>
 
@@ -1377,7 +1324,6 @@
     let selectedSlot = null; // which slot the user tapped to claim (null = next free)
     let myEmail = "";        // the live stream's email (for resume + checkout)
     let resumeOpen = false;  // open the studio app on load if arriving via a manage link
-    let _wasTrial = false;   // was the last live stream a free trial? (drives the trial-ended prompt)
     let myLiveSlotId = null; // which slot (if any) this browser's manage token currently owns
     // Resume via a manage link (?s=token): lets a user reclaim control from ANY device.
     (function(){ const p=new URLSearchParams(location.search); const t=p.get("s")||p.get("token"); if(t){ localStorage.setItem(TKEY, t.replace(/[^a-f0-9]/gi,"")); resumeOpen=true; history.replaceState(null,"","/studio"); } })();
@@ -1534,20 +1480,6 @@
     { const ps=$("planSubscribe");      if(ps) ps.addEventListener("click",(e)=>{ e.preventDefault(); PAY.enabled ? subscribeModal("single") : toast("Subscriptions aren't switched on yet."); }); }
     { const pm=$("planSubscribeMulti"); if(pm) pm.addEventListener("click",(e)=>{ e.preventDefault(); PAY.enabled ? subscribeModal("multi") : toast("The Multistream plan isn't switched on yet."); }); }
 
-    // Prominent "your trial ended" prompt → subscribe (shown once the free 15-min stream stops).
-    function showTrialEnded(){
-      if(window.IS_SUBSCRIBED) return;
-      if(!PAY.enabled){ toast("Your free trial ended. Subscriptions open soon."); return; }
-      const tp=$("trialPrice"); if(tp && PAY.priceLabel) tp.textContent=PAY.priceLabel;
-      const tpm=$("trialPriceMulti"); if(tpm && PAY.priceLabelMulti) tpm.textContent=PAY.priceLabelMulti;
-      const tm=$("trialSubMulti"); if(tm) tm.style.display = PAY.multiEnabled ? "block" : "none";
-      $("trialModal").classList.add("show");
-    }
-    if($("trialSubSingle")) $("trialSubSingle").onclick=()=>{ $("trialModal").classList.remove("show"); PAY.enabled ? subscribeModal("single") : toast("Subscriptions aren't switched on yet."); };
-    if($("trialSubMulti"))  $("trialSubMulti").onclick =()=>{ $("trialModal").classList.remove("show"); PAY.enabled ? subscribeModal("multi")  : toast("The Multistream plan isn't switched on yet."); };
-    if($("trialLater"))     $("trialLater").onclick    =()=>$("trialModal").classList.remove("show");
-    if($("trialModal"))     $("trialModal").onclick    =(e)=>{ if(e.target===$("trialModal")) $("trialModal").classList.remove("show"); };
-
     // Studio mode: Single stream vs Multistream (two clear sections, like the app)
     let mode = "single";
     function setMode(m){
@@ -1556,7 +1488,6 @@
       $("singleDest").style.display = m==="single" ? "block" : "none";
       $("multiDest").style.display  = m==="multi"  ? "block" : "none";
       const mp=$("sappMode"); if(mp) mp.textContent = m==="multi" ? "Multistream" : "Single stream";
-      const ub=$("upgradeBtn"); if(ub) ub.textContent = m==="multi" ? "Subscribe to Multistream: $9.99/mo" : "Subscribe: stream 24 hours";
       if(m==="multi" && $("destList").children.length===0){ addDestCard("youtube"); addDestCard("twitch"); }
     }
     document.querySelectorAll(".modetab").forEach(t=>t.onclick=()=>setMode(t.dataset.mode));
@@ -1888,30 +1819,24 @@
       if(!token){ setLive(false); myLiveSlotId=null; renderMyLiveCard(null); return; }
       try{
         const s=await (await fetch("/status?token="+token)).json();
-        if(!s.running){ // trial ended, stopped, or the connection failed
+        if(!s.running){ // stopped, expired, or the connection failed
           if(localStorage.getItem(TKEY)){
             localStorage.removeItem(TKEY);
-            // A connection failure (bad RTMP URL/key, or the destination rejected us) is not a trial
-            // ending, say so plainly instead of pushing a subscribe card that wouldn't fix anything.
+            // A connection failure (bad RTMP URL/key, or the destination rejected us) reads very
+            // differently from a normal stop/expiry — say so plainly so it's clear what to fix.
             if(s.endReason==="connection_failed") toast(s.endMessage || "Stream disconnected, couldn't reach your destination. Check the RTMP URL and stream key, then try again.");
-            else if(_wasTrial && !window.IS_SUBSCRIBED) showTrialEnded();
             else toast("Your stream stopped.");
           }
-          _wasTrial=false;
           setLive(false); myLiveSlotId=null; renderMyLiveCard(null); return;
         }
         setLive(true);
         myEmail = s.email || myEmail;
-        _wasTrial = !!s.trial;   // remember so we can prompt to subscribe when this trial ends
         myLiveSlotId = s.slot;
         const n=(s.dests&&s.dests.length)||1;
         $("liveInfo").style.display="block";
         $("liveInfo").innerHTML='<b>LIVE</b> · streaming to '+n+' platform'+(n>1?'s':'')+' · live for <b>'+fmt(s.uptime)+'</b>';
         $("cdSlot").textContent=s.slot;
         $("cdTime").textContent=fmt(s.secondsLeft);
-        $("cdLabel").textContent = s.trial ? "remaining on your free trial" : "remaining on your 24-hour slot";
-        // Only show "Subscribe: stream 24 hours" to non-subscribers on a trial.
-        $("upgradeBtn").style.display = (s.trial && !window.IS_SUBSCRIBED) ? "flex" : "none";
         $("log").textContent=(s.log||[]).join("\n"); $("log").scrollTop=$("log").scrollHeight;
         const st=parseStats(s.log||[]);
         $("sBitrate").textContent = st&&st.br!=null ? (st.br/1000).toFixed(2)+" Mbps":"-";
@@ -1931,8 +1856,8 @@
       const sp=$("sappStop"); if(sp) sp.style.display=on?"inline-flex":"none";
       $("startBtn").style.display=on?"none":"flex";
       $("stopBtn").style.display=on?"flex":"none";
-      // These three only make sense before going live (which slot you're about to claim, the free-trial
-      // pitch, resuming a DIFFERENT stream), once this tab is already live they're just noise stacked
+      // These three only make sense before going live (which slot you're about to claim, the free-forever
+      // note, resuming a DIFFERENT stream), once this tab is already live they're just noise stacked
       // above the controls, so fold them away instead of leaving dead prompts next to a Stop button.
       const bn=$("betaNote"); if(bn) bn.style.display=on?"none":"";
       const ssEl=$("selSlot"); if(ssEl) ssEl.style.display=on?"none":"";
@@ -1957,7 +1882,7 @@
         '<span class="mlc-badge"><span class="dot"></span>LIVE</span>'+
         '<div class="mlc-main">'+
           '<div class="mlc-title">Your stream, Slot '+s.slot+'</div>'+
-          '<div class="mlc-sub">'+escHtml(s.file||"video.mp4")+' · streaming to '+n+' platform'+(n>1?'s':'')+' · '+(s.trial?'free trial':'24-hour slot')+'</div>'+
+          '<div class="mlc-sub">'+escHtml(s.file||"video.mp4")+' · streaming to '+n+' platform'+(n>1?'s':'')+' · 24-hour slot</div>'+
           '<div class="mlc-stats">'+
             '<span>Live for <b>'+fmt(s.uptime)+'</b></span>'+
             '<span><b>'+fmt(s.secondsLeft)+'</b> left</span>'+
@@ -2025,9 +1950,8 @@
       return false;
     }
 
-    // Actually claims a slot and goes live: used both for a direct trial start and after a plan is
-    // chosen/subscription confirmed. Uses the auto-uploaded file (pendingUploadId) when one's ready,
-    // so this is instant instead of re-uploading; falls back to uploading the raw file if it isn't.
+    // Claims a slot and goes live. Uses the auto-uploaded file (pendingUploadId) when one's ready, so
+    // this is instant instead of re-uploading; falls back to uploading the raw file if it isn't.
     async function beginStream(){
       const f=$("video").files[0];
       const fd=new FormData();
@@ -2059,29 +1983,6 @@
       xhr.ontimeout=()=>{ done("Go Live"); toast("Upload timed out, try a smaller file or a better connection."); };
       xhr.send(fd);
     }
-    // "Choose how to go live": shown to non-subscribed accounts on tapping Go Live, offering the free
-    // trial (only if not already used) alongside both paid plans, instead of silently defaulting to trial.
-    function openPlanModal(trialAvailable){
-      const t=$("planTrial"); if(t) t.style.display = trialAvailable ? "flex" : "none";
-      const tm=$("planMulti"); if(tm) tm.style.display = PAY.multiEnabled ? "flex" : "none";
-      if(PAY.priceLabel){ const el=$("planSinglePrice"); if(el) el.textContent=PAY.priceLabel; }
-      if(PAY.priceLabelMulti){ const el=$("planMultiPrice"); if(el) el.textContent=PAY.priceLabelMulti; }
-      $("planModal").classList.add("show");
-    }
-    $("planTrial").onclick=()=>{ $("planModal").classList.remove("show"); beginStream(); };
-    $("planSingle").onclick=()=>{
-      $("planModal").classList.remove("show");
-      if(!PAY.enabled) return toast("Subscriptions aren't switched on yet.");
-      PAY._autoGoLive=true; openCheckout(($("email").value||"").trim(),"single");
-    };
-    $("planMulti").onclick=()=>{
-      $("planModal").classList.remove("show");
-      if(!PAY.enabled) return toast("The Multistream plan isn't switched on yet.");
-      PAY._autoGoLive=true; openCheckout(($("email").value||"").trim(),"multi");
-    };
-    $("planCancel").onclick=()=>$("planModal").classList.remove("show");
-    $("planModal").onclick=(e)=>{ if(e.target===$("planModal")) $("planModal").classList.remove("show"); };
-
     $("startBtn").onclick=async()=>{
       const f=$("video").files[0];
       if(!$("email").value) return toast("Enter your email.");
@@ -2090,13 +1991,7 @@
       const dests=collectDests();
       if(!dests.length){ return toast(mode==="multi" ? "Add at least one platform (URL + key)." : "Enter your RTMP server URL."); }
       if(!$("agree").checked) return toast("Confirm you have the rights to this content.");
-      if(window.IS_SUBSCRIBED) return beginStream();
-      const email=$("email").value.trim();
-      try{
-        const r=await (await fetch("/subscribed?email="+encodeURIComponent(email))).json();
-        if(r.active){ window.IS_SUBSCRIBED=true; return beginStream(); }
-        openPlanModal(!r.trialUsed);
-      }catch(_){ beginStream(); } // couldn't check status, don't block going live over a network hiccup
+      return beginStream();
     };
     async function stopStream(){
       const token=localStorage.getItem(TKEY); if(!token) return;
@@ -2106,18 +2001,6 @@
     }
     $("stopBtn").onclick=stopStream;
     $("sappStop").onclick=stopStream;
-    $("upgradeBtn").onclick=async()=>{
-      const token=localStorage.getItem(TKEY); if(!token) return;
-      const email=($("email").value||"").trim()||myEmail;
-      try{
-        const r=await fetch("/upgrade",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token})});
-        const j=await r.json();
-        if(j.ok){ toast("Upgraded to 24 hours, your stream stays live!"); refreshMine(); }
-        else if(j.needsCheckout){ if(!email) return toast("Enter your email above first, then tap Upgrade."); openCheckout(email, mode==="multi"?"multi":"single"); }
-        else if(j.comingSoon){ toast("Paid plans are coming very soon, we saved your interest. Your trial keeps running."); }
-        else { toast(j.error||"Couldn't upgrade right now."); }
-      }catch(e){ toast("Something went wrong."); }
-    };
     $("copyLinkBtn").onclick=()=>{
       const v=$("manageLink"); v.select(); v.setSelectionRange(0,300);
       try{ navigator.clipboard.writeText(v.value); }catch(_){ try{document.execCommand("copy");}catch(_){} }
@@ -2147,7 +2030,6 @@
       if(!active) return;
       const bn=$("betaNote");
       if(bn){ bn.classList.add("is-sub"); bn.innerHTML='<span>'+proBadge("Free")+' Claim any free slot for a full <b>24-hour</b> stream to up to 3 platforms, stream as often as you like.</span>'; }
-      const ub=$("upgradeBtn"); if(ub) ub.style.display="none";           // in-stream upgrade CTA
       const spb=$("sappProBadge"); if(spb){ spb.style.display="inline-flex"; spb.innerHTML=proBadge("Free"); }
     }
     async function checkSub(email){

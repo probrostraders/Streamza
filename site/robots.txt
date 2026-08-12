@@ -15,7 +15,6 @@ Disallow: /status
 Disallow: /slots
 Disallow: /start
 Disallow: /stop
-Disallow: /upgrade
 Disallow: /subscribed
 Disallow: /myuploads
 Disallow: /deleteupload

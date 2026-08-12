@@ -5,8 +5,9 @@
  * included — see the BETA note on tierOf() below for why. Each claim returns a private manage-token
  * (stored in the browser) to monitor/stop that slot. The expiry watchdog stops slots when they run out.
  *
- * Payment: PAYMENTS_LIVE=false → /upgrade just records interest ("coming soon"). When a processor is
- * approved and PAYMENTS_LIVE=true, revert tierOf() to read the real `subscribers` map again.
+ * Payment: currently BETA_FREE — no processor is live, so tierOf() grants every claim full access.
+ * When a processor is approved and PAYMENTS_LIVE=true, revert tierOf() to read the real `subscribers`
+ * map again (see the BETA note on tierOf() below).
  */
 const express = require("express");
 const compression = require("compression");
@@ -19,13 +20,7 @@ const path = require("path");
 const PORT = process.env.PORT || 3000;
 const ADMIN_KEY = process.env.ADMIN_KEY || "streamza-admin";
 const SLOT_COUNT = Number(process.env.SLOT_COUNT) || 10; // max safe on the free 1GB micro (-c copy is light; RAM + outbound bandwidth are the limit). Raise via env on a bigger instance.
-const SLOT_MS = 24 * 60 * 60 * 1000;  // full paid duration (24h)
-const TRIAL_MS = Number(process.env.TRIAL_MS) || 15 * 60 * 1000; // free 15-minute trial on every claim
-// Anti-abuse: reserve some slots only subscribers can take, and rate-limit free trials per IP, so
-// free-trial spam can never starve paying customers.
-const RESERVED_FOR_SUBS = Number(process.env.RESERVED_FOR_SUBS) || 3;       // slots only subscribers can claim
-const MAX_FREE_SLOTS = Math.max(1, SLOT_COUNT - RESERVED_FOR_SUBS);         // free trials may use at most this many
-const TRIAL_COOLDOWN_MS = Number(process.env.TRIAL_COOLDOWN_MS) || 30 * 60 * 1000; // 1 free trial per IP / 30 min
+const SLOT_MS = 24 * 60 * 60 * 1000;  // every claim streams for this long, then the slot frees up
 // Streaming pipeline. By default we RE-ENCODE to a YouTube-Live-friendly stream (a keyframe every 2s) so
 // ANY uploaded MP4 goes live cleanly — uploaded files usually have ~5-10s keyframes, which makes YouTube
 // show "not receiving enough video / Preparing". Re-encoding costs CPU; set RELAY_COPY=1 to stream-copy
@@ -107,15 +102,6 @@ function tierOf(_email) { return "multi"; }
 function isSubscribed(email) { return !!tierOf(email); }            // any plan → full 24h
 function canMultistream(email) { return tierOf(email) === "multi"; } // only the $10 plan
 
-// Which emails have already used their one free 15-minute trial — lets the "choose your plan" screen
-// only offer the trial once per account instead of every time (the IP cooldown in /start is a separate,
-// short-window anti-abuse limit, not this).
-const TRIALS_FILE = path.join(DATA_DIR, "usedtrials.json");
-let usedTrials = new Set();
-try { usedTrials = new Set(JSON.parse(fs.readFileSync(TRIALS_FILE, "utf8")) || []); } catch (_) {}
-function saveUsedTrials() { try { fs.writeFileSync(TRIALS_FILE, JSON.stringify([...usedTrials])); } catch (_) {} }
-function hasUsedTrial(email) { return usedTrials.has((email || "").trim().toLowerCase()); }
-
 // Customer-portal links per email (captured from Lemon Squeezy subscription webhooks) so a signed-in
 // user can cancel / update their card. Only falls back to LS's generic "my orders" page when Lemon
 // Squeezy is actually the active processor — otherwise an unmatched email gets no portal link rather
@@ -135,7 +121,7 @@ function mySlot(email) {
   const e = (email || "").trim().toLowerCase();
   const s = slots.find((x) => x.busy && (x.email || "").toLowerCase() === e);
   if (!s) return null;
-  return { id: s.id, trial: s.trial, token: s.token, live: !!s.proc, file: s.file,
+  return { id: s.id, token: s.token, live: !!s.proc, file: s.file,
            secondsLeft: Math.max(0, Math.floor((s.expiresAt - Date.now()) / 1000)) };
 }
 
@@ -171,7 +157,6 @@ app.use(express.json({ verify: (req, _res, buf) => { req.rawBody = buf; } })); /
 
 // --- tiny in-memory per-IP rate limiter (abuse guard) ---
 const rlHits = new Map();
-const trialCooldown = new Map(); // ip -> last free-trial start (ms), for the per-IP trial cooldown
 function rateLimit(max, windowMs) {
   return (req, res, next) => {
     const ip = req.ip || "?";
@@ -196,7 +181,7 @@ app.use((req, res, next) => {
 // page has no business being indexed, and robots.txt alone doesn't deindex a URL
 // that other sites happen to link to — the header does.
 const NOINDEX_PREFIXES = ["/admin", "/auth", "/pay", "/owner", "/lemonsqueezy", "/paddle",
-  "/status", "/slots", "/start", "/stop", "/upgrade", "/subscribed", "/live-preview",
+  "/status", "/slots", "/start", "/stop", "/subscribed", "/live-preview",
   "/myuploads", "/deleteupload", "/waitlist", "/twitch-callback", "/studio-assets"];
 app.use((req, res, next) => {
   if (NOINDEX_PREFIXES.some((p) => req.path === p || req.path.startsWith(p + "/"))) {
@@ -296,7 +281,7 @@ const libTouch = (fileId, signedIn, canCopy) => { const u = library.find((x) => 
 
 // ---- 5 slots ----
 const slots = Array.from({ length: SLOT_COUNT }, (_, i) => ({
-  id: i + 1, busy: false, trial: true, email: null, dest: null, dests: [], destsFull: [], loop: true,
+  id: i + 1, busy: false, email: null, dest: null, dests: [], destsFull: [], loop: true,
   file: null, filePath: null, fileSize: 0,
   startedAt: 0, expiresAt: 0, proc: null, token: null, log: [],
   stopping: false, restartCount: 0, ffmpegArgs: null, signedIn: false, everStreamed: false,
@@ -304,22 +289,17 @@ const slots = Array.from({ length: SLOT_COUNT }, (_, i) => ({
 function slog(s, line) { if (!line) return; s.log.push(line); if (s.log.length > 60) s.log.shift(); }
 
 // Why a slot most recently ended, keyed by its (now-cleared) token — release() wipes the slot object
-// itself, so /status needs this to tell a real "trial ended, subscribe to continue" from "we gave up
-// because we couldn't reach your RTMP destination", which look identical from the frontend's polling
-// otherwise and were both showing the same misleading subscribe prompt.
+// itself, so /status needs this to tell a real "slot expired, claim another" from "we gave up because
+// we couldn't reach your RTMP destination", which look identical from the frontend's polling otherwise.
 const recentEndings = new Map(); // token -> { reason: "expired"|"stopped"|"connection_failed", message, at }
 const END_REASON_TTL_MS = 5 * 60 * 1000;
 function noteEnding(slot, reason, message) { if (slot.token) recentEndings.set(slot.token, { reason, message: message || null, at: Date.now() }); }
 
 function release(s) {
-  // Signed-in users (subscriber or Google account) KEEP their video (reusable — no re-upload);
-  // anonymous free-trial uploads are removed.
-  if (s.filePath) {
-    if (isSubscribed(s.email) || s.signedIn) libAdd(s.email, path.basename(s.filePath), s.file, s.fileSize, s.signedIn);
-    else rm(s.filePath);
-  }
+  // Videos are kept for reuse (appear under "Your recent videos") rather than deleted on release.
+  if (s.filePath) libAdd(s.email, path.basename(s.filePath), s.file, s.fileSize, s.signedIn);
   Object.assign(s, {
-    busy: false, trial: true, email: null, dest: null, dests: [], destsFull: [], loop: true,
+    busy: false, email: null, dest: null, dests: [], destsFull: [], loop: true,
     file: null, filePath: null, fileSize: 0,
     startedAt: 0, expiresAt: 0, proc: null, token: null, log: [],
     stopping: false, restartCount: 0, ffmpegArgs: null, signedIn: false, everStreamed: false,
@@ -327,9 +307,9 @@ function release(s) {
 }
 // Spawns (or re-spawns) the ffmpeg relay process for a slot. If it dies unexpectedly mid-stream — an RTMP
 // hiccup, not a manual /stop or slot expiry — reconnect automatically instead of ending the whole slot,
-// so "Loop the video" really does keep streaming until the user stops it or the slot/trial runs out.
+// so "Loop the video" really does keep streaming until the user stops it or the slot expires.
 // But if it never actually got a frame out (a bad stream key/URL, not a blip), retrying 20 times just
-// burns the user's trial time on a doomed connection — fail fast instead and say so clearly.
+// burns time on a doomed connection — fail fast instead and say so clearly.
 function launchFfmpeg(slot, args) {
   slot.ffmpegArgs = args;
   const proc = spawn("ffmpeg", args);
@@ -370,7 +350,7 @@ setInterval(() => {
   const now = Date.now();
   for (const s of slots) {
     if (s.busy && s.expiresAt && now > s.expiresAt) {
-      slog(s, s.trial ? "Free 15-minute trial ended — upgrade to 24 hours to keep streaming." : "Slot expired (24h) — stopping. Renew to continue.");
+      slog(s, "Slot expired (24h) — stopping. Claim a slot again to keep streaming.");
       noteEnding(s, "expired", null);
       s.stopping = true;
       try { if (s.proc) s.proc.kill("SIGINT"); else release(s); } catch (_) { release(s); }
@@ -408,9 +388,8 @@ setInterval(() => {
       try { if (now - fs.statSync(fp).mtimeMs > 30 * 60 * 1000) fs.unlinkSync(fp); } catch (_) {}
     }
   } catch (_) {}
-  // prune stale rate-limit + trial-cooldown records
+  // prune stale rate-limit records
   for (const [ip, rec] of rlHits) { if (now > rec.reset) rlHits.delete(ip); }
-  for (const [ip, t] of trialCooldown) { if (now - t > TRIAL_COOLDOWN_MS) trialCooldown.delete(ip); }
   for (const [tok, rec] of recentEndings) { if (now - rec.at > END_REASON_TTL_MS) recentEndings.delete(tok); }
 }, 20000);
 
@@ -520,20 +499,6 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
     return res.status(400).json({ error: "No video file uploaded." });
   }
 
-  // Free-trial anti-abuse: per-IP cooldown + reserve slots for subscribers, so trial spam can never
-  // block paying customers. (Subscribers skip both checks entirely.)
-  const paid = isSubscribed(email);
-  if (!paid) {
-    const last = trialCooldown.get(req.ip) || 0;
-    if (Date.now() - last < TRIAL_COOLDOWN_MS) {
-      const mins = Math.ceil((TRIAL_COOLDOWN_MS - (Date.now() - last)) / 60000);
-      return bail(429, `You just used a free trial. Try again in ~${mins} min — or subscribe for unlimited 24-hour streaming with no wait.`);
-    }
-    if (slots.filter((s) => s.busy && s.trial).length >= MAX_FREE_SLOTS) {
-      return bail(409, "All free-trial slots are busy right now. Subscribe for a guaranteed 24-hour slot, or try again shortly.");
-    }
-  }
-
   // destinations (multistream): JSON `dests` [{url,key}], else a single rtmpUrl/streamKey
   let rawDests = [];
   try { rawDests = JSON.parse(req.body.dests || "[]"); } catch (_) {}
@@ -595,21 +560,16 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
   // this, or an active subscription, is what earns the video a spot in "Your recent videos".
   const signedIn = readSession(req) === email.toLowerCase();
   Object.assign(slot, {
-    busy: true, trial: !paid, email, dests: use.map((d) => d.url), dest: use[0].url, destsFull: use, loop: !!loop,
+    busy: true, email, dests: use.map((d) => d.url), dest: use[0].url, destsFull: use, loop: !!loop,
     file: srcName, filePath: srcPath, fileSize: srcSize,
-    startedAt: Date.now(), expiresAt: Date.now() + (paid ? SLOT_MS : TRIAL_MS), token, log: [],
+    startedAt: Date.now(), expiresAt: Date.now() + SLOT_MS, token, log: [],
     stopping: false, restartCount: 0, signedIn,
   });
-  // Subscribers' and signed-in users' videos are saved for reuse (appear under "Your recent videos");
-  // reused ones refresh their spot instead of duplicating.
-  if (paid || signedIn) { if (isNew) libAdd(email, path.basename(srcPath), srcName, srcSize, signedIn, srcCanCopy); else libTouch(reuseId, signedIn, srcCanCopy); }
-  if (!paid) {
-    trialCooldown.set(req.ip, Date.now());   // start this IP's free-trial cooldown
-    if (!usedTrials.has(email.toLowerCase())) { usedTrials.add(email.toLowerCase()); saveUsedTrials(); }
-  }
-  slog(slot, `Slot ${slot.id} claimed — ${paid ? "24h" : `free ${TRIAL_MS / 60000}-min trial`}${use.length > 1 ? ` · multistream ×${use.length}` : ""} ${loop ? "(loop) " : ""}${srcName} [${useCopy ? "stream-copy, original quality" : "re-encoded"}]`);
+  // Videos are saved for reuse (appear under "Your recent videos") for anyone signed in.
+  if (isNew) libAdd(email, path.basename(srcPath), srcName, srcSize, signedIn, srcCanCopy); else libTouch(reuseId, signedIn, srcCanCopy);
+  slog(slot, `Slot ${slot.id} claimed — 24h${use.length > 1 ? ` · multistream ×${use.length}` : ""} ${loop ? "(loop) " : ""}${srcName} [${useCopy ? "stream-copy, original quality" : "re-encoded"}]`);
   launchFfmpeg(slot, args);
-  res.json({ ok: true, slot: slot.id, token, trial: slot.trial, expiresAt: slot.expiresAt, destinations: use.length, multistreamLimited: limited });
+  res.json({ ok: true, slot: slot.id, token, expiresAt: slot.expiresAt, destinations: use.length, multistreamLimited: limited });
 });
 
 app.post("/stop", (req, res) => {
@@ -665,22 +625,6 @@ app.post("/deleteupload", (req, res) => {
   res.json({ ok: true });
 });
 
-// Extend a running free trial to the full 24 hours. If the user's email already has an active
-// subscription, extend immediately. Otherwise tell the UI to open Paddle checkout (or "coming soon").
-app.post("/upgrade", rateLimit(15, 60000), (req, res) => {
-  const t = req.body.token || req.query.token;
-  const s = slots.find((x) => x.token === t && x.busy);
-  if (!s) return res.status(404).json({ error: "No active stream found for this session." });
-  if (isSubscribed(s.email)) {
-    s.trial = false;
-    s.expiresAt = s.startedAt + SLOT_MS; // full 24h measured from when the stream started
-    slog(s, "Upgraded to the full 24 hours (subscription active).");
-    return res.json({ ok: true, expiresAt: s.expiresAt });
-  }
-  if (!PAYMENTS_LIVE) { saveLead(s.email, "upgrade-interest"); return res.json({ ok: false, comingSoon: true }); }
-  return res.json({ ok: false, needsCheckout: true }); // UI opens Paddle checkout, then retries
-});
-
 // Checkout config for the studio (all values here are public/client-safe).
 app.get("/pay/config", (_req, res) =>
   res.json({
@@ -697,12 +641,11 @@ app.get("/pay/config", (_req, res) =>
     checkoutUrl: LS_CHECKOUT, checkoutMultiUrl: LS_CHECKOUT_MULTI,
   }));
 
-// Studio polls this after checkout to know when the webhook has activated the subscription, and to
-// decide whether the "choose your plan" screen should still offer a free trial for this email.
+// Studio polls this after checkout to know when the webhook has activated the subscription.
 app.get("/subscribed", (req, res) => {
   const email = req.query.email || "";
   const t = tierOf(email);
-  res.json({ active: !!t, tier: t, multi: t === "multi", trialUsed: hasUsedTrial(email) });
+  res.json({ active: !!t, tier: t, multi: t === "multi" });
 });
 
 // Lemon Squeezy webhook — verifies X-Signature, then adds/removes the subscriber by email.
@@ -785,7 +728,7 @@ app.get("/status", (req, res) => {
   }
   res.json({
     running: true, slot: s.id, file: s.file, fileId: s.filePath ? path.basename(s.filePath) : null,
-    dest: s.dest, dests: s.dests, destsFull: s.destsFull, loop: !!s.loop, trial: s.trial, email: s.email,
+    dest: s.dest, dests: s.dests, destsFull: s.destsFull, loop: !!s.loop, email: s.email,
     uptime: Math.floor((Date.now() - s.startedAt) / 1000),
     secondsLeft: Math.max(0, Math.floor((s.expiresAt - Date.now()) / 1000)),
     log: s.log.slice(-14),
@@ -793,8 +736,8 @@ app.get("/status", (req, res) => {
 });
 
 // Stream back the slot's currently-playing video to its own owner (matching manage token = same trust
-// level /stop and /upgrade already require) — lets the studio show a real "what's actually live right
-// now" preview on resume, instead of an empty player that just says LIVE and leaves the user guessing.
+// level /stop already requires) — lets the studio show a real "what's actually live right now" preview
+// on resume, instead of an empty player that just says LIVE and leaves the user guessing.
 app.get("/live-preview", (req, res) => {
   const token = req.query.token || "";
   const s = slots.find((x) => x.token === token && x.busy);
