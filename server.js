@@ -16,7 +16,7 @@ const { spawn } = require("child_process");
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
-const r2 = require("./r2"); // Cloudflare R2 storage for Streamza Loop's chunked video uploads (Phase 2)
+const r2 = require("./r2"); // Cloudflare R2 storage — Streamza Loop's chunked uploads, and Web Studio's local uploads promoted to it opportunistically while under the free-tier budget (see R2_MAX_TOTAL_BYTES)
 
 const PORT = process.env.PORT || 3000;
 const ADMIN_KEY = process.env.ADMIN_KEY || "streamza-admin";
@@ -274,7 +274,10 @@ const libFor = (email) => { const e = (email || "").trim().toLowerCase(); return
 const libRetentionMs = (email) => (isSubscribed(email) ? LIB_UNUSED_MS : LIB_UNUSED_MS_FREE);
 // Deletes a saved video's actual bytes, wherever they live — local disk (Web Studio) or R2 (Streamza
 // Loop). Every eviction path below goes through this instead of calling rm()/r2.deleteObject() directly.
-function rmVideo(u) { if (u.storage === "r2") r2.deleteObject(u.id); else rm(libPath(u.id)); }
+function rmVideo(u) {
+  if (u.storage === "r2") { r2.deleteObject(u.id); r2UsedBytes = Math.max(0, r2UsedBytes - (u.size || 0)); }
+  else rm(libPath(u.id));
+}
 function libAdd(email, fileId, name, size, signedIn, canCopy, storage) {
   const e = (email || "").trim().toLowerCase();
   library = library.filter((u) => u.id !== fileId); // de-dupe (also refreshes lastUsedAt on reuse)
@@ -284,6 +287,18 @@ function libAdd(email, fileId, name, size, signedIn, canCopy, storage) {
   saveLib();
 }
 const libTouch = (fileId, signedIn, canCopy) => { const u = library.find((x) => x.id === fileId); if (u) { u.lastUsedAt = Date.now(); if (signedIn) u.signedIn = true; if (typeof canCopy === "boolean") u.canCopy = canCopy; saveLib(); } };
+
+// ---- R2 storage budget — Cloudflare's R2 free tier is 10GB-month; default the effective ceiling a
+// little under that (9GB) so normal day-to-day drift never risks a real bill. Once the bucket is at or
+// over this, both Web Studio and Streamza Loop stop routing NEW uploads to R2 and fall back to Oracle's
+// own local disk (Web Studio always could; Streamza Loop gets this fallback client-side — see
+// /r2/status below). Nothing already stored in R2 is moved or deleted because of this cap.
+const R2_MAX_TOTAL_BYTES = (Number(process.env.R2_MAX_TOTAL_GB) || 9) * 1024 ** 3;
+let r2UsedBytes = 0; // kept approximately current by direct increment/decrement, corrected hourly (see the R2 sweep) so it can never drift far from reality
+function r2HasBudget(size) { return r2.R2_ENABLED && (r2UsedBytes + (size || 0)) <= R2_MAX_TOTAL_BYTES; }
+if (r2.R2_ENABLED) {
+  r2.listAllObjects().then((objs) => { r2UsedBytes = objs.reduce((n, o) => n + o.size, 0); }).catch(() => {});
+}
 
 // ---- 5 slots ----
 const slots = Array.from({ length: SLOT_COUNT }, (_, i) => ({
@@ -416,8 +431,13 @@ if (r2.R2_ENABLED) {
       const known = new Set(library.filter((u) => u.storage === "r2").map((u) => u.id));
       for (const p of pendingUploads.values()) if (p.storage === "r2") known.add(p.r2Key);
       for (const s of slots) if (s.r2Key) known.add(s.r2Key);
-      const keys = await r2.listAllKeys();
-      for (const key of keys) if (!known.has(key)) await r2.deleteObject(key);
+      const objects = await r2.listAllObjects();
+      let liveTotal = 0;
+      for (const o of objects) {
+        if (known.has(o.key)) liveTotal += o.size;
+        else await r2.deleteObject(o.key);
+      }
+      r2UsedBytes = liveTotal; // self-heals any drift from the incremental +=/-= elsewhere
     } catch (_) {}
   }, 60 * 60 * 1000);
 }
@@ -495,6 +515,20 @@ app.post("/pending-upload", rateLimit(15, 60000), upload.single("video"), async 
   if (codecs.audio && codecs.audio !== "aac") { rm(file.path); return res.status(400).json({ error: `Your audio is ${codecs.audio.toUpperCase()} — please use AAC audio (MP4 = H.264 + AAC).` }); }
   const canCopy = await canStreamCopy(file.path, codecs);
   const uploadId = path.basename(file.path);
+  // Opportunistically promote to R2 while there's free-tier budget for it — frees the local disk this
+  // small VM actually cares about. The browser upload itself is completely unchanged either way; this
+  // is purely a server-side "where do these already-received bytes end up living" decision.
+  if (r2HasBudget(file.size)) {
+    try {
+      await r2.uploadFile(uploadId, fs.createReadStream(file.path), file.size, file.mimetype);
+      rm(file.path);
+      r2UsedBytes += file.size;
+      pendingUploads.set(uploadId, { r2Key: uploadId, storage: "r2", name: file.originalname, size: file.size, createdAt: Date.now(), canCopy });
+      return res.json({ ok: true, uploadId, name: file.originalname, size: file.size });
+    } catch (_) {
+      // R2 upload failed — fall through and keep using the local copy, which is still safely on disk.
+    }
+  }
   pendingUploads.set(uploadId, { path: file.path, storage: "local", name: file.originalname, size: file.size, createdAt: Date.now(), canCopy });
   res.json({ ok: true, uploadId, name: file.originalname, size: file.size });
 });
@@ -502,9 +536,12 @@ app.post("/pending-upload", rateLimit(15, 60000), upload.single("video"), async 
 // ---- R2 chunked/resumable upload (Streamza Loop) — bytes go phone -> R2 directly via presigned URLs;
 // the Oracle VM only ever orchestrates these three calls, never touches the video bytes. Web Studio is
 // untouched — it keeps using the local-disk /pending-upload above. See r2.js for the S3-client details.
+// r2Unavailable (not a 5xx — this is an expected, normal outcome once the free-tier budget is spent)
+// tells the client to fall back to the local-disk upload path instead of treating it as a hard error.
 app.post("/r2/multipart/create", (req, res) => {
-  if (!r2.R2_ENABLED) return res.status(503).json({ error: "Cloud upload isn't configured yet." });
   if (!readSession(req)) return res.status(401).json({ error: "Sign in first." });
+  const size = Number(req.body.size) || 0;
+  if (!r2HasBudget(size)) return res.json({ ok: false, r2Unavailable: true, error: "Cloud upload is at its free-tier limit right now." });
   const name = (req.body.name || "video.mp4").toString();
   const contentType = (req.body.contentType || "video/mp4").toString();
   const key = crypto.randomBytes(16).toString("hex");
@@ -536,6 +573,7 @@ app.post("/r2/multipart/complete", async (req, res) => {
     if (codecs.audio && codecs.audio !== "aac") { r2.deleteObject(r2Key); return res.status(400).json({ error: `Your audio is ${codecs.audio.toUpperCase()} — please use AAC audio (MP4 = H.264 + AAC).` }); }
     const canCopy = await canStreamCopy(getUrl, codecs);
     pendingUploads.set(r2Key, { r2Key, storage: "r2", name: name || "video.mp4", size: Number(size) || 0, createdAt: Date.now(), canCopy });
+    r2UsedBytes += Number(size) || 0;
     res.json({ ok: true, uploadId: r2Key, name: name || "video.mp4", size: Number(size) || 0 });
   } catch (e) {
     res.status(500).json({ error: "Couldn't finish the upload: " + e.message });
@@ -548,6 +586,12 @@ app.post("/r2/multipart/abort", (req, res) => {
   if (r2Key && r2UploadId) r2.abortMultipart(r2Key, r2UploadId);
   res.json({ ok: true });
 });
+
+// Cheap pre-check so a client can skip straight to the local-disk upload path instead of always
+// attempting R2 first and only finding out from /r2/multipart/create that the budget's spent. Not
+// authoritative on its own — /r2/multipart/create re-checks with the real file size, since a status
+// check with no size in mind can't know if this *specific* upload would tip it over the cap.
+app.get("/r2/status", (_req, res) => res.json({ available: r2HasBudget(0) }));
 
 app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res) => {
   const file = req.file;

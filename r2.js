@@ -12,6 +12,7 @@ const {
   CompleteMultipartUploadCommand,
   AbortMultipartUploadCommand,
   GetObjectCommand,
+  PutObjectCommand,
   DeleteObjectCommand,
   ListObjectsV2Command,
 } = require("@aws-sdk/client-s3");
@@ -74,15 +75,29 @@ async function deleteObject(key) {
   } catch (_) {}
 }
 
+// Single-shot upload for a file the server already has in full on local disk (Web Studio's browser
+// upload lands here first, same as always — this is the opportunistic "promote it to R2" step that
+// runs afterward, only when there's budget for it; see r2HasBudget() in server.js). No multipart
+// dance needed since there's nothing to chunk from the client side at this point.
+async function uploadFile(key, bodyStream, size, contentType) {
+  await client.send(new PutObjectCommand({ Bucket: BUCKET, Key: key, Body: bodyStream, ContentLength: size, ContentType: contentType || "video/mp4" }));
+}
+
 async function listAllKeys() {
-  const keys = [];
+  return (await listAllObjects()).map((o) => o.key);
+}
+
+// Same listing, but with sizes — used to both sweep orphans and recompute the true total bytes stored,
+// so r2UsedBytes (server.js) self-heals every hour instead of slowly drifting from reality.
+async function listAllObjects() {
+  const objects = [];
   let token;
   do {
     const r = await client.send(new ListObjectsV2Command({ Bucket: BUCKET, ContinuationToken: token }));
-    (r.Contents || []).forEach((o) => keys.push(o.Key));
+    (r.Contents || []).forEach((o) => objects.push({ key: o.Key, size: o.Size || 0 }));
     token = r.IsTruncated ? r.NextContinuationToken : undefined;
   } while (token);
-  return keys;
+  return objects;
 }
 
 module.exports = {
@@ -93,5 +108,7 @@ module.exports = {
   abortMultipart,
   presignGetUrl,
   deleteObject,
+  uploadFile,
   listAllKeys,
+  listAllObjects,
 };
