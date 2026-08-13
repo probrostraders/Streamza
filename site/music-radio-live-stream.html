@@ -27,14 +27,36 @@
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      { "@type": "Question", "name": "Do I need the rights to the music I stream 24/7?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Streaming copyrighted music you don't have a license for will get the stream muted or claimed, and repeated claims risk the channel. Use your own productions, royalty-free libraries, or music you hold a streaming license for. See our Acceptable Use Policy." } },
-      { "@type": "Question", "name": "Does my computer need to stay on for a 24/7 lofi stream?", "acceptedAnswer": { "@type": "Answer", "text": "No. Once you claim a slot in Streamza Web Studio and go live, the file loops from our servers. You can close the tab and turn your computer off. The broadcast keeps running." } },
-      { "@type": "Question", "name": "How long should a lofi mix be before it repeats?", "acceptedAnswer": { "@type": "Answer", "text": "Longer than you'd think. A 20-60 minute mix is a common sweet spot: long enough that regular listeners rarely notice the loop point, short enough to stay under the 1.5 GB upload limit at good quality." } },
-      { "@type": "Question", "name": "Can I stream to YouTube and Twitch at the same time?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, free — you can send the same looping mix to up to 3 platforms at once from a single upload." } },
-      { "@type": "Question", "name": "Will YouTube demonetise a looping music stream?", "acceptedAnswer": { "@type": "Answer", "text": "Looping itself isn't the problem: platforms act on content with no added value or unlicensed music, not on the format. A well-produced mix with your own or licensed music, a visual, and a real channel around it is treated like any other live stream." } },
-      { "@type": "Question", "name": "What visual should I use behind a music stream?", "acceptedAnswer": { "@type": "Answer", "text": "Anything loop-friendly: a static illustration, a slow pan, an animated loop, or simple lyric/track-title cards. Avoid on-screen clocks or dated text that gives away the restart." } }
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://streamza.live/" },
+          { "@type": "ListItem", "position": 2, "name": "Music & lofi radio", "item": "https://streamza.live/music-radio-live-stream.html" }
+        ]
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://streamza.live/music-radio-live-stream.html",
+        "url": "https://streamza.live/music-radio-live-stream.html",
+        "name": "24/7 Music & Lofi Radio Live Stream, No PC Needed",
+        "description": "Run a 24/7 lofi, chillhop, jazz or study-music live stream on YouTube, Twitch, Facebook or any RTMP server. Loop your mix from the cloud, no computer left on, no OBS.",
+        "inLanguage": "en",
+        "isPartOf": { "@type": "WebSite", "@id": "https://streamza.live/#website" },
+        "about": { "@id": "https://streamza.live/#webapp" },
+        "publisher": { "@id": "https://streamza.live/#org" }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "Do I need the rights to the music I stream 24/7?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Streaming copyrighted music you don't have a license for will get the stream muted or claimed, and repeated claims risk the channel. Use your own productions, royalty-free libraries, or music you hold a streaming license for. See our Acceptable Use Policy." } },
+          { "@type": "Question", "name": "Does my computer need to stay on for a 24/7 lofi stream?", "acceptedAnswer": { "@type": "Answer", "text": "No. Once you claim a slot in Streamza Web Studio and go live, the file loops from our servers. You can close the tab and turn your computer off. The broadcast keeps running." } },
+          { "@type": "Question", "name": "How long should a lofi mix be before it repeats?", "acceptedAnswer": { "@type": "Answer", "text": "Longer than you'd think. A 20-60 minute mix is a common sweet spot: long enough that regular listeners rarely notice the loop point, short enough to stay under the 1.5 GB upload limit at good quality." } },
+          { "@type": "Question", "name": "Can I stream to YouTube and Twitch at the same time?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, free — you can send the same looping mix to up to 3 platforms at once from a single upload." } },
+          { "@type": "Question", "name": "Will YouTube demonetise a looping music stream?", "acceptedAnswer": { "@type": "Answer", "text": "Looping itself isn't the problem: platforms act on content with no added value or unlicensed music, not on the format. A well-produced mix with your own or licensed music, a visual, and a real channel around it is treated like any other live stream." } },
+          { "@type": "Question", "name": "What visual should I use behind a music stream?", "acceptedAnswer": { "@type": "Answer", "text": "Anything loop-friendly: a static illustration, a slow pan, an animated loop, or simple lyric/track-title cards. Avoid on-screen clocks or dated text that gives away the restart." } }
+        ]
+      }
     ]
   }
   </script>

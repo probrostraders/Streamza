@@ -16,6 +16,43 @@
   <meta property="og:url" content="https://streamza.live/support.html" />
   <meta property="og:image" content="https://streamza.live/og-banner.png" />
   <meta name="twitter:card" content="summary_large_image" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://streamza.live/" },
+          { "@type": "ListItem", "position": 2, "name": "Support", "item": "https://streamza.live/support.html" }
+        ]
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://streamza.live/support.html",
+        "url": "https://streamza.live/support.html",
+        "name": "Support & Help: Streamza",
+        "description": "Help and troubleshooting for Streamza: how to stream a pre-recorded video live, find your stream key, fix connection problems, and contact support.",
+        "inLanguage": "en",
+        "isPartOf": { "@type": "WebSite", "@id": "https://streamza.live/#website" },
+        "publisher": { "@id": "https://streamza.live/#org" }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "“Stream key rejected” or it won't connect", "acceptedAnswer": { "@type": "Answer", "text": "Copy a fresh key from your platform, make sure your live event is actually started on the platform, and confirm the server URL is correct. Some networks block standard RTMP, so try a different network if needed." } },
+          { "@type": "Question", "name": "The picture looks soft or keeps buffering", "acceptedAnswer": { "@type": "Answer", "text": "Your upload speed may be too low. Use Tools → Upload Speed Test to measure it and apply the recommended settings, or lower the resolution/bitrate in Settings. Keep Adaptive Bitrate on." } },
+          { "@type": "Question", "name": "A video file won't stream", "acceptedAnswer": { "@type": "Answer", "text": "The file must be H.264 video + AAC audio (most MP4s are). Try another file or convert it first." } },
+          { "@type": "Question", "name": "How do I record my screen instead of streaming?", "acceptedAnswer": { "@type": "Answer", "text": "Tap Screen Record on the bottom navigation. You can add a facecam, draw on screen, and use Game Mode for smooth gameplay capture. Recordings save to your device gallery." } },
+          { "@type": "Question", "name": "Subscription & billing questions", "acceptedAnswer": { "@type": "Answer", "text": "Manage or cancel anytime in Google Play → Subscriptions. To restore a purchase on a new device, use the “Restore Purchases” option in the app. See the subscription terms on the Terms of Service page." } },
+          { "@type": "Question", "name": "How do I delete my data?", "acceptedAnswer": { "@type": "Answer", "text": "Streamza has no account; all data is on your device. Clear it via Android Settings → Apps → Streamza → Storage → Clear data, or uninstall the app. See the Data Deletion page." } }
+        ]
+      }
+    ]
+  }
+  </script>
+
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
