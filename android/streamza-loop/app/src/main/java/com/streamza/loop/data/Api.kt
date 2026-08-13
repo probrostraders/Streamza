@@ -113,10 +113,13 @@ data class Destination(val url: String, val key: String)
 // Retrofit base URL entirely for that one call.
 
 @Serializable
-data class R2CreateRequest(val name: String, val contentType: String)
+data class R2CreateRequest(val name: String, val contentType: String, val size: Long)
 
 @Serializable
-data class R2CreateResponse(val ok: Boolean = false, val r2Key: String? = null, val r2UploadId: String? = null, val name: String? = null, val error: String? = null)
+data class R2CreateResponse(val ok: Boolean = false, val r2Key: String? = null, val r2UploadId: String? = null, val name: String? = null, val r2Unavailable: Boolean = false, val error: String? = null)
+
+@Serializable
+data class R2StatusResponse(val available: Boolean = false)
 
 @Serializable
 data class R2PartUrlRequest(val r2Key: String, val r2UploadId: String, val partNumber: Int)
@@ -149,6 +152,9 @@ interface StreamzaApi {
     @GET("slots")
     suspend fun slots(): SlotsResponse
 
+    // Fallback upload path for when R2 has no free-tier budget left (see R2CreateResponse.r2Unavailable
+    // below) — the same whole-file endpoint Web Studio's browser has always used. Bytes go through the
+    // Oracle VM here, unlike the chunked-to-R2 path this app uses the rest of the time.
     @Multipart
     @POST("pending-upload")
     suspend fun pendingUpload(@Part video: MultipartBody.Part): PendingUploadResponse
@@ -183,6 +189,10 @@ interface StreamzaApi {
 
     @POST("r2/multipart/abort")
     suspend fun r2Abort(@Body body: R2AbortRequest): OkResponse
+
+    // Cheap pre-check, not authoritative — see the comment on the server-side route.
+    @GET("r2/status")
+    suspend fun r2Status(): R2StatusResponse
 
     // Goes straight to the presigned R2 URL (a full https://<bucket>.<account>.r2.cloudflarestorage.com/...
     // URL), not to streamza.live — @Url with a fully-qualified URL overrides the Retrofit base URL for

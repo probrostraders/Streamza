@@ -3,6 +3,11 @@ package com.streamza.loop.data
 import android.content.ContentResolver
 import android.net.Uri
 import android.provider.OpenableColumns
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody
+import okio.BufferedSink
+import okio.source
+import java.io.IOException
 
 /** A video file the user picked, resolved once so its name/size are known upfront (needed for the
  *  multipart request and for showing "12.3 MB" in the UI before upload starts). */
@@ -21,4 +26,16 @@ fun resolvePickedVideo(resolver: ContentResolver, uri: Uri): PickedVideo {
     }
     val mimeType = resolver.getType(uri) ?: "video/mp4"
     return PickedVideo(uri, name, size, mimeType)
+}
+
+/** Streams a picked video's bytes in one shot for the local-disk fallback path (see uploadVideoLocal
+ *  in AppRepository.kt) — used only when R2 has no budget left, so it's fine that this isn't chunked
+ *  the way the R2 path is; Web Studio's browser has uploaded this same way, whole-file, all along. */
+fun wholeVideoRequestBody(resolver: ContentResolver, video: PickedVideo): RequestBody = object : RequestBody() {
+    override fun contentType() = video.mimeType.toMediaTypeOrNull()
+    override fun contentLength() = video.size
+    override fun writeTo(sink: BufferedSink) {
+        resolver.openInputStream(video.uri)?.use { input -> sink.writeAll(input.source()) }
+            ?: throw IOException("Could not open the selected video.")
+    }
 }

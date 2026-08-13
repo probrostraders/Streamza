@@ -34,6 +34,11 @@ private class VideoChunkReader(resolver: ContentResolver, video: PickedVideo) : 
     }
 }
 
+/** Thrown when the server reports R2 is at its free-tier budget (see r2Unavailable in server.js) — a
+ *  distinct, expected outcome the caller should react to by falling back to the local-disk upload path,
+ *  not by treating it as a real failure the way any other exception from this function should be. */
+class R2UnavailableException(message: String) : Exception(message)
+
 /** Uploads a picked video to R2 in chunks, phone -> R2 directly via presigned per-part URLs (see the
  *  server-side r2/multipart endpoints in server.js) — streamza.live only ever sees the small JSON
  *  control calls, never the video bytes. Each part gets up to 3 attempts before the whole upload
@@ -45,7 +50,8 @@ suspend fun uploadVideoToR2(
     video: PickedVideo,
     onProgress: (sent: Long, total: Long) -> Unit,
 ): PendingUploadResponse {
-    val create = api.r2Create(R2CreateRequest(video.name, video.mimeType))
+    val create = api.r2Create(R2CreateRequest(video.name, video.mimeType, video.size))
+    if (create.r2Unavailable) throw R2UnavailableException(create.error ?: "Cloud upload is at its limit.")
     if (!create.ok || create.r2Key == null || create.r2UploadId == null) {
         throw ApiException(create.error ?: "Couldn't start the upload.")
     }

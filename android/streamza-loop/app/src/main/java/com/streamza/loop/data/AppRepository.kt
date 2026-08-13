@@ -8,6 +8,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -52,12 +53,32 @@ class AppRepository private constructor(
 
     suspend fun fetchSlots(): Result<SlotsResponse> = runCatching { api.slots() }
 
-    // Uploads straight to R2 in chunks (see R2ChunkedUploader) — Web Studio's own /pending-upload
-    // (local disk on the Oracle VM) is left entirely alone; this app never calls it.
+    // Uploads to R2 in chunks (see R2ChunkedUploader) whenever the free-tier budget allows it; once
+    // it's spent, the server says so (r2Unavailable) and this falls back to the same whole-file
+    // /pending-upload path Web Studio's browser has always used — bytes go through Oracle in that
+    // case, but the upload still succeeds instead of just failing.
     suspend fun uploadVideo(
         video: PickedVideo,
         onProgress: (sent: Long, total: Long) -> Unit,
-    ): Result<PendingUploadResponse> = runCatching { uploadVideoToR2(api, resolver, video, onProgress) }
+    ): Result<PendingUploadResponse> = runCatching {
+        try {
+            uploadVideoToR2(api, resolver, video, onProgress)
+        } catch (_: R2UnavailableException) {
+            uploadVideoLocal(video, onProgress)
+        }
+    }
+
+    private suspend fun uploadVideoLocal(
+        video: PickedVideo,
+        onProgress: (sent: Long, total: Long) -> Unit,
+    ): PendingUploadResponse {
+        val body = wholeVideoRequestBody(resolver, video)
+        val part = MultipartBody.Part.createFormData("video", video.name, body)
+        val res = api.pendingUpload(part)
+        if (!res.ok) throw ApiException(res.error ?: "Upload failed.")
+        onProgress(video.size, video.size) // no incremental progress on this path — report done in one step
+        return res
+    }
 
     /** Claims a slot and goes live. No `slot` field is sent — the server auto-assigns the next free
      *  one (see server.js /start's "otherwise take the next free one" fallback); this app deliberately
