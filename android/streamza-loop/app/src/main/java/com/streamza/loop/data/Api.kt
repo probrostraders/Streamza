@@ -3,13 +3,17 @@ package com.streamza.loop.data
 import kotlinx.serialization.Serializable
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import okhttp3.ResponseBody
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.PartMap
 import retrofit2.http.Query
+import retrofit2.http.Url
 
 // DTOs mirror server.js's response shapes field-for-field (see server.js /auth/me, /slots, /start,
 // /status, /myuploads) so there's no translation layer to keep in sync by hand.
@@ -103,6 +107,32 @@ data class DeleteUploadRequest(val email: String, val fileId: String)
 @Serializable
 data class Destination(val url: String, val key: String)
 
+// ---- Cloudflare R2 chunked upload (see server.js /r2/multipart/*) — the app's actual upload path.
+// Bytes never go through streamza.live: create/part-url/complete only exchange small JSON control
+// messages; the multipart PUTs below go straight to the presigned R2 URL via @Url, overriding the
+// Retrofit base URL entirely for that one call.
+
+@Serializable
+data class R2CreateRequest(val name: String, val contentType: String)
+
+@Serializable
+data class R2CreateResponse(val ok: Boolean = false, val r2Key: String? = null, val r2UploadId: String? = null, val name: String? = null, val error: String? = null)
+
+@Serializable
+data class R2PartUrlRequest(val r2Key: String, val r2UploadId: String, val partNumber: Int)
+
+@Serializable
+data class R2PartUrlResponse(val ok: Boolean = false, val url: String? = null, val error: String? = null)
+
+@Serializable
+data class R2CompletedPart(val partNumber: Int, val etag: String)
+
+@Serializable
+data class R2CompleteRequest(val r2Key: String, val r2UploadId: String, val parts: List<R2CompletedPart>, val name: String, val size: Long)
+
+@Serializable
+data class R2AbortRequest(val r2Key: String, val r2UploadId: String)
+
 interface StreamzaApi {
     @GET("auth/config")
     suspend fun authConfig(): AuthConfigResponse
@@ -141,4 +171,22 @@ interface StreamzaApi {
 
     @POST("deleteupload")
     suspend fun deleteUpload(@Body body: DeleteUploadRequest): OkResponse
+
+    @POST("r2/multipart/create")
+    suspend fun r2Create(@Body body: R2CreateRequest): R2CreateResponse
+
+    @POST("r2/multipart/part-url")
+    suspend fun r2PartUrl(@Body body: R2PartUrlRequest): R2PartUrlResponse
+
+    @POST("r2/multipart/complete")
+    suspend fun r2Complete(@Body body: R2CompleteRequest): PendingUploadResponse
+
+    @POST("r2/multipart/abort")
+    suspend fun r2Abort(@Body body: R2AbortRequest): OkResponse
+
+    // Goes straight to the presigned R2 URL (a full https://<bucket>.<account>.r2.cloudflarestorage.com/...
+    // URL), not to streamza.live — @Url with a fully-qualified URL overrides the Retrofit base URL for
+    // just this call. No auth needed here: the presigned URL itself is the credential.
+    @PUT
+    suspend fun r2PutPart(@Url url: String, @Body body: RequestBody): Response<ResponseBody>
 }

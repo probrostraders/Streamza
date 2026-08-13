@@ -1,8 +1,11 @@
 package com.streamza.loop.ui.theme
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 
 // Matches the website's palette (site/styles.css :root) exactly — same brand across web + app.
@@ -32,8 +35,12 @@ private val LoopColorScheme = darkColorScheme(
 fun StreamzaLoopTheme(content: @Composable () -> Unit) {
     // Streamza's identity is deliberately always-dark (pure black + system red), same on web and app —
     // not following system light/dark, matching the website's own choice not to offer a light theme.
-    MaterialTheme(
-        colorScheme = LoopColorScheme,
-        content = content,
-    )
+    MaterialTheme(colorScheme = LoopColorScheme) {
+        // MaterialTheme only carries color *tokens* — nothing actually paints colorScheme.background
+        // without this Surface. Without it, the window shows Android's default background instead
+        // (caught by actually running the app on an emulator: the screen came out mid-gray, not black).
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            content()
+        }
+    }
 }

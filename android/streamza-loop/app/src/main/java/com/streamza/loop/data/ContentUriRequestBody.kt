@@ -3,10 +3,6 @@ package com.streamza.loop.data
 import android.content.ContentResolver
 import android.net.Uri
 import android.provider.OpenableColumns
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.RequestBody
-import okio.BufferedSink
-import okio.source
 
 /** A video file the user picked, resolved once so its name/size are known upfront (needed for the
  *  multipart request and for showing "12.3 MB" in the UI before upload starts). */
@@ -25,20 +21,4 @@ fun resolvePickedVideo(resolver: ContentResolver, uri: Uri): PickedVideo {
     }
     val mimeType = resolver.getType(uri) ?: "video/mp4"
     return PickedVideo(uri, name, size, mimeType)
-}
-
-/** Streams a content:// Uri's bytes directly as a RequestBody — content URIs under scoped storage
- *  don't reliably expose a real filesystem File, so this reads via ContentResolver instead of File I/O. */
-class ContentUriRequestBody(
-    private val resolver: ContentResolver,
-    private val video: PickedVideo,
-) : RequestBody() {
-    override fun contentType() = video.mimeType.toMediaTypeOrNull()
-    override fun contentLength() = video.size
-
-    override fun writeTo(sink: BufferedSink) {
-        resolver.openInputStream(video.uri)?.use { input ->
-            sink.writeAll(input.source())
-        } ?: throw java.io.IOException("Could not open the selected video.")
-    }
 }

@@ -1,0 +1,97 @@
+package com.streamza.loop.data
+
+import android.content.ContentResolver
+import kotlinx.coroutines.delay
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.FileInputStream
+import java.io.IOException
+
+private const val CHUNK_SIZE = 16 * 1024 * 1024 // 16MB — R2/S3 multipart parts must be >=5MB except the last
+private const val MAX_ATTEMPTS_PER_PART = 3
+
+/** Reads a picked video in fixed-size chunks via its real file descriptor (ParcelFileDescriptor lets us
+ *  seek precisely instead of re-reading from the start for every chunk, unlike a plain InputStream). */
+private class VideoChunkReader(resolver: ContentResolver, video: PickedVideo) : AutoCloseable {
+    private val pfd = resolver.openFileDescriptor(video.uri, "r") ?: throw IOException("Could not open the selected video.")
+    private val stream = FileInputStream(pfd.fileDescriptor)
+
+    fun readChunk(offset: Long, length: Int): ByteArray {
+        stream.channel.position(offset)
+        val buf = ByteArray(length)
+        var read = 0
+        while (read < length) {
+            val n = stream.read(buf, read, length - read)
+            if (n < 0) break
+            read += n
+        }
+        return if (read == length) buf else buf.copyOf(read)
+    }
+
+    override fun close() {
+        stream.close()
+        pfd.close()
+    }
+}
+
+/** Uploads a picked video to R2 in chunks, phone -> R2 directly via presigned per-part URLs (see the
+ *  server-side r2/multipart endpoints in server.js) — streamza.live only ever sees the small JSON
+ *  control calls, never the video bytes. Each part gets up to 3 attempts before the whole upload
+ *  fails; on any unrecoverable failure the in-progress R2 multipart upload is aborted so it doesn't
+ *  linger as a partial object. */
+suspend fun uploadVideoToR2(
+    api: StreamzaApi,
+    resolver: ContentResolver,
+    video: PickedVideo,
+    onProgress: (sent: Long, total: Long) -> Unit,
+): PendingUploadResponse {
+    val create = api.r2Create(R2CreateRequest(video.name, video.mimeType))
+    if (!create.ok || create.r2Key == null || create.r2UploadId == null) {
+        throw ApiException(create.error ?: "Couldn't start the upload.")
+    }
+    val r2Key = create.r2Key
+    val r2UploadId = create.r2UploadId
+
+    try {
+        val totalParts = ((video.size + CHUNK_SIZE - 1) / CHUNK_SIZE).toInt().coerceAtLeast(1)
+        val parts = mutableListOf<R2CompletedPart>()
+        var sent = 0L
+
+        VideoChunkReader(resolver, video).use { reader ->
+            for (partNumber in 1..totalParts) {
+                val offset = (partNumber - 1).toLong() * CHUNK_SIZE
+                val thisChunkSize = minOf(CHUNK_SIZE.toLong(), video.size - offset).toInt()
+                val bytes = reader.readChunk(offset, thisChunkSize)
+
+                var etag: String? = null
+                var lastError: Exception? = null
+                for (attempt in 1..MAX_ATTEMPTS_PER_PART) {
+                    try {
+                        val partUrlRes = api.r2PartUrl(R2PartUrlRequest(r2Key, r2UploadId, partNumber))
+                        if (!partUrlRes.ok || partUrlRes.url == null) throw ApiException(partUrlRes.error ?: "Couldn't get an upload URL.")
+                        val body = bytes.toRequestBody("application/octet-stream".toMediaTypeOrNull())
+                        val putRes = api.r2PutPart(partUrlRes.url, body)
+                        if (!putRes.isSuccessful) throw ApiException("Upload failed (HTTP ${putRes.code()}).")
+                        etag = putRes.headers()["ETag"]?.trim('"') ?: throw ApiException("Upload succeeded but no ETag was returned.")
+                        break
+                    } catch (e: Exception) {
+                        lastError = e
+                        if (attempt < MAX_ATTEMPTS_PER_PART) delay(1000L * attempt)
+                    }
+                }
+                if (etag == null) throw (lastError ?: ApiException("Upload failed."))
+
+                parts.add(R2CompletedPart(partNumber, etag))
+                sent += thisChunkSize
+                onProgress(sent, video.size)
+            }
+        }
+
+        val complete = api.r2Complete(R2CompleteRequest(r2Key, r2UploadId, parts, video.name, video.size))
+        if (!complete.ok) throw ApiException(complete.error ?: "Couldn't finish the upload.")
+        return complete
+    } catch (e: Exception) {
+        runCatching { api.r2Abort(R2AbortRequest(r2Key, r2UploadId)) }
+        throw e
+    }
+}

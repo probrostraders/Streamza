@@ -35,9 +35,11 @@ class SessionCookieJar private constructor(
         scope.launch { context.cookieStore.edit { it[COOKIE_KEY] = session.value } }
     }
 
+    // Must check the host: requests also go straight to R2's *.r2.cloudflarestorage.com for the actual
+    // upload bytes (see StreamzaApi.r2PutPart), and the session cookie must never be sent there.
     override fun loadForRequest(url: HttpUrl): List<Cookie> {
         val c = cached ?: return emptyList()
-        return listOf(c)
+        return if (url.host == host) listOf(c) else emptyList()
     }
 
     val isSignedIn: Boolean get() = cached != null
