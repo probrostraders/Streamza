@@ -1,0 +1,3 @@
+<resources>
+    <style name="Theme.StreamzaLoop" parent="android:Theme.Material.NoActionBar" />
+</resources>
