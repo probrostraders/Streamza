@@ -16,6 +16,7 @@ const { spawn } = require("child_process");
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
+const r2 = require("./r2"); // Cloudflare R2 storage for Streamza Loop's chunked video uploads (Phase 2)
 
 const PORT = process.env.PORT || 3000;
 const ADMIN_KEY = process.env.ADMIN_KEY || "streamza-admin";
@@ -180,7 +181,7 @@ app.use((req, res, next) => {
 // Keep app/API surfaces out of search results. Anything that isn't a marketing
 // page has no business being indexed, and robots.txt alone doesn't deindex a URL
 // that other sites happen to link to — the header does.
-const NOINDEX_PREFIXES = ["/admin", "/auth", "/pay", "/owner", "/lemonsqueezy", "/paddle",
+const NOINDEX_PREFIXES = ["/admin", "/auth", "/pay", "/owner", "/lemonsqueezy", "/paddle", "/r2",
   "/status", "/slots", "/start", "/stop", "/subscribed", "/live-preview",
   "/myuploads", "/deleteupload", "/waitlist", "/twitch-callback", "/studio-assets"];
 app.use((req, res, next) => {
@@ -266,15 +267,20 @@ let library = []; // [{ id, email, name, size, uploadedAt, lastUsedAt, signedIn 
 try { library = JSON.parse(fs.readFileSync(LIB_FILE, "utf8")) || []; } catch (_) { library = []; }
 const saveLib = () => { try { fs.writeFileSync(LIB_FILE, JSON.stringify(library)); } catch (_) {} };
 const libPath = (id) => path.join(UPLOAD_DIR, id);
-const libExists = (u) => { try { return fs.existsSync(libPath(u.id)); } catch (_) { return false; } };
+// R2-backed entries have no local file to check — trust the library.json record; the R2 hygiene sweep
+// (below) is what keeps that record in sync with what's actually still in the bucket.
+const libExists = (u) => { if (u.storage === "r2") return true; try { return fs.existsSync(libPath(u.id)); } catch (_) { return false; } };
 const libFor = (email) => { const e = (email || "").trim().toLowerCase(); return library.filter((u) => u.email === e && libExists(u)); };
 const libRetentionMs = (email) => (isSubscribed(email) ? LIB_UNUSED_MS : LIB_UNUSED_MS_FREE);
-function libAdd(email, fileId, name, size, signedIn, canCopy) {
+// Deletes a saved video's actual bytes, wherever they live — local disk (Web Studio) or R2 (Streamza
+// Loop). Every eviction path below goes through this instead of calling rm()/r2.deleteObject() directly.
+function rmVideo(u) { if (u.storage === "r2") r2.deleteObject(u.id); else rm(libPath(u.id)); }
+function libAdd(email, fileId, name, size, signedIn, canCopy, storage) {
   const e = (email || "").trim().toLowerCase();
   library = library.filter((u) => u.id !== fileId); // de-dupe (also refreshes lastUsedAt on reuse)
-  library.push({ id: fileId, email: e, name: name || "video.mp4", size: size || 0, uploadedAt: Date.now(), lastUsedAt: Date.now(), signedIn: !!signedIn, canCopy: !!canCopy });
+  library.push({ id: fileId, email: e, name: name || "video.mp4", size: size || 0, uploadedAt: Date.now(), lastUsedAt: Date.now(), signedIn: !!signedIn, canCopy: !!canCopy, storage: storage || "local" });
   const mine = library.filter((u) => u.email === e).sort((a, b) => b.lastUsedAt - a.lastUsedAt);
-  mine.slice(LIB_MAX_PER_USER).forEach((u) => { rm(libPath(u.id)); library = library.filter((x) => x.id !== u.id); }); // keep newest N
+  mine.slice(LIB_MAX_PER_USER).forEach((u) => { rmVideo(u); library = library.filter((x) => x.id !== u.id); }); // keep newest N
   saveLib();
 }
 const libTouch = (fileId, signedIn, canCopy) => { const u = library.find((x) => x.id === fileId); if (u) { u.lastUsedAt = Date.now(); if (signedIn) u.signedIn = true; if (typeof canCopy === "boolean") u.canCopy = canCopy; saveLib(); } };
@@ -282,7 +288,7 @@ const libTouch = (fileId, signedIn, canCopy) => { const u = library.find((x) => 
 // ---- 5 slots ----
 const slots = Array.from({ length: SLOT_COUNT }, (_, i) => ({
   id: i + 1, busy: false, email: null, dest: null, dests: [], destsFull: [], loop: true,
-  file: null, filePath: null, fileSize: 0,
+  file: null, filePath: null, fileSize: 0, storage: "local", r2Key: null,
   startedAt: 0, expiresAt: 0, proc: null, token: null, log: [],
   stopping: false, restartCount: 0, ffmpegArgs: null, signedIn: false, everStreamed: false,
 }));
@@ -297,10 +303,11 @@ function noteEnding(slot, reason, message) { if (slot.token) recentEndings.set(s
 
 function release(s) {
   // Videos are kept for reuse (appear under "Your recent videos") rather than deleted on release.
-  if (s.filePath) libAdd(s.email, path.basename(s.filePath), s.file, s.fileSize, s.signedIn);
+  if (s.filePath) libAdd(s.email, path.basename(s.filePath), s.file, s.fileSize, s.signedIn, undefined, "local");
+  else if (s.r2Key) libAdd(s.email, s.r2Key, s.file, s.fileSize, s.signedIn, undefined, "r2");
   Object.assign(s, {
     busy: false, email: null, dest: null, dests: [], destsFull: [], loop: true,
-    file: null, filePath: null, fileSize: 0,
+    file: null, filePath: null, fileSize: 0, storage: "local", r2Key: null,
     startedAt: 0, expiresAt: 0, proc: null, token: null, log: [],
     stopping: false, restartCount: 0, ffmpegArgs: null, signedIn: false, everStreamed: false,
   });
@@ -360,26 +367,32 @@ setInterval(() => {
   // when it was saved, the file is gone, or it's passed its retention window (30d subscriber / 7d signed-in
   // free — see LIB_UNUSED_MS / LIB_UNUSED_MS_FREE); never touch a file that's streaming right now.
   try {
-    const live = new Set(slots.filter((s) => s.filePath).map((s) => path.basename(s.filePath)));
+    const live = new Set(slots.filter((s) => s.filePath || s.r2Key).map((s) => s.filePath ? path.basename(s.filePath) : s.r2Key));
     library = library.filter((u) => {
       if (live.has(u.id)) return true;
       if (!libExists(u)) return false;
       const eligible = isSubscribed(u.email) || u.signedIn;
-      if (!eligible || now - u.lastUsedAt > libRetentionMs(u.email)) { rm(libPath(u.id)); return false; }
+      if (!eligible || now - u.lastUsedAt > libRetentionMs(u.email)) { rmVideo(u); return false; }
       return true;
     });
-    // global disk budget — evict the least-recently-used (non-live) saved videos until under the cap
-    let total = library.reduce((n, u) => n + (u.size || 0), 0);
+    // global disk budget — local disk only (R2 isn't the constrained resource this box's small disk is,
+    // so R2-backed entries don't count toward it and are never evicted by this loop).
+    let total = library.reduce((n, u) => n + (u.storage === "r2" ? 0 : (u.size || 0)), 0);
     if (total > LIB_MAX_TOTAL) {
       for (const u of [...library].sort((a, b) => a.lastUsedAt - b.lastUsedAt)) {
         if (total <= LIB_MAX_TOTAL) break;
-        if (live.has(u.id)) continue;
-        rm(libPath(u.id)); library = library.filter((x) => x.id !== u.id); total -= (u.size || 0);
+        if (live.has(u.id) || u.storage === "r2") continue;
+        rmVideo(u); library = library.filter((x) => x.id !== u.id); total -= (u.size || 0);
       }
     }
     saveLib();
     // drop pre-uploads nobody ever claimed with "Go Live" (picked a file, then walked away)
-    for (const [id, p] of pendingUploads) { if (now - p.createdAt > PENDING_UPLOAD_TTL_MS) { rm(p.path); pendingUploads.delete(id); } }
+    for (const [id, p] of pendingUploads) {
+      if (now - p.createdAt > PENDING_UPLOAD_TTL_MS) {
+        if (p.storage === "r2") r2.deleteObject(p.r2Key); else rm(p.path);
+        pendingUploads.delete(id);
+      }
+    }
     // delete true orphans (files belonging to nothing) older than 30 min — failed/aborted uploads
     const known = new Set(library.map((u) => u.id));
     for (const f of fs.readdirSync(UPLOAD_DIR)) {
@@ -392,6 +405,22 @@ setInterval(() => {
   for (const [ip, rec] of rlHits) { if (now > rec.reset) rlHits.delete(ip); }
   for (const [tok, rec] of recentEndings) { if (now - rec.at > END_REASON_TTL_MS) recentEndings.delete(tok); }
 }, 20000);
+
+// R2 hygiene sweep — a separate, much slower interval than the 20s loop above. Listing the whole bucket
+// has a real (if small) cost and orphaned R2 objects aren't time-sensitive the way an expiring slot is.
+// Deletes objects that aren't referenced by any saved video, live slot, or still-pending upload — e.g. a
+// multipart upload that completed on R2 but the server crashed before /r2/multipart/complete ran.
+if (r2.R2_ENABLED) {
+  setInterval(async () => {
+    try {
+      const known = new Set(library.filter((u) => u.storage === "r2").map((u) => u.id));
+      for (const p of pendingUploads.values()) if (p.storage === "r2") known.add(p.r2Key);
+      for (const s of slots) if (s.r2Key) known.add(s.r2Key);
+      const keys = await r2.listAllKeys();
+      for (const key of keys) if (!known.has(key)) await r2.deleteObject(key);
+    } catch (_) {}
+  }, 60 * 60 * 1000);
+}
 
 // public availability board (no PII)
 app.get("/slots", (req, res) => {
@@ -455,7 +484,7 @@ async function canStreamCopy(file, codecs) {
 // Auto-upload: the browser sends the file the moment it's picked (before the plan/destination is even
 // chosen), so "Go Live" just claims a slot against an already-uploaded file instead of waiting through
 // the whole transfer again. Validated (codec-checked) immediately, same as a normal fresh upload.
-const pendingUploads = new Map(); // uploadId -> { path, name, size, createdAt }
+const pendingUploads = new Map(); // uploadId -> { path, r2Key, storage, name, size, createdAt, canCopy }
 const PENDING_UPLOAD_TTL_MS = 2 * 60 * 60 * 1000; // unclaimed pre-uploads older than this are swept
 
 app.post("/pending-upload", rateLimit(15, 60000), upload.single("video"), async (req, res) => {
@@ -466,8 +495,58 @@ app.post("/pending-upload", rateLimit(15, 60000), upload.single("video"), async 
   if (codecs.audio && codecs.audio !== "aac") { rm(file.path); return res.status(400).json({ error: `Your audio is ${codecs.audio.toUpperCase()} — please use AAC audio (MP4 = H.264 + AAC).` }); }
   const canCopy = await canStreamCopy(file.path, codecs);
   const uploadId = path.basename(file.path);
-  pendingUploads.set(uploadId, { path: file.path, name: file.originalname, size: file.size, createdAt: Date.now(), canCopy });
+  pendingUploads.set(uploadId, { path: file.path, storage: "local", name: file.originalname, size: file.size, createdAt: Date.now(), canCopy });
   res.json({ ok: true, uploadId, name: file.originalname, size: file.size });
+});
+
+// ---- R2 chunked/resumable upload (Streamza Loop) — bytes go phone -> R2 directly via presigned URLs;
+// the Oracle VM only ever orchestrates these three calls, never touches the video bytes. Web Studio is
+// untouched — it keeps using the local-disk /pending-upload above. See r2.js for the S3-client details.
+app.post("/r2/multipart/create", (req, res) => {
+  if (!r2.R2_ENABLED) return res.status(503).json({ error: "Cloud upload isn't configured yet." });
+  if (!readSession(req)) return res.status(401).json({ error: "Sign in first." });
+  const name = (req.body.name || "video.mp4").toString();
+  const contentType = (req.body.contentType || "video/mp4").toString();
+  const key = crypto.randomBytes(16).toString("hex");
+  r2.createMultipart(key, contentType)
+    .then((uploadId) => res.json({ ok: true, r2Key: key, r2UploadId: uploadId, name }))
+    .catch((e) => res.status(500).json({ error: "Couldn't start the upload: " + e.message }));
+});
+
+app.post("/r2/multipart/part-url", (req, res) => {
+  if (!r2.R2_ENABLED) return res.status(503).json({ error: "Cloud upload isn't configured yet." });
+  if (!readSession(req)) return res.status(401).json({ error: "Sign in first." });
+  const { r2Key, r2UploadId, partNumber } = req.body;
+  if (!r2Key || !r2UploadId || !partNumber) return res.status(400).json({ error: "Missing multipart fields." });
+  r2.presignPartUrl(r2Key, r2UploadId, Number(partNumber))
+    .then((url) => res.json({ ok: true, url }))
+    .catch((e) => res.status(500).json({ error: "Couldn't presign the upload: " + e.message }));
+});
+
+app.post("/r2/multipart/complete", async (req, res) => {
+  if (!r2.R2_ENABLED) return res.status(503).json({ error: "Cloud upload isn't configured yet." });
+  if (!readSession(req)) return res.status(401).json({ error: "Sign in first." });
+  const { r2Key, r2UploadId, parts, name, size } = req.body;
+  if (!r2Key || !r2UploadId || !Array.isArray(parts) || !parts.length) return res.status(400).json({ error: "Missing multipart fields." });
+  try {
+    await r2.completeMultipart(r2Key, r2UploadId, parts);
+    const getUrl = await r2.presignGetUrl(r2Key);
+    const codecs = await probeCodecs(getUrl);
+    if (codecs.video && codecs.video !== "h264") { r2.deleteObject(r2Key); return res.status(400).json({ error: `Your video is ${codecs.video.toUpperCase()} — please export as MP4 with H.264 video so it can stream instantly (no re-encode).` }); }
+    if (codecs.audio && codecs.audio !== "aac") { r2.deleteObject(r2Key); return res.status(400).json({ error: `Your audio is ${codecs.audio.toUpperCase()} — please use AAC audio (MP4 = H.264 + AAC).` }); }
+    const canCopy = await canStreamCopy(getUrl, codecs);
+    pendingUploads.set(r2Key, { r2Key, storage: "r2", name: name || "video.mp4", size: Number(size) || 0, createdAt: Date.now(), canCopy });
+    res.json({ ok: true, uploadId: r2Key, name: name || "video.mp4", size: Number(size) || 0 });
+  } catch (e) {
+    res.status(500).json({ error: "Couldn't finish the upload: " + e.message });
+  }
+});
+
+app.post("/r2/multipart/abort", (req, res) => {
+  if (!r2.R2_ENABLED) return res.json({ ok: true });
+  const { r2Key, r2UploadId } = req.body;
+  if (r2Key && r2UploadId) r2.abortMultipart(r2Key, r2UploadId);
+  res.json({ ok: true });
 });
 
 app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res) => {
@@ -482,19 +561,25 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
   if (req.body.agree !== "true" && req.body.agree !== "on") return bail(400, "Please confirm you have the rights to stream this content.");
 
   // Source = a fresh upload, an already pre-uploaded (auto-uploaded on file-select) video, or one of
-  // the account's saved videos (no re-upload needed either way).
-  let srcPath, srcName, srcSize, isNew = false, skipCodecCheck = false, srcCanCopy = null;
+  // the account's saved videos (no re-upload needed either way). R2-backed sources (Streamza Loop's
+  // chunked uploads) resolve to a freshly presigned GET URL instead of a local path — everything below
+  // this block treats srcPath as an opaque string ffmpeg/ffprobe can read from either way.
+  let srcPath, srcName, srcSize, isNew = false, skipCodecCheck = false, srcCanCopy = null, srcStorage = "local", srcR2Key = null;
   if (file) {
     srcPath = file.path; srcName = file.originalname; srcSize = file.size; isNew = true;
   } else if (pendingId && pendingUploads.has(pendingId)) {
     const p = pendingUploads.get(pendingId);
-    srcPath = p.path; srcName = p.name; srcSize = p.size; isNew = true; skipCodecCheck = true;
+    srcName = p.name; srcSize = p.size; isNew = true; skipCodecCheck = true;
     srcCanCopy = !!p.canCopy;
+    if (p.storage === "r2") { srcStorage = "r2"; srcR2Key = p.r2Key; srcPath = await r2.presignGetUrl(p.r2Key); }
+    else { srcPath = p.path; }
   } else if (reuseId) {
     const u = libFor(email).find((x) => x.id === reuseId);
     if (!u) return res.status(400).json({ error: "That saved video is no longer available — please upload it again." });
-    srcPath = libPath(u.id); srcName = u.name; srcSize = u.size;
+    srcName = u.name; srcSize = u.size;
     srcCanCopy = typeof u.canCopy === "boolean" ? u.canCopy : null; // null = saved before this existed — probe once below
+    if (u.storage === "r2") { srcStorage = "r2"; srcR2Key = u.id; srcPath = await r2.presignGetUrl(u.id); }
+    else { srcPath = libPath(u.id); }
   } else {
     return res.status(400).json({ error: "No video file uploaded." });
   }
@@ -539,6 +624,8 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
   const useCopy = RELAY_COPY || !!srcCanCopy;
   const args = ["-re"];
   if (loop) args.push("-stream_loop", "-1");
+  // R2 input needs explicit reconnect handling — a local file read never drops, but a network GET can.
+  if (srcStorage === "r2") args.push("-reconnect", "1", "-reconnect_streamed", "1", "-reconnect_delay_max", "2", "-reconnect_at_eof", "1");
   args.push("-i", srcPath, "-map", "0:v:0", "-map", "0:a:0?");
   if (useCopy) {
     args.push("-c", "copy");
@@ -561,12 +648,12 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
   const signedIn = readSession(req) === email.toLowerCase();
   Object.assign(slot, {
     busy: true, email, dests: use.map((d) => d.url), dest: use[0].url, destsFull: use, loop: !!loop,
-    file: srcName, filePath: srcPath, fileSize: srcSize,
+    file: srcName, filePath: srcStorage === "local" ? srcPath : null, fileSize: srcSize, storage: srcStorage, r2Key: srcR2Key,
     startedAt: Date.now(), expiresAt: Date.now() + SLOT_MS, token, log: [],
     stopping: false, restartCount: 0, signedIn,
   });
   // Videos are saved for reuse (appear under "Your recent videos") for anyone signed in.
-  if (isNew) libAdd(email, path.basename(srcPath), srcName, srcSize, signedIn, srcCanCopy); else libTouch(reuseId, signedIn, srcCanCopy);
+  if (isNew) libAdd(email, srcStorage === "r2" ? srcR2Key : path.basename(srcPath), srcName, srcSize, signedIn, srcCanCopy, srcStorage); else libTouch(reuseId, signedIn, srcCanCopy);
   slog(slot, `Slot ${slot.id} claimed — 24h${use.length > 1 ? ` · multistream ×${use.length}` : ""} ${loop ? "(loop) " : ""}${srcName} [${useCopy ? "stream-copy, original quality" : "re-encoded"}]`);
   launchFfmpeg(slot, args);
   res.json({ ok: true, slot: slot.id, token, expiresAt: slot.expiresAt, destinations: use.length, multistreamLimited: limited });
@@ -603,13 +690,16 @@ app.get("/myuploads", (req, res) => {
 // Stream back a saved video's bytes so re-using it actually shows a preview instead of the blank
 // placeholder (the browser has no local File object for a server-saved pick, unlike a fresh upload).
 // Same authorization as /myuploads — supports Range requests so the <video> element can seek/scrub.
-app.get("/myuploads/:id/file", (req, res) => {
+app.get("/myuploads/:id/file", async (req, res) => {
   const email = (req.query.email || "").trim();
   const subscribed = isSubscribed(email);
   const signedIn = !!email && readSession(req) === email.toLowerCase();
   if (!subscribed && !signedIn) return res.status(403).end();
   const u = libFor(email).find((x) => x.id === req.params.id);
   if (!u) return res.status(404).end();
+  if (u.storage === "r2") {
+    try { return res.redirect(302, await r2.presignGetUrl(u.id, 600)); } catch (_) { return res.status(500).end(); }
+  }
   res.sendFile(libPath(u.id), { headers: { "Content-Type": "video/mp4" } });
 });
 
@@ -617,11 +707,11 @@ app.get("/myuploads/:id/file", (req, res) => {
 app.post("/deleteupload", (req, res) => {
   const email = (req.body.email || "").trim().toLowerCase();
   const id = (req.body.fileId || "").trim();
-  const live = new Set(slots.filter((s) => s.filePath).map((s) => path.basename(s.filePath)));
+  const live = new Set(slots.filter((s) => s.filePath || s.r2Key).map((s) => s.filePath ? path.basename(s.filePath) : s.r2Key));
   const u = library.find((x) => x.id === id && x.email === email);
   if (!u) return res.json({ ok: false, error: "Not found." });
   if (live.has(id)) return res.json({ ok: false, error: "That video is streaming right now — stop it first." });
-  rm(libPath(id)); library = library.filter((x) => x.id !== id); saveLib();
+  rmVideo(u); library = library.filter((x) => x.id !== id); saveLib();
   res.json({ ok: true });
 });
 
@@ -727,7 +817,7 @@ app.get("/status", (req, res) => {
     return res.json({ running: false, endReason: r ? r.reason : null, endMessage: r ? r.message : null });
   }
   res.json({
-    running: true, slot: s.id, file: s.file, fileId: s.filePath ? path.basename(s.filePath) : null,
+    running: true, slot: s.id, file: s.file, fileId: s.filePath ? path.basename(s.filePath) : (s.r2Key || null),
     dest: s.dest, dests: s.dests, destsFull: s.destsFull, loop: !!s.loop, email: s.email,
     uptime: Math.floor((Date.now() - s.startedAt) / 1000),
     secondsLeft: Math.max(0, Math.floor((s.expiresAt - Date.now()) / 1000)),
@@ -738,10 +828,13 @@ app.get("/status", (req, res) => {
 // Stream back the slot's currently-playing video to its own owner (matching manage token = same trust
 // level /stop already requires) — lets the studio show a real "what's actually live right now" preview
 // on resume, instead of an empty player that just says LIVE and leaves the user guessing.
-app.get("/live-preview", (req, res) => {
+app.get("/live-preview", async (req, res) => {
   const token = req.query.token || "";
   const s = slots.find((x) => x.token === token && x.busy);
-  if (!s || !s.filePath) return res.status(404).end();
+  if (!s || (!s.filePath && !s.r2Key)) return res.status(404).end();
+  if (s.r2Key) {
+    try { return res.redirect(302, await r2.presignGetUrl(s.r2Key, 600)); } catch (_) { return res.status(500).end(); }
+  }
   res.sendFile(s.filePath, { headers: { "Content-Type": "video/mp4" } });
 });
 
