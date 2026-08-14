@@ -80,7 +80,7 @@ fun StreamScreen(viewModel: AppViewModel, liveToken: String?, onGoToLive: () -> 
 @Composable
 private fun AlreadyLiveCard(onGoToLive: () -> Unit) {
     Column(modifier = Modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text("New stream", style = MaterialTheme.typography.headlineSmall)
+        ScreenHeader("New stream")
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("You're already live", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -130,7 +130,7 @@ private fun NewStreamForm(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
-        Text("New stream", style = MaterialTheme.typography.headlineSmall)
+        ScreenHeader("New stream")
 
         if (auth?.trialAvailable == true) {
             Card(modifier = Modifier.fillMaxWidth()) {

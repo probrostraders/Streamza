@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -83,6 +84,8 @@ fun SubscriptionScreen(viewModel: AppViewModel, billingManager: BillingManager, 
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = "Back") }
+            AppLogo(size = 28.dp)
+            Spacer(Modifier.width(8.dp))
             Text("Subscription", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         }
 

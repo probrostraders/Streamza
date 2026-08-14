@@ -52,7 +52,7 @@ fun MyVideosScreen(viewModel: AppViewModel) {
     LaunchedEffect(email) { reload() }
 
     Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
-        Text("Your videos", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(bottom = 12.dp))
+        ScreenHeader("Your videos", modifier = Modifier.padding(bottom = 12.dp))
         when {
             error != null -> Text(error!!, color = MaterialTheme.colorScheme.error)
             videos == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }

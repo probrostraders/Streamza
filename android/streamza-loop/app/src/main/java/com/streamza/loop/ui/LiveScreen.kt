@@ -106,6 +106,7 @@ private fun LiveDashboard(repo: AppRepository, token: String, onStopped: () -> U
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            AppLogo()
             Surface(shape = CircleShape, color = StreamzaRed, modifier = Modifier.size(10.dp)) {}
             Text("Live", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             if (s.trial) {

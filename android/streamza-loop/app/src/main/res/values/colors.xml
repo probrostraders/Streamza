@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Matches StreamzaRed in ui/theme/Theme.kt — the adaptive launcher icon's background fill,
+         showing through around ic_launcher_foreground's padded artwork. -->
+    <color name="ic_launcher_background">#FF3B30</color>
+</resources>
