@@ -48,11 +48,16 @@ const RELAY_FPS = Number(process.env.RELAY_FPS) || 30;
 const FFMPEG_MAX_RESTARTS = Number(process.env.FFMPEG_MAX_RESTARTS) || 20;      // auto-reconnects before giving up
 const FFMPEG_RESTART_DELAY_MS = Number(process.env.FFMPEG_RESTART_DELAY_MS) || 3000; // backoff between reconnects
 const MULTISTREAM_MAX = Number(process.env.MULTISTREAM_MAX) || 3;    // max simultaneous platforms on the multistream plan
+// Web Studio (the website's browser-based streamer) is on pause while product focus is entirely the
+// Streamza Loop Android app — /studio serves a "coming back soon" page and /start refuses new claims
+// from browsers (the app is unaffected, identified by its X-Streamza-Client header). Flip back on with
+// WEB_STUDIO_LOCKED=0, no code change needed.
+const WEB_STUDIO_LOCKED = process.env.WEB_STUDIO_LOCKED !== "0";
 // --- Streamza Loop's Play Billing product IDs — must match exactly what's created in Play Console.
 // One product per destination-slot count (1/2/3 platforms at once); each product should carry weekly/
 // monthly/yearly base plans in Play Console — price and any free-trial phase live there too, never
-// here. This is the only subscription system in the codebase — Web Studio itself is free with no paid
-// checkout; the Android app is where a subscription is actually bought (see googlePlay.js, /billing/*).
+// here. This is the only subscription system in the codebase; the Android app is where a subscription
+// is actually bought (see googlePlay.js, /billing/*).
 const PLAY_PRODUCTS = {
   1: process.env.PLAY_PRODUCT_1 || "streamza_loop_1slot",
   2: process.env.PLAY_PRODUCT_2 || "streamza_loop_2slot",
@@ -192,9 +197,10 @@ app.use((req, res, next) => {
   next();
 });
 
-// Public Web Studio (claim a slot, upload, go live) at /studio.
+// Public Web Studio (claim a slot, upload, go live) at /studio — locked while the product focus is
+// the Streamza Loop Android app. Toggle back on with WEB_STUDIO_LOCKED=0 (no code change needed).
 app.get(["/studio", "/studio/"], (_req, res) =>
-  res.sendFile(path.join(__dirname, "public", "index.html")));
+  res.sendFile(path.join(__dirname, "public", WEB_STUDIO_LOCKED ? "studio-locked.html" : "index.html")));
 
 // Owner admin dashboard at /admin (login shell; all data APIs require ADMIN_KEY).
 app.get(["/admin", "/admin/"], (_req, res) =>
@@ -629,13 +635,18 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
   const loop = req.body.loop === "true" || req.body.loop === "on";
   const bail = (code, error) => { if (file) rm(file.path); return res.status(code).json({ error }); };
 
+  const isLoopApp = req.get("X-Streamza-Client") === "loop";
+  if (WEB_STUDIO_LOCKED && !isLoopApp) {
+    if (file) rm(file.path);
+    return res.status(503).json({ error: "Web Studio is taking a short break — get the Streamza Loop app to go live." });
+  }
+
   if (!EMAIL_RE.test(email)) return bail(400, "Enter a valid email to claim a slot.");
   if (req.body.agree !== "true" && req.body.agree !== "on") return bail(400, "Please confirm you have the rights to stream this content.");
 
   // Streamza Loop app only: real entitlement gating. loopSlots > 0 means a real subscription (that
   // many destination slots); otherwise this claim can only be the one free 15-minute trial, and if
   // that's already been used, it's a hard paywall — fail fast, before touching the upload at all.
-  const isLoopApp = req.get("X-Streamza-Client") === "loop";
   const loopSlots = isLoopApp ? loopSlotsFor(email) : 0;
   const loopTrialClaim = isLoopApp && loopSlots === 0;
   if (loopTrialClaim && loopTrialsUsed.has(email.toLowerCase())) {
