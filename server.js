@@ -5,9 +5,10 @@
  * included — see the BETA note on tierOf() below for why. Each claim returns a private manage-token
  * (stored in the browser) to monitor/stop that slot. The expiry watchdog stops slots when they run out.
  *
- * Payment: currently BETA_FREE — no processor is live, so tierOf() grants every claim full access.
- * When a processor is approved and PAYMENTS_LIVE=true, revert tierOf() to read the real `subscribers`
- * map again (see the BETA note on tierOf() below).
+ * Payment: Web Studio itself is free — tierOf() grants every claim full access, no checkout on the
+ * website at all. The only paid product is the Streamza Loop Android app's Google Play subscription
+ * (see googlePlay.js, /billing/*), which writes into the same `subscribers` map tierOf() reads — see
+ * the note on tierOf() below for how to switch Web Studio back to reading it for real.
  */
 const express = require("express");
 const compression = require("compression");
@@ -42,37 +43,14 @@ const RELAY_FPS = Number(process.env.RELAY_FPS) || 30;
 // of ending the slot, as long as it wasn't a manual stop and time remains on the slot.
 const FFMPEG_MAX_RESTARTS = Number(process.env.FFMPEG_MAX_RESTARTS) || 20;      // auto-reconnects before giving up
 const FFMPEG_RESTART_DELAY_MS = Number(process.env.FFMPEG_RESTART_DELAY_MS) || 3000; // backoff between reconnects
-// --- Lemon Squeezy (two subscription tiers) — set via env once your store is ready ---
-const LS_STORE = process.env.LS_STORE || "";                   // store subdomain, e.g. "streamza"
-const LS_VARIANT_ID = process.env.LS_VARIANT_ID || "";         // SINGLE plan variant ($4.99/mo, 1 platform)
-const LS_VARIANT_MULTI = process.env.LS_VARIANT_MULTI || "";   // MULTISTREAM plan variant ($10/mo, up to N platforms)
-const LS_WEBHOOK_SECRET = process.env.LS_WEBHOOK_SECRET || ""; // webhook signing secret
-const LS_PRICE_LABEL = process.env.LS_PRICE_LABEL || "";       // e.g. "$4.99/mo"
-const LS_PRICE_LABEL_MULTI = process.env.LS_PRICE_LABEL_MULTI || ""; // e.g. "$10/mo"
 const MULTISTREAM_MAX = Number(process.env.MULTISTREAM_MAX) || 3;    // max simultaneous platforms on the multistream plan
 // --- Streamza Loop's Play Billing product IDs — must match exactly what's created in Play Console.
 // The actual price and any free-trial phase are configured there too, not here; this app only ever
-// references the product IDs and displays whatever Play Billing reports back for them.
+// references the product IDs and displays whatever Play Billing reports back for them. This is the
+// only subscription system in the codebase — Web Studio itself is free with no paid checkout; the
+// Android app is where a subscription is actually bought (see googlePlay.js, /billing/*).
 const PLAY_PRODUCT_SINGLE = process.env.PLAY_PRODUCT_SINGLE || "streamza_loop_single";
 const PLAY_PRODUCT_MULTI = process.env.PLAY_PRODUCT_MULTI || "streamza_loop_multi";
-const ckurl = (v) => (LS_STORE && v) ? `https://${LS_STORE}.lemonsqueezy.com/checkout/buy/${v}` : "";
-const LS_CHECKOUT = ckurl(LS_VARIANT_ID);
-const LS_CHECKOUT_MULTI = ckurl(LS_VARIANT_MULTI);
-// --- Paddle (the go-forward processor — set via env once the seller account is approved) ---
-const PADDLE_ENV = process.env.PADDLE_ENV === "production" ? "production" : "sandbox"; // default sandbox until explicitly live
-const PADDLE_CLIENT_TOKEN = process.env.PADDLE_CLIENT_TOKEN || "";   // client-side token (Developer tools → Authentication)
-const PADDLE_PRICE_ID = process.env.PADDLE_PRICE_ID || "";           // Single plan price id, e.g. "pri_..."
-const PADDLE_PRICE_ID_MULTI = process.env.PADDLE_PRICE_ID_MULTI || ""; // Multistream plan price id
-const PADDLE_WEBHOOK_SECRET = process.env.PADDLE_WEBHOOK_SECRET || ""; // notification destination secret
-const PADDLE_PRICE_LABEL = process.env.PADDLE_PRICE_LABEL || "";
-const PADDLE_PRICE_LABEL_MULTI = process.env.PADDLE_PRICE_LABEL_MULTI || "";
-const PADDLE_ENABLED = !!(PADDLE_CLIENT_TOKEN && PADDLE_PRICE_ID && PADDLE_WEBHOOK_SECRET);
-const LS_ENABLED = !!(LS_CHECKOUT && LS_WEBHOOK_SECRET);
-// Paddle takes priority the moment it's configured; Lemon Squeezy stays as a dormant fallback so nothing
-// breaks mid-migration. Only one provider is ever active for checkout at a time.
-const PAY_PROVIDER = PADDLE_ENABLED ? "paddle" : (LS_ENABLED ? "lemonsqueezy" : null);
-const PAYMENTS_LIVE = !!PAY_PROVIDER;
-const BETA_FREE = !PAYMENTS_LIVE;     // admin label: paid subscriptions not enabled yet
 // --- Google Sign-In (optional accounts) — set GOOGLE_CLIENT_ID to enable ---
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || ""; // OAuth Web client id (…apps.googleusercontent.com)
 const SESSION_SECRET = process.env.SESSION_SECRET || (ADMIN_KEY + "-sz-session"); // signs the login cookie
@@ -100,28 +78,22 @@ try {
   else for (const [e, t] of Object.entries(raw)) subscribers.set(e, t);
 } catch (_) {}
 function saveSubs() { try { fs.writeFileSync(SUBS_FILE, JSON.stringify(Object.fromEntries(subscribers))); } catch (_) {} }
-// BETA — everything is free. Lemon Squeezy's re-approval was rejected and Paddle's seller application
-// has gone unanswered, so there is no working payment processor right now. Rather than gate signups
-// behind a paywall nobody can actually pay into, every account gets full 24h streaming + multistream,
-// no card, no account. `subscribers` and the webhook handlers below are left in place, untouched, so
-// flipping real billing back on later is just reverting this one function.
+// BETA — Web Studio is free for everyone, no checkout on the website at all. `subscribers` is written
+// to only by the Play Billing verification flow (/billing/verify-purchase, see googlePlay.js) for the
+// Streamza Loop Android app; flipping Web Studio back to gating on it for real is just reverting this
+// one function to `return subscribers.get((email||"").trim().toLowerCase()) || null;`.
 function tierOf(_email) { return "multi"; }
 function isSubscribed(email) { return !!tierOf(email); }            // any plan → full 24h
-function canMultistream(email) { return tierOf(email) === "multi"; } // only the $10 plan
+function canMultistream(email) { return tierOf(email) === "multi"; } // only the multi tier
 
-// Customer-portal links per email (captured from Lemon Squeezy subscription webhooks) so a signed-in
-// user can cancel / update their card. Only falls back to LS's generic "my orders" page when Lemon
-// Squeezy is actually the active processor — otherwise an unmatched email gets no portal link rather
-// than being misdirected to the wrong company's billing page.
+// Customer-portal links per email (captured by the Play Billing verify flow — see
+// /billing/verify-purchase) so a signed-in user can manage/cancel their subscription from Google Play.
 const PORTAL_FILE = path.join(DATA_DIR, "portals.json");
-const LS_MY_ORDERS = process.env.LS_MY_ORDERS || "https://app.lemonsqueezy.com/my-orders";
 let portals = new Map();
 try { const raw = JSON.parse(fs.readFileSync(PORTAL_FILE, "utf8")) || {}; for (const [e, u] of Object.entries(raw)) portals.set(e, u); } catch (_) {}
 function savePortals() { try { fs.writeFileSync(PORTAL_FILE, JSON.stringify(Object.fromEntries(portals))); } catch (_) {} }
 function portalFor(email) {
-  const p = portals.get((email || "").trim().toLowerCase());
-  if (p) return p;
-  return PAY_PROVIDER === "lemonsqueezy" ? LS_MY_ORDERS : "";
+  return portals.get((email || "").trim().toLowerCase()) || "";
 }
 // The signed-in user's currently active slot — lets them resume control of their stream from any device.
 function mySlot(email) {
@@ -187,7 +159,7 @@ app.use((req, res, next) => {
 // Keep app/API surfaces out of search results. Anything that isn't a marketing
 // page has no business being indexed, and robots.txt alone doesn't deindex a URL
 // that other sites happen to link to — the header does.
-const NOINDEX_PREFIXES = ["/admin", "/auth", "/pay", "/billing", "/owner", "/lemonsqueezy", "/paddle", "/r2",
+const NOINDEX_PREFIXES = ["/admin", "/auth", "/billing", "/owner", "/r2",
   "/status", "/slots", "/start", "/stop", "/subscribed", "/live-preview",
   "/myuploads", "/deleteupload", "/waitlist", "/twitch-callback", "/studio-assets"];
 app.use((req, res, next) => {
@@ -765,24 +737,7 @@ app.post("/deleteupload", (req, res) => {
   res.json({ ok: true });
 });
 
-// Checkout config for the studio (all values here are public/client-safe).
-app.get("/pay/config", (_req, res) =>
-  res.json({
-    enabled: PAYMENTS_LIVE,
-    provider: PAY_PROVIDER, // "paddle" | "lemonsqueezy" | null
-    maxDests: MULTISTREAM_MAX,
-    // Paddle (used when provider === "paddle")
-    paddleEnv: PADDLE_ENV, paddleClientToken: PADDLE_CLIENT_TOKEN,
-    paddlePriceId: PADDLE_PRICE_ID, paddlePriceIdMulti: PADDLE_PRICE_ID_MULTI,
-    priceLabel: PAY_PROVIDER === "paddle" ? PADDLE_PRICE_LABEL : LS_PRICE_LABEL,
-    priceLabelMulti: PAY_PROVIDER === "paddle" ? PADDLE_PRICE_LABEL_MULTI : LS_PRICE_LABEL_MULTI,
-    multiEnabled: PAY_PROVIDER === "paddle" ? !!PADDLE_PRICE_ID_MULTI : !!LS_CHECKOUT_MULTI,
-    // Lemon Squeezy (dormant fallback — used when provider === "lemonsqueezy")
-    checkoutUrl: LS_CHECKOUT, checkoutMultiUrl: LS_CHECKOUT_MULTI,
-  }));
-
-// Product IDs for the Android app's Play Billing plan-picker — public/client-safe, same idea as
-// /pay/config above but for Streamza Loop's checkout instead of Web Studio's.
+// Product IDs for the Android app's Play Billing plan-picker — public/client-safe.
 app.get("/billing/config", (_req, res) =>
   res.json({ enabled: googlePlay.PLAY_BILLING_ENABLED, productSingle: PLAY_PRODUCT_SINGLE, productMulti: PLAY_PRODUCT_MULTI }));
 
@@ -818,76 +773,6 @@ app.get("/subscribed", (req, res) => {
   const email = req.query.email || "";
   const t = tierOf(email);
   res.json({ active: !!t, tier: t, multi: t === "multi" });
-});
-
-// Lemon Squeezy webhook — verifies X-Signature, then adds/removes the subscriber by email.
-function verifyLsSig(req) {
-  if (!LS_WEBHOOK_SECRET || !req.rawBody) return false;
-  try {
-    const sig = req.get("X-Signature") || "";
-    const mac = crypto.createHmac("sha256", LS_WEBHOOK_SECRET).update(req.rawBody).digest("hex");
-    return sig.length === mac.length && crypto.timingSafeEqual(Buffer.from(mac), Buffer.from(sig));
-  } catch (_) { return false; }
-}
-app.post("/lemonsqueezy/webhook", (req, res) => {
-  if (!verifyLsSig(req)) return res.status(401).send("bad signature");
-  const evt = req.body || {};
-  const name = (evt.meta && evt.meta.event_name) || "";
-  const custom = (evt.meta && evt.meta.custom_data) || {};
-  const attrs = (evt.data && evt.data.attributes) || {};
-  const email = ((custom.relay_email || attrs.user_email || "") + "").trim().toLowerCase();
-  // tier: the purchased product/variant name is authoritative; fall back to the tier we tagged at checkout
-  const pname = ((attrs.variant_name || "") + " " + (attrs.product_name || "")).toLowerCase();
-  const tier = (/multi/.test(pname) || custom.tier === "multi") ? "multi" : "single";
-  // Only trust attrs.status as a SUBSCRIPTION status when the payload is actually a subscription
-  // object (data.type === "subscriptions"). subscription_payment_success carries a
-  // subscription-invoice instead, whose own "status" (e.g. "paid") means something different —
-  // treating it the same here was wiping out subscribers seconds after subscription_created had
-  // just correctly added them.
-  const isSubscriptionObject = evt.data && evt.data.type === "subscriptions";
-  if (email) {
-    if (/^subscription_/.test(name) && isSubscriptionObject) {
-      const status = (attrs.status || "").toLowerCase(); // active, on_trial, paused, past_due, cancelled, expired, unpaid
-      if (status === "active" || status === "on_trial") subscribers.set(email, tier);
-      else subscribers.delete(email);
-      saveSubs();
-      const portalUrl = (attrs.urls && (attrs.urls.customer_portal || attrs.urls.update_payment_method)) || "";
-      if (portalUrl) { portals.set(email, portalUrl); savePortals(); }
-    } else if (name === "order_created") { subscribers.set(email, tier); saveSubs(); }
-  }
-  res.json({ ok: true });
-});
-
-// Paddle webhook — verifies the Paddle-Signature header (ts=...;h1=... over "ts:rawBody", HMAC-SHA256),
-// then adds/removes the subscriber by email. Paddle's subscription payloads carry a customer_id, not an
-// email, so the email travels in custom_data (set at checkout — see Paddle.Checkout.open in the studio).
-function verifyPaddleSig(req) {
-  if (!PADDLE_WEBHOOK_SECRET || !req.rawBody) return false;
-  try {
-    const header = req.get("Paddle-Signature") || "";
-    const parts = Object.fromEntries(header.split(";").map((p) => p.split("=")));
-    if (!parts.ts || !parts.h1) return false;
-    const signedPayload = `${parts.ts}:${req.rawBody.toString("utf8")}`;
-    const mac = crypto.createHmac("sha256", PADDLE_WEBHOOK_SECRET).update(signedPayload).digest("hex");
-    return mac.length === parts.h1.length && crypto.timingSafeEqual(Buffer.from(mac), Buffer.from(parts.h1));
-  } catch (_) { return false; }
-}
-app.post("/paddle/webhook", (req, res) => {
-  if (!verifyPaddleSig(req)) return res.status(401).send("bad signature");
-  const evt = req.body || {};
-  const type = evt.event_type || "";
-  const data = evt.data || {};
-  const custom = data.custom_data || {};
-  const email = ((custom.relay_email || "") + "").trim().toLowerCase();
-  const priceId = (data.items && data.items[0] && data.items[0].price && data.items[0].price.id) || "";
-  const tier = (custom.tier === "multi" || (PADDLE_PRICE_ID_MULTI && priceId === PADDLE_PRICE_ID_MULTI)) ? "multi" : "single";
-  if (email && /^subscription\./.test(type)) {
-    const status = (data.status || "").toLowerCase(); // active, trialing, paused, past_due, canceled
-    if (status === "active" || status === "trialing") subscribers.set(email, tier);
-    else subscribers.delete(email);
-    saveSubs();
-  }
-  res.json({ ok: true });
 });
 
 // owner's slot detail (by token)
@@ -964,8 +849,7 @@ app.get("/admin/api/overview", (req, res) => {
     totalWaitlist: waitlist.length,
     totalSubscribers: subscribers.size,
     totalMulti: [...subscribers.values()].filter((t) => t === "multi").length,
-    paymentsLive: PAYMENTS_LIVE,
-    betaFree: BETA_FREE,
+    playBillingEnabled: googlePlay.PLAY_BILLING_ENABLED,
     active,
     recentLeads: leads.slice(-25).reverse(),
   });

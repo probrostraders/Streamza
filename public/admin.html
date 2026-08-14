@@ -142,7 +142,7 @@
         $("sWait").textContent = d.totalWaitlist;
         $("sLive").innerHTML = d.slotsBusy+' <small>/ '+d.slotsTotal+'</small>';
         $("sLive").className = "v"+(d.slotsBusy>0?" green":"");
-        $("sSubs").innerHTML = d.paymentsLive ? (d.totalSubscribers + ' <small class="muted">subscriber' + (d.totalSubscribers===1?'':'s') + '</small>') : 'Free beta <small class="muted">(payments off)</small>';
+        $("sSubs").innerHTML = d.totalSubscribers + ' <small class="muted">Play Billing subscriber' + (d.totalSubscribers===1?'':'s') + (d.playBillingEnabled ? '' : ' (verification not configured)') + '</small>';
         $("liveSub").textContent = d.slotsBusy+" of "+d.slotsTotal+" slots in use";
         $("csvBtn").onclick = (e)=>{ e.preventDefault(); downloadCsv(); };
 

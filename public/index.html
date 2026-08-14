@@ -65,9 +65,7 @@
     ]
   }
   </script>
-  <link rel="preconnect" href="https://app.lemonsqueezy.com" crossorigin />
   <link rel="preconnect" href="https://accounts.google.com" crossorigin />
-  <script src="https://app.lemonsqueezy.com/js/lemon.js" defer></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     @font-face{font-family:'Roboto';font-style:normal;font-weight:400;font-display:swap;src:url('/fonts/roboto-var.woff2') format('woff2');}
@@ -1288,21 +1286,6 @@
     </div>
   </footer>
 
-  <!-- Subscribe modal (replaces the browser prompt) -->
-  <div class="modal" id="subModal">
-    <div class="box">
-      <img src="logo.svg" alt="Streamza" />
-      <h3 id="subTitle">Subscribe</h3>
-      <p id="subDesc">Enter your email to continue to secure checkout.</p>
-      <input type="email" id="subEmail" placeholder="you@example.com" autocomplete="email" />
-      <div class="mrow">
-        <button class="btn btn-ghost" id="subCancel">Cancel</button>
-        <button class="btn btn-primary" id="subGo">Continue →</button>
-      </div>
-      <p class="secure">🔒 Secure checkout · cancel anytime</p>
-    </div>
-  </div>
-
   <!-- Mode chooser (when a slot is tapped) -->
   <div class="modal" id="modeModal">
     <div class="box">
@@ -1398,87 +1381,10 @@
         if($("hdrSignout")) $("hdrSignout").onclick=signOut;
       }
       if($("email")){ $("email").value=u.email; $("email").readOnly=true; $("email").style.opacity=".8"; $("email").dispatchEvent(new Event("input")); }
-      if($("subEmail")) $("subEmail").value=u.email;
       if(typeof checkSub==="function") checkSub(u.email);
       if(typeof loadRecent==="function") loadRecent(u.email);
     }
     async function signOut(){ try{ await fetch("/auth/logout",{method:"POST"}); }catch(_){} try{localStorage.removeItem("streamza_email");}catch(_){} location.reload(); }
-
-    // Subscription checkout: Paddle when the server has real credentials for it (the go-forward
-    // processor), Lemon Squeezy as a dormant fallback otherwise. /pay/config tells us which.
-    let PAY = { enabled:false };
-    (async function(){
-      try{
-        PAY = await (await fetch("/pay/config")).json();
-        if(PAY.priceLabel){ const el=$("planPrice"); if(el) el.textContent=PAY.priceLabel; }
-        if(PAY.priceLabelMulti){ const el=$("planPriceMulti"); if(el) el.textContent=PAY.priceLabelMulti; }
-      }catch(_){}
-    })();
-    function lsReady(){
-      if(!window.LemonSqueezy && typeof createLemonSqueezy==="function") createLemonSqueezy();
-      if(window.LemonSqueezy && !PAY._lsInited && LemonSqueezy.Setup){
-        LemonSqueezy.Setup({ eventHandler:(e)=>{ if(e && e.event==="Checkout.Success" && PAY._email){ toast("Payment received, activating your subscription…"); pollSubscribed(PAY._email,0); } } });
-        PAY._lsInited=true;
-      }
-      return !!window.LemonSqueezy;
-    }
-    function paddleReady(){
-      if(!window.Paddle || !PAY.paddleClientToken) return false;
-      if(!PAY._paddleInited){
-        try{
-          Paddle.Environment.set(PAY.paddleEnv==="production" ? "production" : "sandbox");
-          Paddle.Initialize({
-            token: PAY.paddleClientToken,
-            eventCallback:(e)=>{ if(e && e.name==="checkout.completed" && PAY._email){ toast("Payment received, activating your subscription…"); pollSubscribed(PAY._email,0); } },
-          });
-          PAY._paddleInited=true;
-        }catch(_){ return false; }
-      }
-      return true;
-    }
-    function openCheckout(email, plan){
-      if(!PAY.enabled){ toast(plan==="multi" ? "The Multistream plan isn't switched on yet." : "Subscriptions aren't switched on yet."); return; }
-      PAY._email = email;
-      try{ localStorage.setItem("streamza_email", email); }catch(_){}
-      if(PAY.provider==="paddle"){
-        const priceId = plan==="multi" ? PAY.paddlePriceIdMulti : PAY.paddlePriceId;
-        if(!priceId || !paddleReady()){ toast("Checkout isn't ready yet — try again in a moment."); return; }
-        Paddle.Checkout.open({
-          items:[{ priceId, quantity:1 }],
-          customer:{ email },
-          customData:{ relay_email: email, tier: plan==="multi"?"multi":"single" },
-        });
-        return;
-      }
-      const url0 = plan==="multi" ? PAY.checkoutMultiUrl : PAY.checkoutUrl;
-      if(!url0){ toast(plan==="multi" ? "The Multistream plan isn't switched on yet." : "Subscriptions aren't switched on yet."); return; }
-      const url = url0 + "?embed=1&media=0&checkout[email]=" + encodeURIComponent(email) + "&checkout[custom][relay_email]=" + encodeURIComponent(email) + "&checkout[custom][tier]=" + (plan==="multi"?"multi":"single");
-      if(lsReady() && window.LemonSqueezy.Url){ LemonSqueezy.Url.Open(url); }
-      else { window.open(url, "_blank"); pollSubscribed(email,0); }
-    }
-    // Branded subscribe modal (no ugly browser prompt)
-    let _subPlan="single";
-    function subscribeModal(plan){
-      _subPlan=plan;
-      $("subTitle").textContent = plan==="multi" ? "Subscribe: Multistream" : "Subscribe: Single";
-      $("subDesc").textContent = plan==="multi"
-        ? "Stream to up to 3 platforms at once, 24/7. Enter your email to continue to secure checkout."
-        : "Full 24-hour streaming, as often as you like. Enter your email to continue to secure checkout.";
-      $("subEmail").value = ((($("email")&&$("email").value)||myEmail)||"").trim();
-      $("subModal").classList.add("show");
-      setTimeout(()=>$("subEmail").focus(),60);
-    }
-    $("subCancel").onclick=()=>$("subModal").classList.remove("show");
-    $("subModal").onclick=(e)=>{ if(e.target===$("subModal")) $("subModal").classList.remove("show"); };
-    $("subGo").onclick=()=>{
-      const em=($("subEmail").value||"").trim();
-      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return toast("Please enter a valid email.");
-      $("subModal").classList.remove("show");
-      openCheckout(em,_subPlan);
-    };
-    $("subEmail").addEventListener("keydown",(e)=>{ if(e.key==="Enter") $("subGo").click(); });
-    { const ps=$("planSubscribe");      if(ps) ps.addEventListener("click",(e)=>{ e.preventDefault(); PAY.enabled ? subscribeModal("single") : toast("Subscriptions aren't switched on yet."); }); }
-    { const pm=$("planSubscribeMulti"); if(pm) pm.addEventListener("click",(e)=>{ e.preventDefault(); PAY.enabled ? subscribeModal("multi") : toast("The Multistream plan isn't switched on yet."); }); }
 
     // Studio mode: Single stream vs Multistream (two clear sections, like the app)
     let mode = "single";
@@ -1541,22 +1447,6 @@
     $("mmMulti").onclick =()=>{ $("modeModal").classList.remove("show"); openStudioApp("multi",  _pendingSlot); };
     $("mmCancel").onclick=()=>$("modeModal").classList.remove("show");
     $("modeModal").onclick=(e)=>{ if(e.target===$("modeModal")) $("modeModal").classList.remove("show"); };
-    async function pollSubscribed(email,n){
-      if(n>15){ toast("Subscription is processing. It'll unlock shortly. Tap Upgrade again in a moment."); return; }
-      try{
-        const r=await (await fetch("/subscribed?email="+encodeURIComponent(email))).json();
-        if(r.active){
-          applySubState(r);                                    // hide the Subscribe prompts right away
-          try{ localStorage.setItem(EKEY, email); }catch(_){}  // remember so it stays recognised
-          const token=localStorage.getItem(TKEY);
-          if(token){ await fetch("/upgrade",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token})}); }
-          if(PAY._autoGoLive){ PAY._autoGoLive=false; toast("Subscription active, going live…"); beginStream(); }
-          else toast("Subscription active, you're now on a full 24-hour slot!");
-          refreshMine(); return;
-        }
-      }catch(_){}
-      setTimeout(()=>pollSubscribed(email,n+1),2000);
-    }
     function toast(m){const t=$("toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),3400);}
     function fmt(sec){sec=Math.max(0,sec);const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");}
     function fmtShort(sec){const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60);return h>0?h+"h "+m+"m":m+"m";}
@@ -2021,9 +1911,8 @@
     // remember the user's email so returning subscribers are recognised instantly
     const EKEY="streamza_email";
     const savedEmail=localStorage.getItem(EKEY);
-    if(savedEmail){ if($("email")&&!$("email").value)$("email").value=savedEmail; if($("subEmail"))$("subEmail").value=savedEmail; myEmail=savedEmail; checkSub(savedEmail); loadRecent(savedEmail); }
-    // Reflect the subscription state across the whole studio UI (called on load, on email entry, and the
-    // moment a fresh checkout is detected), so the "Subscribe" prompts actually disappear once active.
+    if(savedEmail){ if($("email")&&!$("email").value)$("email").value=savedEmail; myEmail=savedEmail; checkSub(savedEmail); loadRecent(savedEmail); }
+    // Reflect the subscription state across the whole studio UI (called on load and on email entry).
     function applySubState(r){
       const active = !!(r && r.active);
       window.IS_SUBSCRIBED = active;
@@ -2038,7 +1927,7 @@
     }
     // Recognise a returning subscriber the moment they type their email (not only the saved one on load).
     function watchEmail(id){ const el=$(id); if(!el) return; el.addEventListener("change",()=>{ const v=(el.value||"").trim(); if(v.includes("@")){ try{ localStorage.setItem(EKEY,v); }catch(_){} checkSub(v); loadRecent(v); } }); }
-    watchEmail("email"); watchEmail("subEmail");
+    watchEmail("email");
 
     updateSelLabel(); refreshSlots(); refreshMine();
     // arrived via a manage link (?s=) → resume straight into the studio with everything restored,

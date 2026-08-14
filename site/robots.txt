@@ -6,11 +6,8 @@ Allow: /
 Disallow: /admin
 Disallow: /studio-assets/
 Disallow: /auth/
-Disallow: /pay/
 Disallow: /billing/
 Disallow: /owner/
-Disallow: /lemonsqueezy/
-Disallow: /paddle/
 Disallow: /r2/
 Disallow: /twitch-callback
 Disallow: /status
