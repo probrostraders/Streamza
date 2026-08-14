@@ -136,6 +136,13 @@ class AppRepository private constructor(
             val cookieJar = SessionCookieJar.create(context, API_HOST)
             val client = OkHttpClient.Builder()
                 .cookieJar(cookieJar)
+                // OkHttp's defaults (10s connect/read/write) are fine for small JSON calls but far too
+                // short for an 8MB R2 chunk over a real mobile connection — that was surfacing as a raw
+                // SocketTimeoutException("timeout") on real (non-trivial-sized) video uploads. These are
+                // ceilings, not floors, so quick calls are unaffected.
+                .connectTimeout(20, java.util.concurrent.TimeUnit.SECONDS)
+                .writeTimeout(2, java.util.concurrent.TimeUnit.MINUTES)
+                .readTimeout(2, java.util.concurrent.TimeUnit.MINUTES)
                 // Identifies this app to the shared backend (server.js branches on it — see
                 // authPayload()/​the /start trial gate) so Web Studio's own free model stays untouched.
                 // Host-scoped the same way the cookie jar is: never sent to R2's presigned-URL host.

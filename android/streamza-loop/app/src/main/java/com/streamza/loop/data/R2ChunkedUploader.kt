@@ -2,13 +2,34 @@ package com.streamza.loop.data
 
 import android.content.ContentResolver
 import kotlinx.coroutines.delay
+import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.RequestBody
+import okio.BufferedSink
 import java.io.FileInputStream
 import java.io.IOException
 
-private const val CHUNK_SIZE = 16 * 1024 * 1024 // 16MB — R2/S3 multipart parts must be >=5MB except the last
+private const val CHUNK_SIZE = 8 * 1024 * 1024 // 8MB — R2/S3 multipart parts must be >=5MB except the last;
+// smaller than the old 16MB so a single slow mobile-network request has less to time out on.
+private const val PROGRESS_STEP = 64 * 1024 // report progress every 64KB written, not just once per whole part
 private const val MAX_ATTEMPTS_PER_PART = 3
+
+/** A part's bytes, written in small steps so [onDelta] gives real-time progress within the part's own
+ *  upload instead of just one jump when the whole part finishes. */
+private fun progressRequestBody(bytes: ByteArray, mediaType: MediaType?, onDelta: (Long) -> Unit): RequestBody =
+    object : RequestBody() {
+        override fun contentType() = mediaType
+        override fun contentLength() = bytes.size.toLong()
+        override fun writeTo(sink: BufferedSink) {
+            var offset = 0
+            while (offset < bytes.size) {
+                val len = minOf(PROGRESS_STEP, bytes.size - offset)
+                sink.write(bytes, offset, len)
+                offset += len
+                onDelta(len.toLong())
+            }
+        }
+    }
 
 /** Reads a picked video in fixed-size chunks via its real file descriptor (ParcelFileDescriptor lets us
  *  seek precisely instead of re-reading from the start for every chunk, unlike a plain InputStream). */
@@ -61,7 +82,7 @@ suspend fun uploadVideoToR2(
     try {
         val totalParts = ((video.size + CHUNK_SIZE - 1) / CHUNK_SIZE).toInt().coerceAtLeast(1)
         val parts = mutableListOf<R2CompletedPart>()
-        var sent = 0L
+        var confirmedSent = 0L // only advances once a part's PUT actually succeeds (real ETag back)
 
         VideoChunkReader(resolver, video).use { reader ->
             for (partNumber in 1..totalParts) {
@@ -75,7 +96,11 @@ suspend fun uploadVideoToR2(
                     try {
                         val partUrlRes = api.r2PartUrl(R2PartUrlRequest(r2Key, r2UploadId, partNumber))
                         if (!partUrlRes.ok || partUrlRes.url == null) throw ApiException(partUrlRes.error ?: "Couldn't get an upload URL.")
-                        val body = bytes.toRequestBody("application/octet-stream".toMediaTypeOrNull())
+                        var partProgress = 0L
+                        val body = progressRequestBody(bytes, "application/octet-stream".toMediaTypeOrNull()) { delta ->
+                            partProgress += delta
+                            onProgress((confirmedSent + partProgress).coerceAtMost(video.size), video.size)
+                        }
                         val putRes = api.r2PutPart(partUrlRes.url, body)
                         if (!putRes.isSuccessful) throw ApiException("Upload failed (HTTP ${putRes.code()}).")
                         etag = putRes.headers()["ETag"]?.trim('"') ?: throw ApiException("Upload succeeded but no ETag was returned.")
@@ -88,8 +113,8 @@ suspend fun uploadVideoToR2(
                 if (etag == null) throw (lastError ?: ApiException("Upload failed."))
 
                 parts.add(R2CompletedPart(partNumber, etag))
-                sent += thisChunkSize
-                onProgress(sent, video.size)
+                confirmedSent += thisChunkSize
+                onProgress(confirmedSent, video.size)
             }
         }
 
