@@ -47,6 +47,7 @@ fun HomeScreen(
     onGoToLive: () -> Unit,
     onGoToVideos: () -> Unit,
     onGoToSettings: () -> Unit,
+    onGoToSubscription: () -> Unit,
 ) {
     val repo by viewModel.repo.collectAsState()
     val auth by (repo?.auth ?: return).collectAsState()
@@ -69,9 +70,13 @@ fun HomeScreen(
             )
         }
 
+        val subscribed = auth?.subscribed == true
+        val trialAvailable = auth?.trialAvailable == true
+        val canStartFree = subscribed || trialAvailable
+
         if (liveToken != null) {
             LiveStatusCard(status = status, onClick = onGoToLive)
-        } else {
+        } else if (canStartFree) {
             Card(
                 onClick = onGoToStream,
                 modifier = Modifier.fillMaxWidth(),
@@ -80,7 +85,8 @@ fun HomeScreen(
                 Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Ready to go live?", style = MaterialTheme.typography.titleLarge, color = androidx.compose.ui.graphics.Color.White, fontWeight = FontWeight.Bold)
                     Text(
-                        "Pick a video, choose where it streams, and go — Streamza keeps it running even after you close the app.",
+                        if (subscribed) "Pick a video, choose where it streams, and go — Streamza keeps it running even after you close the app."
+                        else "Your first stream is free for 15 minutes, no card needed.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.9f),
                     )
@@ -90,13 +96,36 @@ fun HomeScreen(
                     ) { Text("Start streaming") }
                 }
             }
+        } else {
+            Card(
+                onClick = onGoToSubscription,
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = StreamzaRed),
+            ) {
+                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Your free trial is over", style = MaterialTheme.typography.titleLarge, color = androidx.compose.ui.graphics.Color.White, fontWeight = FontWeight.Bold)
+                    Text(
+                        "Subscribe to keep streaming — pick how many platforms you need and how often you're billed.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.9f),
+                    )
+                    Button(
+                        onClick = onGoToSubscription,
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color.White, contentColor = StreamzaRed),
+                    ) { Text("See plans") }
+                }
+            }
         }
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             QuickAction(Icons.Default.CloudQueue, "My Videos", Modifier.weight(1f)) { onGoToVideos() }
             QuickAction(
-                if (auth?.subscribed == true) Icons.Default.Hub else Icons.Default.FlashOn,
-                if (auth?.subscribed == true) "Plan: ${auth?.tier ?: "Active"}" else "Upgrade plan",
+                if (subscribed) Icons.Default.Hub else Icons.Default.FlashOn,
+                when {
+                    subscribed -> "Plan: ${auth?.maxDestinations ?: 1} slot${if ((auth?.maxDestinations ?: 1) == 1) "" else "s"}"
+                    trialAvailable -> "Free trial"
+                    else -> "Subscribe"
+                },
                 Modifier.weight(1f),
             ) { onGoToSettings() }
         }
@@ -110,11 +139,11 @@ fun HomeScreen(
         )
         FeatureCard(
             icon = Icons.Default.Hub,
-            title = if (auth?.multi == true) "Multistream, unlocked" else "Multistream to several platforms",
-            body = if (auth?.multi == true)
-                "Your plan streams to YouTube, Facebook, and Twitch at the same time from one upload."
+            title = if ((auth?.maxDestinations ?: 1) > 1) "Multistream, unlocked" else "Multistream to several platforms",
+            body = if ((auth?.maxDestinations ?: 1) > 1)
+                "Your plan streams to ${auth?.maxDestinations} platforms at the same time from one upload."
             else
-                "Upgrade to send one stream to YouTube, Facebook, and Twitch at once.",
+                "Buy more slots to send one stream to YouTube, Facebook, and Twitch at once.",
         )
         FeatureCard(
             icon = Icons.Default.CloudQueue,

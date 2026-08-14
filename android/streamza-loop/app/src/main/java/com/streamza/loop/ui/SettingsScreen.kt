@@ -11,9 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SegmentedButton
@@ -22,29 +20,21 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.android.billingclient.api.ProductDetails
 import com.streamza.loop.AppViewModel
-import com.streamza.loop.billing.BillingManager
-import com.streamza.loop.billing.pricingSummary
-import com.streamza.loop.data.BillingConfigResponse
 import kotlinx.coroutines.launch
 
 private const val SUPPORT_EMAIL = "probrostraders@gmail.com"
 
 @Composable
-fun SettingsScreen(viewModel: AppViewModel, billingManager: BillingManager, activity: Activity) {
+fun SettingsScreen(viewModel: AppViewModel, activity: Activity, onOpenSubscription: () -> Unit) {
     val repo by viewModel.repo.collectAsState()
     val auth by (repo?.auth ?: return).collectAsState()
     val scope = rememberCoroutineScope()
@@ -52,17 +42,6 @@ fun SettingsScreen(viewModel: AppViewModel, billingManager: BillingManager, acti
 
     val themeMode by viewModel.themeMode.collectAsState()
     val defaultLoop by viewModel.defaultLoop.collectAsState()
-
-    val products by billingManager.products.collectAsState()
-    val connected by billingManager.connected.collectAsState()
-    var billingConfig by remember { mutableStateOf<BillingConfigResponse?>(null) }
-
-    LaunchedEffect(connected) {
-        val cfg = repo?.billingConfig()?.getOrNull()
-        billingConfig = cfg
-        val ids = listOfNotNull(cfg?.productSingle, cfg?.productMulti)
-        if (connected && ids.isNotEmpty()) billingManager.queryProducts(ids)
-    }
 
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
@@ -73,7 +52,13 @@ fun SettingsScreen(viewModel: AppViewModel, billingManager: BillingManager, acti
         Card {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(auth?.email ?: "-", style = MaterialTheme.typography.titleMedium)
-                Text(if (auth?.subscribed == true) "Plan: ${auth?.tier ?: "subscribed"}" else "Plan: Free")
+                Text(
+                    when {
+                        auth?.subscribed == true -> "Plan: ${auth?.maxDestinations ?: 1} slot${if ((auth?.maxDestinations ?: 1) == 1) "" else "s"}"
+                        auth?.trialAvailable == true -> "Free trial available"
+                        else -> "Free trial used"
+                    }
+                )
             }
         }
 
@@ -102,29 +87,13 @@ fun SettingsScreen(viewModel: AppViewModel, billingManager: BillingManager, acti
         }
 
         SettingsSection(title = "Subscription") {
-            if (auth?.subscribed == true) {
-                Text("You're on the ${if (auth?.tier == "multi") "Multi-destination" else "Single-destination"} plan.")
-                val portal = auth?.portal
-                if (portal != null) {
-                    OutlinedButton(onClick = {
-                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(portal)))
-                    }) { Text("Manage subscription") }
-                }
-            } else if (products.isNotEmpty()) {
-                products.forEach { product ->
-                    PlanCard(
-                        product = product,
-                        isMulti = product.productId == billingConfig?.productMulti,
-                        onSubscribe = { billingManager.launchPurchase(activity, product) },
-                    )
-                }
-            } else if (!connected) {
-                CircularProgressIndicator()
-            } else {
-                Text(
-                    "Everything is free right now, on the app and the website.",
-                    style = MaterialTheme.typography.bodyMedium,
-                )
+            Text(
+                if (auth?.subscribed == true) "You're on the ${auth?.maxDestinations ?: 1}-slot plan."
+                else "Buy slots to stream to more platforms at once, with no free-trial limit.",
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            OutlinedButton(onClick = onOpenSubscription, modifier = Modifier.fillMaxWidth()) {
+                Text(if (auth?.subscribed == true) "Manage subscription" else "See plans")
             }
         }
 
@@ -153,27 +122,5 @@ private fun SettingsSection(title: String, content: @Composable androidx.compose
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
         content()
-    }
-}
-
-@Composable
-private fun PlanCard(product: ProductDetails, isMulti: Boolean, onSubscribe: () -> Unit) {
-    Card {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(
-                if (isMulti) "Multi-destination" else "Single-destination",
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Text(
-                if (isMulti) "Stream to several platforms at once, on the app and the website."
-                else "Stream to one destination at a time, on the app and the website.",
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            val price = product.pricingSummary()
-            if (price.isNotEmpty()) Text(price, style = MaterialTheme.typography.bodyMedium)
-            Button(onClick = onSubscribe, modifier = Modifier.fillMaxWidth()) {
-                Text("Subscribe")
-            }
-        }
     }
 }

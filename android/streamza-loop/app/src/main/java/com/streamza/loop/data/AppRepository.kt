@@ -4,6 +4,7 @@ import android.content.Context
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -98,9 +99,12 @@ class AppRepository private constructor(
             "pendingUploadId" to text(pendingUploadId),
             "dests" to text(json.encodeToString(dests)),
         )
-        val res = api.start(fields)
-        if (!res.ok) throw ApiException(res.error ?: "Couldn't go live.")
-        res
+        val http = api.start(fields)
+        val body = http.body()
+        if (http.isSuccessful && body?.ok == true) return@runCatching body
+        val errBody = http.errorBody()?.string()
+        val parsed = errBody?.let { runCatching { json.decodeFromString<StartResponse>(it) }.getOrNull() }
+        throw StartException(parsed?.error ?: body?.error ?: "Couldn't go live.", parsed?.trialExhausted == true)
     }
 
     suspend fun stopStream(token: String): Result<OkResponse> = runCatching { api.stop(StopRequest(token)) }
@@ -128,6 +132,14 @@ class AppRepository private constructor(
             val cookieJar = SessionCookieJar.create(context, API_HOST)
             val client = OkHttpClient.Builder()
                 .cookieJar(cookieJar)
+                // Identifies this app to the shared backend (server.js branches on it — see
+                // authPayload()/​the /start trial gate) so Web Studio's own free model stays untouched.
+                // Host-scoped the same way the cookie jar is: never sent to R2's presigned-URL host.
+                .addInterceptor { chain ->
+                    val req = chain.request()
+                    val tagged = if (req.url.host == API_HOST) req.newBuilder().addHeader("X-Streamza-Client", "loop").build() else req
+                    chain.proceed(tagged)
+                }
                 .build()
             val contentType = "application/json".toMediaType()
             val retrofit = Retrofit.Builder()
@@ -141,3 +153,8 @@ class AppRepository private constructor(
 }
 
 class ApiException(message: String) : Exception(message)
+
+/** Thrown by [AppRepository.goLive] on any /start failure. [trialExhausted] lets the UI tell "your
+ *  free trial is over" apart from an ordinary error (bad codec, all slots full, ...) so it can jump
+ *  straight to the Subscription screen instead of just showing inline text. */
+class StartException(message: String, val trialExhausted: Boolean = false) : Exception(message)

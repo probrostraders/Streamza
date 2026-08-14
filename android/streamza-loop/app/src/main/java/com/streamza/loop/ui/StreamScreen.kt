@@ -42,13 +42,14 @@ import com.streamza.loop.data.AppRepository
 import com.streamza.loop.data.AuthMeResponse
 import com.streamza.loop.data.Destination
 import com.streamza.loop.data.PickedVideo
+import com.streamza.loop.data.StartException
 import com.streamza.loop.data.resolvePickedVideo
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 
 @Composable
-fun StreamScreen(viewModel: AppViewModel, liveToken: String?, onGoToLive: () -> Unit) {
+fun StreamScreen(viewModel: AppViewModel, liveToken: String?, onGoToLive: () -> Unit, onGoToSubscription: () -> Unit) {
     val repo by viewModel.repo.collectAsState()
     val auth by (repo?.auth ?: return).collectAsState()
 
@@ -57,10 +58,11 @@ fun StreamScreen(viewModel: AppViewModel, liveToken: String?, onGoToLive: () -> 
     if (liveToken != null) {
         AlreadyLiveCard(onGoToLive)
     } else {
-        NewStreamForm(repo = repo!!, auth = auth, defaultLoop = defaultLoop, onClaimed = { token ->
-            viewModel.onClaimed(token)
-            onGoToLive()
-        })
+        NewStreamForm(
+            repo = repo!!, auth = auth, defaultLoop = defaultLoop,
+            onClaimed = { token -> viewModel.onClaimed(token); onGoToLive() },
+            onGoToSubscription = onGoToSubscription,
+        )
     }
 }
 
@@ -83,7 +85,13 @@ private fun AlreadyLiveCard(onGoToLive: () -> Unit) {
 }
 
 @Composable
-private fun NewStreamForm(repo: AppRepository, auth: AuthMeResponse?, defaultLoop: Boolean, onClaimed: (String) -> Unit) {
+private fun NewStreamForm(
+    repo: AppRepository,
+    auth: AuthMeResponse?,
+    defaultLoop: Boolean,
+    onClaimed: (String) -> Unit,
+    onGoToSubscription: () -> Unit,
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -99,14 +107,31 @@ private fun NewStreamForm(repo: AppRepository, auth: AuthMeResponse?, defaultLoo
         if (uri != null) picked = resolvePickedVideo(context.contentResolver, uri)
     }
 
-    val canMultistream = auth?.multi == true
+    val maxDests = auth?.maxDestinations ?: 1
+    val canMultistream = maxDests > 1
     val email = auth?.email.orEmpty()
+
+    // Trim any extra destination rows if the plan's cap just shrank (e.g. auth refreshed after signup).
+    LaunchedEffect(maxDests) { if (dests.size > maxDests) dests = dests.take(maxDests.coerceAtLeast(1)) }
 
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         Text("New stream", style = MaterialTheme.typography.headlineSmall)
+
+        if (auth?.trialAvailable == true) {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text("Your first stream is free", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                    Text(
+                        "15 minutes, one platform, no card needed.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
 
         Section(title = "1. Video") {
             OutlinedButton(onClick = {
@@ -126,13 +151,13 @@ private fun NewStreamForm(repo: AppRepository, auth: AuthMeResponse?, defaultLoo
                     onRemove = { dests = dests.toMutableList().also { it.removeAt(i) } },
                 )
             }
-            if (canMultistream && dests.size < 3) {
+            if (dests.size < maxDests) {
                 OutlinedButton(onClick = { dests = dests + DestinationDraft() }, modifier = Modifier.fillMaxWidth()) {
                     Text("+ Add another platform")
                 }
             } else if (!canMultistream) {
                 Text(
-                    "Upgrade your plan to stream to multiple platforms at once.",
+                    "Buy more slots to stream to multiple platforms at once.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -186,7 +211,10 @@ private fun NewStreamForm(repo: AppRepository, auth: AuthMeResponse?, defaultLoo
                     val finalDests = dests.map { Destination(it.resolvedUrl, it.key) }
                     repo.goLive(email, uploadId, finalDests, loop, agree)
                         .onSuccess { start -> onClaimed(start.token!!) }
-                        .onFailure { error = it.message ?: "Couldn't go live." }
+                        .onFailure {
+                            if (it is StartException && it.trialExhausted) onGoToSubscription()
+                            else error = it.message ?: "Couldn't go live."
+                        }
                     uploading = false
                 }
             },

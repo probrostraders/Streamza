@@ -24,6 +24,10 @@ const PORT = process.env.PORT || 3000;
 const ADMIN_KEY = process.env.ADMIN_KEY || "streamza-admin";
 const SLOT_COUNT = Number(process.env.SLOT_COUNT) || 10; // max safe on the free 1GB micro (-c copy is light; RAM + outbound bandwidth are the limit). Raise via env on a bigger instance.
 const SLOT_MS = 24 * 60 * 60 * 1000;  // every claim streams for this long, then the slot frees up
+// Streamza Loop app only (identified by the X-Streamza-Client header the app sends on every request —
+// see AppRepository.kt): a brand-new account gets ONE free 15-minute stream, then a hard paywall until
+// they subscribe. Web Studio (the website) is untouched by this — it keeps its own unrelated free model.
+const LOOP_TRIAL_MS = 15 * 60 * 1000;
 // Streaming pipeline. By default we RE-ENCODE to a YouTube-Live-friendly stream (a keyframe every 2s) so
 // ANY uploaded MP4 goes live cleanly — uploaded files usually have ~5-10s keyframes, which makes YouTube
 // show "not receiving enough video / Preparing". Re-encoding costs CPU; set RELAY_COPY=1 to stream-copy
@@ -45,12 +49,15 @@ const FFMPEG_MAX_RESTARTS = Number(process.env.FFMPEG_MAX_RESTARTS) || 20;      
 const FFMPEG_RESTART_DELAY_MS = Number(process.env.FFMPEG_RESTART_DELAY_MS) || 3000; // backoff between reconnects
 const MULTISTREAM_MAX = Number(process.env.MULTISTREAM_MAX) || 3;    // max simultaneous platforms on the multistream plan
 // --- Streamza Loop's Play Billing product IDs — must match exactly what's created in Play Console.
-// The actual price and any free-trial phase are configured there too, not here; this app only ever
-// references the product IDs and displays whatever Play Billing reports back for them. This is the
-// only subscription system in the codebase — Web Studio itself is free with no paid checkout; the
-// Android app is where a subscription is actually bought (see googlePlay.js, /billing/*).
-const PLAY_PRODUCT_SINGLE = process.env.PLAY_PRODUCT_SINGLE || "streamza_loop_single";
-const PLAY_PRODUCT_MULTI = process.env.PLAY_PRODUCT_MULTI || "streamza_loop_multi";
+// One product per destination-slot count (1/2/3 platforms at once); each product should carry weekly/
+// monthly/yearly base plans in Play Console — price and any free-trial phase live there too, never
+// here. This is the only subscription system in the codebase — Web Studio itself is free with no paid
+// checkout; the Android app is where a subscription is actually bought (see googlePlay.js, /billing/*).
+const PLAY_PRODUCTS = {
+  1: process.env.PLAY_PRODUCT_1 || "streamza_loop_1slot",
+  2: process.env.PLAY_PRODUCT_2 || "streamza_loop_2slot",
+  3: process.env.PLAY_PRODUCT_3 || "streamza_loop_3slot",
+};
 // --- Google Sign-In (optional accounts) — set GOOGLE_CLIENT_ID to enable ---
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || ""; // OAuth Web client id (…apps.googleusercontent.com)
 const SESSION_SECRET = process.env.SESSION_SECRET || (ADMIN_KEY + "-sz-session"); // signs the login cookie
@@ -69,22 +76,38 @@ try {
   for (const f of fs.readdirSync(UPLOAD_DIR)) if (!savedIds.has(f)) fs.unlinkSync(path.join(UPLOAD_DIR, f));
 } catch (_) {}
 
-// active subscribers (emails) — updated by the Paddle webhook, persisted to disk
+// active subscribers (emails) — written by the Play Billing verify flow, persisted to disk
 const SUBS_FILE = path.join(DATA_DIR, "subscribers.json");
-let subscribers = new Map(); // email -> "single" | "multi"
+let subscribers = new Map(); // email -> number of destination slots purchased (1, 2, or 3)
 try {
   const raw = JSON.parse(fs.readFileSync(SUBS_FILE, "utf8"));
-  if (Array.isArray(raw)) raw.forEach((e) => subscribers.set(e, "single")); // legacy [emails] format
-  else for (const [e, t] of Object.entries(raw)) subscribers.set(e, t);
+  if (Array.isArray(raw)) raw.forEach((e) => subscribers.set(e, 1)); // legacy [emails] format
+  else for (const [e, t] of Object.entries(raw)) subscribers.set(e, Number(t) || 1);
 } catch (_) {}
 function saveSubs() { try { fs.writeFileSync(SUBS_FILE, JSON.stringify(Object.fromEntries(subscribers))); } catch (_) {} }
 // BETA — Web Studio is free for everyone, no checkout on the website at all. `subscribers` is written
 // to only by the Play Billing verification flow (/billing/verify-purchase, see googlePlay.js) for the
 // Streamza Loop Android app; flipping Web Studio back to gating on it for real is just reverting this
-// one function to `return subscribers.get((email||"").trim().toLowerCase()) || null;`.
+// one function to `return subscribers.get((email||"").trim().toLowerCase()) ? "multi" : null;`.
 function tierOf(_email) { return "multi"; }
 function isSubscribed(email) { return !!tierOf(email); }            // any plan → full 24h
 function canMultistream(email) { return tierOf(email) === "multi"; } // only the multi tier
+
+// Streamza Loop app's REAL entitlement (unlike tierOf() above, which is Web Studio's deliberately
+// hardcoded-free stand-in) — number of destination slots this email has actually purchased via Play
+// Billing, or 0 if none. This is the one place real subscription state is read for gating anything.
+function loopSlotsFor(email) {
+  const n = subscribers.get((email || "").trim().toLowerCase());
+  return Number.isInteger(n) && n > 0 ? n : 0;
+}
+
+// Emails that have already spent their one free 15-minute Streamza Loop trial — persisted so it
+// survives restarts and can't just be re-granted by reinstalling the app (still keyed by Google
+// account email, not device, since sign-in is required).
+const LOOP_TRIALS_FILE = path.join(DATA_DIR, "looptrials.json");
+let loopTrialsUsed = new Set();
+try { loopTrialsUsed = new Set(JSON.parse(fs.readFileSync(LOOP_TRIALS_FILE, "utf8")) || []); } catch (_) {}
+function saveLoopTrials() { try { fs.writeFileSync(LOOP_TRIALS_FILE, JSON.stringify([...loopTrialsUsed])); } catch (_) {} }
 
 // Customer-portal links per email (captured by the Play Billing verify flow — see
 // /billing/verify-purchase) so a signed-in user can manage/cancel their subscription from Google Play.
@@ -194,11 +217,31 @@ app.use("/studio-assets", express.static(path.join(__dirname, "public")));
 
 // ---- Google Sign-In endpoints (no-op until GOOGLE_CLIENT_ID is set) ----
 app.get("/auth/config", (_req, res) => res.json({ enabled: AUTH_ON, clientId: GOOGLE_CLIENT_ID }));
+// Builds the /auth/me-shaped response. Web Studio (browser, no header) always sees the hardcoded-free
+// tierOf(). The Streamza Loop app (identified by X-Streamza-Client: loop, sent on every request — see
+// AppRepository.kt) sees its REAL entitlement instead, since it's the one product that actually gates
+// on it: maxDestinations is how many platforms it may stream to at once (0 until subscribed, in which
+// case a free-trial claim still gets exactly 1), trialAvailable is whether the free 15-minute stream
+// is still unclaimed.
+function authPayload(req, email, name) {
+  const isLoopApp = req.get("X-Streamza-Client") === "loop";
+  if (isLoopApp) {
+    const slots = loopSlotsFor(email);
+    return {
+      signedIn: true, email, name: name || "",
+      subscribed: slots > 0, tier: slots > 0 ? String(slots) : null, multi: slots > 1,
+      maxDestinations: slots > 0 ? slots : 1,
+      trialAvailable: slots === 0 && !loopTrialsUsed.has(email.toLowerCase()),
+      portal: slots > 0 ? portalFor(email) : null, slot: mySlot(email),
+    };
+  }
+  const tier = tierOf(email);
+  return { signedIn: true, email, name: name || "", subscribed: !!tier, tier, multi: tier === "multi", portal: tier ? portalFor(email) : null, slot: mySlot(email) };
+}
 app.get("/auth/me", (req, res) => {
   const email = readSession(req);
   if (!email) return res.json({ signedIn: false });
-  const tier = tierOf(email);
-  res.json({ signedIn: true, email, subscribed: !!tier, tier, multi: tier === "multi", portal: tier ? portalFor(email) : null, slot: mySlot(email) });
+  res.json(authPayload(req, email));
 });
 app.post("/auth/google", rateLimit(20, 60000), async (req, res) => {
   if (!AUTH_ON) return res.status(400).json({ error: "Sign-in is not enabled yet." });
@@ -213,8 +256,7 @@ app.post("/auth/google", rateLimit(20, 60000), async (req, res) => {
     const email = String(t.email).trim().toLowerCase();
     res.setHeader("Set-Cookie", sessionCookie(req, signSession(email)));
     saveLead(email, "google-signin");
-    const tier = tierOf(email);
-    res.json({ signedIn: true, email, name: t.name || "", subscribed: !!tier, tier, multi: tier === "multi", portal: tier ? portalFor(email) : null, slot: mySlot(email) });
+    res.json(authPayload(req, email, t.name));
   } catch (_) { res.status(500).json({ error: "Sign-in failed — please try again." }); }
 });
 app.post("/auth/logout", (req, res) => {
@@ -582,6 +624,17 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
   if (!EMAIL_RE.test(email)) return bail(400, "Enter a valid email to claim a slot.");
   if (req.body.agree !== "true" && req.body.agree !== "on") return bail(400, "Please confirm you have the rights to stream this content.");
 
+  // Streamza Loop app only: real entitlement gating. loopSlots > 0 means a real subscription (that
+  // many destination slots); otherwise this claim can only be the one free 15-minute trial, and if
+  // that's already been used, it's a hard paywall — fail fast, before touching the upload at all.
+  const isLoopApp = req.get("X-Streamza-Client") === "loop";
+  const loopSlots = isLoopApp ? loopSlotsFor(email) : 0;
+  const loopTrialClaim = isLoopApp && loopSlots === 0;
+  if (loopTrialClaim && loopTrialsUsed.has(email.toLowerCase())) {
+    if (file) rm(file.path);
+    return res.status(402).json({ error: "Your free trial is over — subscribe to keep streaming.", trialExhausted: true });
+  }
+
   // Source = a fresh upload, an already pre-uploaded (auto-uploaded on file-select) video, or one of
   // the account's saved videos (no re-upload needed either way). R2-backed sources (Streamza Loop's
   // chunked uploads) resolve to a freshly presigned GET URL instead of a local path — everything below
@@ -637,7 +690,9 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
 
   if (pendingId) pendingUploads.delete(pendingId); // now committed to a slot — no longer "pending"
   saveLead(email, "stream");
-  const maxDests = canMultistream(email) ? MULTISTREAM_MAX : 1;  // multistream only on the $10 plan
+  // Loop app: destination cap is the real number of purchased slots (1 during the free trial, since
+  // that trial is single-platform only). Web Studio: unchanged, still its own free canMultistream().
+  const maxDests = isLoopApp ? (loopSlots > 0 ? loopSlots : 1) : (canMultistream(email) ? MULTISTREAM_MAX : 1);
   const limited = norm.length > maxDests;                        // user asked for more than their plan allows
   const use = norm.slice(0, maxDests);
   const targets = use.map((d) => (d.key ? `${d.url}/${d.key}` : d.url));
@@ -668,17 +723,21 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
   // Signed in via Google (session cookie matches the claimed email), not just typed into the form —
   // this, or an active subscription, is what earns the video a spot in "Your recent videos".
   const signedIn = readSession(req) === email.toLowerCase();
+  const durationMs = loopTrialClaim ? LOOP_TRIAL_MS : SLOT_MS;
   Object.assign(slot, {
     busy: true, email, dests: use.map((d) => d.url), dest: use[0].url, destsFull: use, loop: !!loop,
     file: srcName, filePath: srcStorage === "local" ? srcPath : null, fileSize: srcSize, storage: srcStorage, r2Key: srcR2Key,
-    startedAt: Date.now(), expiresAt: Date.now() + SLOT_MS, token, log: [],
+    startedAt: Date.now(), expiresAt: Date.now() + durationMs, token, log: [], loopTrial: loopTrialClaim,
     stopping: false, restartCount: 0, signedIn,
   });
+  // The trial is spent the moment it's claimed, win or lose — matches "one free stream", not "one free
+  // successful stream". Marked here (not on stream end) so a killed/short session still counts.
+  if (loopTrialClaim) { loopTrialsUsed.add(email.toLowerCase()); saveLoopTrials(); }
   // Videos are saved for reuse (appear under "Your recent videos") for anyone signed in.
   if (isNew) libAdd(email, srcStorage === "r2" ? srcR2Key : path.basename(srcPath), srcName, srcSize, signedIn, srcCanCopy, srcStorage); else libTouch(reuseId, signedIn, srcCanCopy);
-  slog(slot, `Slot ${slot.id} claimed — 24h${use.length > 1 ? ` · multistream ×${use.length}` : ""} ${loop ? "(loop) " : ""}${srcName} [${useCopy ? "stream-copy, original quality" : "re-encoded"}]`);
+  slog(slot, `Slot ${slot.id} claimed — ${loopTrialClaim ? "15-min trial" : "24h"}${use.length > 1 ? ` · multistream ×${use.length}` : ""} ${loop ? "(loop) " : ""}${srcName} [${useCopy ? "stream-copy, original quality" : "re-encoded"}]`);
   launchFfmpeg(slot, args);
-  res.json({ ok: true, slot: slot.id, token, expiresAt: slot.expiresAt, destinations: use.length, multistreamLimited: limited });
+  res.json({ ok: true, slot: slot.id, token, expiresAt: slot.expiresAt, destinations: use.length, multistreamLimited: limited, trial: loopTrialClaim });
 });
 
 app.post("/stop", (req, res) => {
@@ -737,14 +796,16 @@ app.post("/deleteupload", (req, res) => {
   res.json({ ok: true });
 });
 
-// Product IDs for the Android app's Play Billing plan-picker — public/client-safe.
+// Product IDs for the Android app's Play Billing plan-picker — public/client-safe. Keyed by slot
+// count so the app can query all three and offer a slot-count picker (weekly/monthly/yearly base
+// plans within each product are read directly from Play's own ProductDetails, not listed here).
 app.get("/billing/config", (_req, res) =>
-  res.json({ enabled: googlePlay.PLAY_BILLING_ENABLED, productSingle: PLAY_PRODUCT_SINGLE, productMulti: PLAY_PRODUCT_MULTI }));
+  res.json({ enabled: googlePlay.PLAY_BILLING_ENABLED, products: PLAY_PRODUCTS }));
 
-// Verifies a Play Billing purchase server-side and, on success, marks the buyer's email in the same
-// `subscribers` Map Web Studio already reads via isSubscribed()/canMultistream() — one subscription,
-// unlocks both. Email comes from the session (readSession), never from the request body, so a
-// purchase token can't be credited to an arbitrary email.
+// Verifies a Play Billing purchase server-side and, on success, records the buyer's real slot count
+// in `subscribers` — the one thing loopSlotsFor()/the /start paywall actually reads. Email comes from
+// the session (readSession), never from the request body, so a purchase token can't be credited to
+// an arbitrary email.
 app.post("/billing/verify-purchase", rateLimit(10, 60000), async (req, res) => {
   if (!googlePlay.PLAY_BILLING_ENABLED) return res.status(503).json({ error: "Billing verification isn't configured yet." });
   const email = readSession(req);
@@ -758,11 +819,12 @@ app.post("/billing/verify-purchase", rateLimit(10, 60000), async (req, res) => {
       return res.status(400).json({ error: "This subscription isn't active." });
     }
     const productId = (sub.lineItems && sub.lineItems[0] && sub.lineItems[0].productId) || "";
-    const tier = productId === PLAY_PRODUCT_MULTI ? "multi" : "single";
+    const slotEntry = Object.entries(PLAY_PRODUCTS).find(([, pid]) => pid === productId);
+    const slotCount = slotEntry ? Number(slotEntry[0]) : 1;
     try { await googlePlay.acknowledgePurchase(productId, purchaseToken); } catch (_) {} // no-op if already acknowledged
-    subscribers.set(email, tier); saveSubs();
+    subscribers.set(email, slotCount); saveSubs();
     portals.set(email, `https://play.google.com/store/account/subscriptions?sku=${encodeURIComponent(productId)}&package=${encodeURIComponent(googlePlay.PACKAGE_NAME)}`); savePortals();
-    res.json({ ok: true, tier });
+    res.json({ ok: true, slots: slotCount });
   } catch (e) {
     res.status(500).json({ error: "Couldn't verify that purchase: " + e.message });
   }
@@ -789,6 +851,7 @@ app.get("/status", (req, res) => {
     uptime: Math.floor((Date.now() - s.startedAt) / 1000),
     secondsLeft: Math.max(0, Math.floor((s.expiresAt - Date.now()) / 1000)),
     log: s.log.slice(-14),
+    trial: !!s.loopTrial,
   });
 });
 
@@ -848,7 +911,7 @@ app.get("/admin/api/overview", (req, res) => {
     totalLeads: leads.length,
     totalWaitlist: waitlist.length,
     totalSubscribers: subscribers.size,
-    totalMulti: [...subscribers.values()].filter((t) => t === "multi").length,
+    totalMulti: [...subscribers.values()].filter((n) => n > 1).length,
     playBillingEnabled: googlePlay.PLAY_BILLING_ENABLED,
     active,
     recentLeads: leads.slice(-25).reverse(),

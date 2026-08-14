@@ -39,6 +39,7 @@ import com.streamza.loop.ui.MyVideosScreen
 import com.streamza.loop.ui.SettingsScreen
 import com.streamza.loop.ui.SignInScreen
 import com.streamza.loop.ui.StreamScreen
+import com.streamza.loop.ui.SubscriptionScreen
 import com.streamza.loop.ui.theme.StreamzaLoopTheme
 import kotlinx.coroutines.launch
 
@@ -82,6 +83,8 @@ private sealed class Tab(val route: String, val label: String) {
     data object Settings : Tab("settings", "Settings")
 }
 
+private const val SUBSCRIPTION_ROUTE = "subscription"
+
 @androidx.compose.runtime.Composable
 private fun StreamzaLoopApp(viewModel: AppViewModel, billingManager: BillingManager, activity: Activity) {
     val repo by viewModel.repo.collectAsState()
@@ -109,6 +112,9 @@ private fun StreamzaLoopApp(viewModel: AppViewModel, billingManager: BillingMana
             restoreState = true
         }
     }
+    // The paywall is pushed on top of whichever tab triggered it (not a bottom-nav destination itself),
+    // so back returns to that tab instead of Home — auto-shown the moment a free trial runs out.
+    val goToSubscription: () -> Unit = { navController.navigate(SUBSCRIPTION_ROUTE) }
 
     val tabs = listOf(Tab.Home, Tab.Stream, Tab.Live, Tab.Videos, Tab.Settings)
 
@@ -146,16 +152,20 @@ private fun StreamzaLoopApp(viewModel: AppViewModel, billingManager: BillingMana
                     onGoToLive = { goTo(Tab.Live.route) },
                     onGoToVideos = { goTo(Tab.Videos.route) },
                     onGoToSettings = { goTo(Tab.Settings.route) },
+                    onGoToSubscription = goToSubscription,
                 )
             }
             composable(Tab.Stream.route) {
-                StreamScreen(viewModel, liveToken, onGoToLive = { goTo(Tab.Live.route) })
+                StreamScreen(viewModel, liveToken, onGoToLive = { goTo(Tab.Live.route) }, onGoToSubscription = goToSubscription)
             }
             composable(Tab.Live.route) {
-                LiveScreen(viewModel, liveToken, onGoToStream = { goTo(Tab.Stream.route) })
+                LiveScreen(viewModel, liveToken, onGoToStream = { goTo(Tab.Stream.route) }, onGoToSubscription = goToSubscription)
             }
             composable(Tab.Videos.route) { MyVideosScreen(viewModel) }
-            composable(Tab.Settings.route) { SettingsScreen(viewModel, billingManager, activity) }
+            composable(Tab.Settings.route) { SettingsScreen(viewModel, activity, onOpenSubscription = goToSubscription) }
+            composable(SUBSCRIPTION_ROUTE) {
+                SubscriptionScreen(viewModel, billingManager, activity, onBack = { navController.popBackStack() })
+            }
         }
     }
 }

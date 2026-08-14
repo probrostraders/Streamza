@@ -38,6 +38,11 @@ data class AuthMeResponse(
     val subscribed: Boolean = false,
     val tier: String? = null,
     val multi: Boolean = false,
+    // Real entitlement (server.js authPayload()'s app branch): how many destinations this account may
+    // stream to at once — 1 by default (covers the free-trial case), the purchased slot count once
+    // subscribed. trialAvailable is whether the one free 15-minute stream is still unclaimed.
+    val maxDestinations: Int = 1,
+    val trialAvailable: Boolean = false,
     val portal: String? = null,
     val slot: MySlot? = null,
     val error: String? = null,
@@ -72,7 +77,9 @@ data class StartResponse(
     val expiresAt: Long? = null,
     val destinations: Int? = null,
     val multistreamLimited: Boolean = false,
+    val trial: Boolean = false,
     val error: String? = null,
+    val trialExhausted: Boolean = false,
 )
 
 @Serializable
@@ -92,6 +99,7 @@ data class StatusResponse(
     val log: List<String>? = null,
     val endReason: String? = null,
     val endMessage: String? = null,
+    val trial: Boolean = false,
 )
 
 @Serializable
@@ -137,16 +145,18 @@ data class R2CompleteRequest(val r2Key: String, val r2UploadId: String, val part
 data class R2AbortRequest(val r2Key: String, val r2UploadId: String)
 
 // ---- Google Play Billing verification (see server.js /billing/*) — product ids are fetched from
-// the server rather than hardcoded here so Play Console is the one place tier ids live.
+// the server rather than hardcoded here so Play Console is the one place tier ids live. One product
+// per destination-slot count ("1"/"2"/"3" -> product id); weekly/monthly/yearly are base plans within
+// each product, read straight from Play's own ProductDetails (see BillingManager.periodOffers()).
 
 @Serializable
-data class BillingConfigResponse(val enabled: Boolean = false, val productSingle: String? = null, val productMulti: String? = null)
+data class BillingConfigResponse(val enabled: Boolean = false, val products: Map<String, String> = emptyMap())
 
 @Serializable
 data class VerifyPurchaseRequest(val purchaseToken: String)
 
 @Serializable
-data class VerifyPurchaseResponse(val ok: Boolean = false, val tier: String? = null, val error: String? = null)
+data class VerifyPurchaseResponse(val ok: Boolean = false, val slots: Int? = null, val error: String? = null)
 
 interface StreamzaApi {
     @GET("auth/config")
@@ -174,9 +184,12 @@ interface StreamzaApi {
     // Server expects multipart/form-data for /start regardless of whether a fresh file is attached
     // (it's parsed by multer's upload.single("video") middleware either way) — fields arrive as a
     // map so the caller only includes whichever of pendingUploadId/fileId/slot actually apply.
+    // Returns the raw Response (not the unwrapped body) because /start reports every failure — full
+    // slots, bad codec, trial exhausted — via a non-2xx status with a real JSON error body; unwrapping
+    // would make Retrofit throw a generic HttpException and lose that message (see AppRepository.goLive).
     @Multipart
     @POST("start")
-    suspend fun start(@PartMap fields: Map<String, @JvmSuppressWildcards RequestBody>): StartResponse
+    suspend fun start(@PartMap fields: Map<String, @JvmSuppressWildcards RequestBody>): Response<StartResponse>
 
     @POST("stop")
     suspend fun stop(@Body body: StopRequest): OkResponse

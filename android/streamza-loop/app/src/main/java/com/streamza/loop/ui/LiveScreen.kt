@@ -45,14 +45,14 @@ import kotlinx.coroutines.launch
 private const val POLL_INTERVAL_MS = 3000L
 
 @Composable
-fun LiveScreen(viewModel: AppViewModel, liveToken: String?, onGoToStream: () -> Unit) {
+fun LiveScreen(viewModel: AppViewModel, liveToken: String?, onGoToStream: () -> Unit, onGoToSubscription: () -> Unit) {
     val repo by viewModel.repo.collectAsState()
     (repo ?: return)
 
     if (liveToken == null) {
         EmptyLiveState(onGoToStream)
     } else {
-        LiveDashboard(repo = repo!!, token = liveToken, onStopped = viewModel::onStopped)
+        LiveDashboard(repo = repo!!, token = liveToken, onStopped = viewModel::onStopped, onGoToSubscription = onGoToSubscription)
     }
 }
 
@@ -73,17 +73,22 @@ private fun EmptyLiveState(onGoToStream: () -> Unit) {
 }
 
 @Composable
-private fun LiveDashboard(repo: AppRepository, token: String, onStopped: () -> Unit) {
+private fun LiveDashboard(repo: AppRepository, token: String, onStopped: () -> Unit, onGoToSubscription: () -> Unit) {
     var status by remember { mutableStateOf<StatusResponse?>(null) }
     var stopping by remember { mutableStateOf(false) }
+    var wasTrial by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(token) {
         while (true) {
             val res = repo.status(token).getOrNull()
             status = res
+            if (res != null && res.running) wasTrial = res.trial
             if (res == null || !res.running) {
                 onStopped()
+                // The 15-minute trial just ran out — take them straight to Subscribe instead of
+                // leaving them staring at an empty dashboard wondering why it stopped.
+                if (wasTrial) onGoToSubscription()
                 break
             }
             delay(POLL_INTERVAL_MS)
@@ -103,6 +108,17 @@ private fun LiveDashboard(repo: AppRepository, token: String, onStopped: () -> U
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Surface(shape = CircleShape, color = StreamzaRed, modifier = Modifier.size(10.dp)) {}
             Text("Live", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            if (s.trial) {
+                Surface(color = StreamzaRed.copy(alpha = 0.15f), shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)) {
+                    Text(
+                        "FREE TRIAL",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = StreamzaRed,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                    )
+                }
+            }
         }
         Text(s.file ?: "video.mp4", style = MaterialTheme.typography.titleMedium)
 
