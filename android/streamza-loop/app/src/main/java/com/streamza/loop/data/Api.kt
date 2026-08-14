@@ -136,6 +136,18 @@ data class R2CompleteRequest(val r2Key: String, val r2UploadId: String, val part
 @Serializable
 data class R2AbortRequest(val r2Key: String, val r2UploadId: String)
 
+// ---- Google Play Billing verification (see server.js /billing/*) — product ids are fetched from
+// the server rather than hardcoded here so Play Console is the one place tier ids live.
+
+@Serializable
+data class BillingConfigResponse(val enabled: Boolean = false, val productSingle: String? = null, val productMulti: String? = null)
+
+@Serializable
+data class VerifyPurchaseRequest(val purchaseToken: String)
+
+@Serializable
+data class VerifyPurchaseResponse(val ok: Boolean = false, val tier: String? = null, val error: String? = null)
+
 interface StreamzaApi {
     @GET("auth/config")
     suspend fun authConfig(): AuthConfigResponse
@@ -199,4 +211,10 @@ interface StreamzaApi {
     // just this call. No auth needed here: the presigned URL itself is the credential.
     @PUT
     suspend fun r2PutPart(@Url url: String, @Body body: RequestBody): Response<ResponseBody>
+
+    @GET("billing/config")
+    suspend fun billingConfig(): BillingConfigResponse
+
+    @POST("billing/verify-purchase")
+    suspend fun verifyPurchase(@Body body: VerifyPurchaseRequest): VerifyPurchaseResponse
 }

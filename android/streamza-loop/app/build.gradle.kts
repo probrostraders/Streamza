@@ -70,4 +70,7 @@ dependencies {
 
     // Coil for thumbnails (video/photo picker previews)
     implementation("io.coil-kt:coil-compose:2.7.0")
+
+    // Google Play Billing (subscription purchase flow)
+    implementation("com.android.billingclient:billing-ktx:7.1.1")
 }

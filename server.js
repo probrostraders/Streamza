@@ -17,6 +17,7 @@ const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 const r2 = require("./r2"); // Cloudflare R2 storage — Streamza Loop's chunked uploads, and Web Studio's local uploads promoted to it opportunistically while under the free-tier budget (see R2_MAX_TOTAL_BYTES)
+const googlePlay = require("./googlePlay"); // Google Play Developer API — verifies Streamza Loop's subscription purchases
 
 const PORT = process.env.PORT || 3000;
 const ADMIN_KEY = process.env.ADMIN_KEY || "streamza-admin";
@@ -49,6 +50,11 @@ const LS_WEBHOOK_SECRET = process.env.LS_WEBHOOK_SECRET || ""; // webhook signin
 const LS_PRICE_LABEL = process.env.LS_PRICE_LABEL || "";       // e.g. "$4.99/mo"
 const LS_PRICE_LABEL_MULTI = process.env.LS_PRICE_LABEL_MULTI || ""; // e.g. "$10/mo"
 const MULTISTREAM_MAX = Number(process.env.MULTISTREAM_MAX) || 3;    // max simultaneous platforms on the multistream plan
+// --- Streamza Loop's Play Billing product IDs — must match exactly what's created in Play Console.
+// The actual price and any free-trial phase are configured there too, not here; this app only ever
+// references the product IDs and displays whatever Play Billing reports back for them.
+const PLAY_PRODUCT_SINGLE = process.env.PLAY_PRODUCT_SINGLE || "streamza_loop_single";
+const PLAY_PRODUCT_MULTI = process.env.PLAY_PRODUCT_MULTI || "streamza_loop_multi";
 const ckurl = (v) => (LS_STORE && v) ? `https://${LS_STORE}.lemonsqueezy.com/checkout/buy/${v}` : "";
 const LS_CHECKOUT = ckurl(LS_VARIANT_ID);
 const LS_CHECKOUT_MULTI = ckurl(LS_VARIANT_MULTI);
@@ -181,7 +187,7 @@ app.use((req, res, next) => {
 // Keep app/API surfaces out of search results. Anything that isn't a marketing
 // page has no business being indexed, and robots.txt alone doesn't deindex a URL
 // that other sites happen to link to — the header does.
-const NOINDEX_PREFIXES = ["/admin", "/auth", "/pay", "/owner", "/lemonsqueezy", "/paddle", "/r2",
+const NOINDEX_PREFIXES = ["/admin", "/auth", "/pay", "/billing", "/owner", "/lemonsqueezy", "/paddle", "/r2",
   "/status", "/slots", "/start", "/stop", "/subscribed", "/live-preview",
   "/myuploads", "/deleteupload", "/waitlist", "/twitch-callback", "/studio-assets"];
 app.use((req, res, next) => {
@@ -774,6 +780,38 @@ app.get("/pay/config", (_req, res) =>
     // Lemon Squeezy (dormant fallback — used when provider === "lemonsqueezy")
     checkoutUrl: LS_CHECKOUT, checkoutMultiUrl: LS_CHECKOUT_MULTI,
   }));
+
+// Product IDs for the Android app's Play Billing plan-picker — public/client-safe, same idea as
+// /pay/config above but for Streamza Loop's checkout instead of Web Studio's.
+app.get("/billing/config", (_req, res) =>
+  res.json({ enabled: googlePlay.PLAY_BILLING_ENABLED, productSingle: PLAY_PRODUCT_SINGLE, productMulti: PLAY_PRODUCT_MULTI }));
+
+// Verifies a Play Billing purchase server-side and, on success, marks the buyer's email in the same
+// `subscribers` Map Web Studio already reads via isSubscribed()/canMultistream() — one subscription,
+// unlocks both. Email comes from the session (readSession), never from the request body, so a
+// purchase token can't be credited to an arbitrary email.
+app.post("/billing/verify-purchase", rateLimit(10, 60000), async (req, res) => {
+  if (!googlePlay.PLAY_BILLING_ENABLED) return res.status(503).json({ error: "Billing verification isn't configured yet." });
+  const email = readSession(req);
+  if (!email) return res.status(401).json({ error: "Sign in first." });
+  const purchaseToken = (req.body.purchaseToken || "").toString();
+  if (!purchaseToken) return res.status(400).json({ error: "Missing purchase token." });
+  try {
+    const sub = await googlePlay.getSubscription(purchaseToken);
+    const state = sub.subscriptionState;
+    if (state !== "SUBSCRIPTION_STATE_ACTIVE" && state !== "SUBSCRIPTION_STATE_IN_GRACE_PERIOD") {
+      return res.status(400).json({ error: "This subscription isn't active." });
+    }
+    const productId = (sub.lineItems && sub.lineItems[0] && sub.lineItems[0].productId) || "";
+    const tier = productId === PLAY_PRODUCT_MULTI ? "multi" : "single";
+    try { await googlePlay.acknowledgePurchase(productId, purchaseToken); } catch (_) {} // no-op if already acknowledged
+    subscribers.set(email, tier); saveSubs();
+    portals.set(email, `https://play.google.com/store/account/subscriptions?sku=${encodeURIComponent(productId)}&package=${encodeURIComponent(googlePlay.PACKAGE_NAME)}`); savePortals();
+    res.json({ ok: true, tier });
+  } catch (e) {
+    res.status(500).json({ error: "Couldn't verify that purchase: " + e.message });
+  }
+});
 
 // Studio polls this after checkout to know when the webhook has activated the subscription.
 app.get("/subscribed", (req, res) => {

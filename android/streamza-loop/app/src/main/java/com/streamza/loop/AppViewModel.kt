@@ -3,10 +3,12 @@ package com.streamza.loop
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.streamza.loop.data.AppPreferences
 import com.streamza.loop.data.AppRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /** Holds the one AppRepository instance for the process and the sign-in state every screen reads.
@@ -21,6 +23,10 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
      *  it's non-null, and fall back to the server-reported slot token (auth.value?.slot?.token)
      *  otherwise — that combination is done at the call site, not here, so it stays a plain StateFlow. */
     val justClaimedToken = MutableStateFlow<String?>(null)
+
+    private val prefs = AppPreferences(application)
+    val defaultLoop: StateFlow<Boolean> = prefs.defaultLoop.stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.Eagerly, true)
+    val themeMode: StateFlow<String> = prefs.themeMode.stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.Eagerly, "system")
 
     init {
         viewModelScope.launch {
@@ -41,5 +47,13 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun refreshAuth() {
         viewModelScope.launch { _repo.value?.refreshAuth() }
+    }
+
+    fun setDefaultLoop(value: Boolean) {
+        viewModelScope.launch { prefs.setDefaultLoop(value) }
+    }
+
+    fun setThemeMode(value: String) {
+        viewModelScope.launch { prefs.setThemeMode(value) }
     }
 }

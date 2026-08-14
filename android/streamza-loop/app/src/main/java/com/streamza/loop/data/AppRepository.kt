@@ -115,6 +115,14 @@ class AppRepository private constructor(
         res
     }
 
+    suspend fun billingConfig(): Result<BillingConfigResponse> = runCatching { api.billingConfig() }
+
+    suspend fun verifyPurchase(purchaseToken: String): Result<VerifyPurchaseResponse> = runCatching {
+        val res = api.verifyPurchase(VerifyPurchaseRequest(purchaseToken))
+        if (!res.ok) throw ApiException(res.error ?: "Couldn't verify that purchase.")
+        res
+    }
+
     companion object {
         suspend fun create(context: Context): AppRepository {
             val cookieJar = SessionCookieJar.create(context, API_HOST)
