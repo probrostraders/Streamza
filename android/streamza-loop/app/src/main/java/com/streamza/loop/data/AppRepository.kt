@@ -62,6 +62,10 @@ class AppRepository private constructor(
         video: PickedVideo,
         onProgress: (sent: Long, total: Long) -> Unit,
     ): Result<PendingUploadResponse> = runCatching {
+        val maxMB = runCatching { api.r2Status().maxUploadMB }.getOrDefault(300)
+        if (video.size > maxMB.toLong() * 1024 * 1024) {
+            throw ApiException("Videos are limited to $maxMB MB for looping streams — trim it down or use a shorter clip.")
+        }
         try {
             uploadVideoToR2(api, resolver, video, onProgress)
         } catch (_: R2UnavailableException) {
@@ -140,6 +144,9 @@ class AppRepository private constructor(
                     val tagged = if (req.url.host == API_HOST) req.newBuilder().addHeader("X-Streamza-Client", "loop").build() else req
                     chain.proceed(tagged)
                 }
+                // BASIC only logs method/URL/status/timing — never headers or bodies (which would
+                // include stream keys and the session cookie), so it's safe to leave on unconditionally.
+                .addInterceptor(okhttp3.logging.HttpLoggingInterceptor().apply { level = okhttp3.logging.HttpLoggingInterceptor.Level.BASIC })
                 .build()
             val contentType = "application/json".toMediaType()
             val retrofit = Retrofit.Builder()

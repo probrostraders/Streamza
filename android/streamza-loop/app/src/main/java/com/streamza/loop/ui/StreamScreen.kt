@@ -3,18 +3,22 @@ package com.streamza.loop.ui
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,15 +38,19 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.streamza.loop.AppViewModel
+import com.streamza.loop.UploadState
 import com.streamza.loop.data.AppRepository
 import com.streamza.loop.data.AuthMeResponse
 import com.streamza.loop.data.Destination
-import com.streamza.loop.data.PickedVideo
 import com.streamza.loop.data.StartException
+import com.streamza.loop.data.formatFileSize
 import com.streamza.loop.data.resolvePickedVideo
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.Icons
@@ -54,13 +62,16 @@ fun StreamScreen(viewModel: AppViewModel, liveToken: String?, onGoToLive: () -> 
     val auth by (repo?.auth ?: return).collectAsState()
 
     val defaultLoop by viewModel.defaultLoop.collectAsState()
+    val uploadState by viewModel.uploadState.collectAsState()
 
     if (liveToken != null) {
         AlreadyLiveCard(onGoToLive)
     } else {
         NewStreamForm(
-            repo = repo!!, auth = auth, defaultLoop = defaultLoop,
-            onClaimed = { token -> viewModel.onClaimed(token); onGoToLive() },
+            repo = repo!!, auth = auth, defaultLoop = defaultLoop, uploadState = uploadState,
+            onPickVideo = viewModel::pickVideo,
+            onClearVideo = viewModel::clearPickedVideo,
+            onClaimed = { token -> viewModel.onGoneLive(); viewModel.onClaimed(token); onGoToLive() },
             onGoToSubscription = onGoToSubscription,
         )
     }
@@ -89,22 +100,23 @@ private fun NewStreamForm(
     repo: AppRepository,
     auth: AuthMeResponse?,
     defaultLoop: Boolean,
+    uploadState: UploadState,
+    onPickVideo: (com.streamza.loop.data.PickedVideo) -> Unit,
+    onClearVideo: () -> Unit,
     onClaimed: (String) -> Unit,
     onGoToSubscription: () -> Unit,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    var picked by remember { mutableStateOf<PickedVideo?>(null) }
     var dests by remember { mutableStateOf(listOf(DestinationDraft())) }
     var loop by remember { mutableStateOf(defaultLoop) }
     var agree by remember { mutableStateOf(false) }
-    var uploading by remember { mutableStateOf(false) }
-    var uploadProgress by remember { mutableStateOf(0f) }
+    var claiming by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
 
     val pickVideo = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) picked = resolvePickedVideo(context.contentResolver, uri)
+        if (uri != null) onPickVideo(resolvePickedVideo(context.contentResolver, uri))
     }
 
     val maxDests = auth?.maxDestinations ?: 1
@@ -134,12 +146,52 @@ private fun NewStreamForm(
         }
 
         Section(title = "1. Video") {
-            OutlinedButton(onClick = {
-                pickVideo.launch(androidx.activity.result.PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
-            }, modifier = Modifier.fillMaxWidth()) {
-                Text(picked?.name ?: "Choose a video")
+            val picked = uploadState.picked
+            if (picked == null) {
+                OutlinedButton(onClick = {
+                    pickVideo.launch(androidx.activity.result.PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
+                }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Choose a video")
+                }
+            } else {
+                Card(
+                    onClick = { pickVideo.launch(androidx.activity.result.PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Box(modifier = Modifier.size(64.dp).clip(RoundedCornerShape(8.dp))) {
+                            AsyncImage(
+                                model = picked.uri,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop,
+                            )
+                            if (uploadState.uploading) {
+                                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                    CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                                }
+                            }
+                        }
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(picked.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                            Text(
+                                when {
+                                    uploadState.error != null -> uploadState.error
+                                    uploadState.uploading -> "Uploading… ${(uploadState.progress * 100).toInt()}%"
+                                    uploadState.uploadId != null -> "Uploaded, ready to go · ${formatFileSize(picked.size)}"
+                                    else -> formatFileSize(picked.size)
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (uploadState.error != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        IconButton(onClick = onClearVideo) { Icon(Icons.Default.Close, contentDescription = "Remove video") }
+                    }
+                }
+                if (uploadState.uploading) {
+                    LinearProgressIndicator(progress = { uploadState.progress }, modifier = Modifier.fillMaxWidth())
+                }
             }
-            picked?.let { Text("${it.size / 1024 / 1024} MB", style = MaterialTheme.typography.bodySmall) }
         }
 
         Section(title = if (dests.size > 1) "2. Destinations" else "2. Destination") {
@@ -179,35 +231,17 @@ private fun NewStreamForm(
             }
         }
 
-        if (uploading) {
-            LinearProgressIndicator(progress = { uploadProgress }, modifier = Modifier.fillMaxWidth())
-        }
-
         error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
 
         Button(
-            enabled = !uploading && picked != null && agree && dests.all { it.isValid },
+            enabled = uploadState.ready && !claiming && agree && dests.all { it.isValid },
             modifier = Modifier.fillMaxWidth(),
             onClick = {
-                val video = picked ?: return@Button
+                val uploadId = uploadState.uploadId ?: return@Button
                 if (email.isBlank()) { error = "Sign in again — your account email is missing."; return@Button }
-                uploading = true
+                claiming = true
                 error = null
                 scope.launch {
-                    val uploadResult = repo.uploadVideo(video) { sent, total ->
-                        if (total > 0) uploadProgress = sent.toFloat() / total.toFloat()
-                    }
-                    uploadResult.onFailure {
-                        error = it.message ?: "Upload failed."
-                        uploading = false
-                        return@launch
-                    }
-                    val uploadId = uploadResult.getOrNull()?.uploadId
-                    if (uploadId == null) {
-                        error = "Upload finished but no upload id was returned."
-                        uploading = false
-                        return@launch
-                    }
                     val finalDests = dests.map { Destination(it.resolvedUrl, it.key) }
                     repo.goLive(email, uploadId, finalDests, loop, agree)
                         .onSuccess { start -> onClaimed(start.token!!) }
@@ -215,11 +249,11 @@ private fun NewStreamForm(
                             if (it is StartException && it.trialExhausted) onGoToSubscription()
                             else error = it.message ?: "Couldn't go live."
                         }
-                    uploading = false
+                    claiming = false
                 }
             },
         ) {
-            Text("Go Live")
+            Text(if (claiming) "Going live…" else "Go Live")
         }
     }
 }

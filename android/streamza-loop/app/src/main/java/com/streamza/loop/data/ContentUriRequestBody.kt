@@ -13,6 +13,15 @@ import java.io.IOException
  *  multipart request and for showing "12.3 MB" in the UI before upload starts). */
 data class PickedVideo(val uri: Uri, val name: String, val size: Long, val mimeType: String)
 
+/** "830 KB" / "12.3 MB" instead of the old `size / 1024 / 1024` integer division, which always showed
+ *  "0 MB" for anything under 1 MB (e.g. a short test clip) — real videos are usually fine, but nothing
+ *  should ever display a lie about its own size. */
+fun formatFileSize(bytes: Long): String = when {
+    bytes < 1024 -> "$bytes B"
+    bytes < 1024 * 1024 -> "${bytes / 1024} KB"
+    else -> "%.1f MB".format(bytes / (1024.0 * 1024.0))
+}
+
 fun resolvePickedVideo(resolver: ContentResolver, uri: Uri): PickedVideo {
     var name = "video.mp4"
     var size = 0L

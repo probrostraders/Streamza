@@ -68,8 +68,10 @@ dependencies {
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
-    // Coil for thumbnails (video/photo picker previews)
+    // Coil for thumbnails (video/photo picker previews) — coil-video adds the video-frame decoder so
+    // AsyncImage can show a real thumbnail straight from a picked video's content:// Uri.
     implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation("io.coil-kt:coil-video:2.7.0")
 
     // Google Play Billing (subscription purchase flow)
     implementation("com.android.billingclient:billing-ktx:7.1.1")

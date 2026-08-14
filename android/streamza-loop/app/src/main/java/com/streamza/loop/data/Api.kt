@@ -127,7 +127,7 @@ data class R2CreateRequest(val name: String, val contentType: String, val size: 
 data class R2CreateResponse(val ok: Boolean = false, val r2Key: String? = null, val r2UploadId: String? = null, val name: String? = null, val r2Unavailable: Boolean = false, val error: String? = null)
 
 @Serializable
-data class R2StatusResponse(val available: Boolean = false)
+data class R2StatusResponse(val available: Boolean = false, val maxUploadMB: Int = 300)
 
 @Serializable
 data class R2PartUrlRequest(val r2Key: String, val r2UploadId: String, val partNumber: Int)

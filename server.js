@@ -316,6 +316,11 @@ const libTouch = (fileId, signedIn, canCopy) => { const u = library.find((x) => 
 const R2_MAX_TOTAL_BYTES = (Number(process.env.R2_MAX_TOTAL_GB) || 9) * 1024 ** 3;
 let r2UsedBytes = 0; // kept approximately current by direct increment/decrement, corrected hourly (see the R2 sweep) so it can never drift far from reality
 function r2HasBudget(size) { return r2.R2_ENABLED && (r2UsedBytes + (size || 0)) <= R2_MAX_TOTAL_BYTES; }
+// Streamza Loop app only — loop videos are short clips meant to play on repeat, not full movies, so
+// cap them well under Web Studio's 1.5GB local-disk limit. Bounds one subscriber's worst case
+// (LIB_MAX_PER_USER videos, each at this cap) instead of letting a single account's saved library
+// alone threaten the whole shared 9GB R2 budget above.
+const LOOP_MAX_UPLOAD_BYTES = (Number(process.env.LOOP_MAX_UPLOAD_MB) || 300) * 1024 ** 2;
 if (r2.R2_ENABLED) {
   r2.listAllObjects().then((objs) => { r2UsedBytes = objs.reduce((n, o) => n + o.size, 0); }).catch(() => {});
 }
@@ -561,6 +566,9 @@ app.post("/pending-upload", rateLimit(15, 60000), upload.single("video"), async 
 app.post("/r2/multipart/create", (req, res) => {
   if (!readSession(req)) return res.status(401).json({ error: "Sign in first." });
   const size = Number(req.body.size) || 0;
+  if (req.get("X-Streamza-Client") === "loop" && size > LOOP_MAX_UPLOAD_BYTES) {
+    return res.status(400).json({ error: `Videos are limited to ${Math.round(LOOP_MAX_UPLOAD_BYTES / 1024 / 1024)} MB — trim it down or use a shorter clip.` });
+  }
   if (!r2HasBudget(size)) return res.json({ ok: false, r2Unavailable: true, error: "Cloud upload is at its free-tier limit right now." });
   const name = (req.body.name || "video.mp4").toString();
   const contentType = (req.body.contentType || "video/mp4").toString();
@@ -611,7 +619,7 @@ app.post("/r2/multipart/abort", (req, res) => {
 // attempting R2 first and only finding out from /r2/multipart/create that the budget's spent. Not
 // authoritative on its own — /r2/multipart/create re-checks with the real file size, since a status
 // check with no size in mind can't know if this *specific* upload would tip it over the cap.
-app.get("/r2/status", (_req, res) => res.json({ available: r2HasBudget(0) }));
+app.get("/r2/status", (_req, res) => res.json({ available: r2HasBudget(0), maxUploadMB: Math.round(LOOP_MAX_UPLOAD_BYTES / 1024 / 1024) }));
 
 app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res) => {
   const file = req.file;

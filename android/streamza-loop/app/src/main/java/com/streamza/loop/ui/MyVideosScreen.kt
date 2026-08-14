@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.streamza.loop.AppViewModel
 import com.streamza.loop.data.SavedVideo
+import com.streamza.loop.data.formatFileSize
 import kotlinx.coroutines.launch
 
 @Composable
@@ -65,7 +66,7 @@ fun MyVideosScreen(viewModel: AppViewModel) {
                     ) {
                         Column {
                             Text(v.name, style = MaterialTheme.typography.bodyLarge)
-                            Text("${v.size / 1024 / 1024} MB", style = MaterialTheme.typography.bodySmall)
+                            Text(formatFileSize(v.size), style = MaterialTheme.typography.bodySmall)
                         }
                         IconButton(onClick = {
                             scope.launch {
