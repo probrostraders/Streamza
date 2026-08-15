@@ -4,7 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,7 +24,7 @@ fun AppLogo(modifier: Modifier = Modifier, size: Dp = 32.dp) {
     Image(
         painter = painterResource(R.drawable.ic_streamza_logo),
         contentDescription = null,
-        modifier = modifier.size(size).clip(RoundedCornerShape(size / 4)),
+        modifier = modifier.size(size).clip(CircleShape),
     )
 }
 
