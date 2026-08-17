@@ -84,7 +84,6 @@ fun SubscriptionScreen(viewModel: AppViewModel, billingManager: BillingManager, 
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = "Back") }
-            AppLogo(size = 28.dp)
             Spacer(Modifier.width(8.dp))
             Text("Subscription", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         }

@@ -62,10 +62,7 @@ fun HomeScreen(
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                AppLogo(size = 40.dp)
-                Text("Streamza Loop", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-            }
+            Text("Streamza Loop", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
             Text(
                 "Welcome back${auth?.name?.let { ", $it" } ?: ""}",
                 style = MaterialTheme.typography.bodyMedium,

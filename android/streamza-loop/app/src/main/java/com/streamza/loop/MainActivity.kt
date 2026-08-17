@@ -9,8 +9,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LiveTv
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.VideoLibrary
@@ -173,7 +173,7 @@ private fun StreamzaLoopApp(viewModel: AppViewModel, billingManager: BillingMana
 private fun iconFor(tab: Tab) = when (tab) {
     Tab.Home -> Icons.Default.Home
     Tab.Stream -> Icons.Default.Videocam
-    Tab.Live -> Icons.Default.FiberManualRecord
+    Tab.Live -> Icons.Default.LiveTv
     Tab.Videos -> Icons.Default.VideoLibrary
     Tab.Settings -> Icons.Default.Settings
 }

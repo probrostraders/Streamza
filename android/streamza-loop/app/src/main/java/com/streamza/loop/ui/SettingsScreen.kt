@@ -47,7 +47,7 @@ fun SettingsScreen(viewModel: AppViewModel, activity: Activity, onOpenSubscripti
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
-        ScreenHeader("Settings")
+        Text("Settings", style = MaterialTheme.typography.headlineSmall)
 
         Card {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
