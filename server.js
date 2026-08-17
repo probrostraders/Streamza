@@ -339,10 +339,12 @@ const libTouch = (fileId, signedIn, canCopy) => { const u = library.find((x) => 
 const R2_MAX_TOTAL_BYTES = (Number(process.env.R2_MAX_TOTAL_GB) || 9) * 1024 ** 3;
 let r2UsedBytes = 0; // kept approximately current by direct increment/decrement, corrected hourly (see the R2 sweep) so it can never drift far from reality
 function r2HasBudget(size) { return r2.R2_ENABLED && (r2UsedBytes + (size || 0)) <= R2_MAX_TOTAL_BYTES; }
-// Streamza Loop app only — a standard per-video cap like most streaming/upload apps use, not tied to
-// subscription status (that's what LOOP_SUB_MAX_TOTAL_BYTES and the free-tier 2-hour retention above
-// are for instead — this just stops any single upload from being unreasonably huge).
-const LOOP_MAX_UPLOAD_BYTES = (Number(process.env.LOOP_MAX_UPLOAD_MB) || 1000) * 1024 ** 2;
+// Streamza Loop app only — a standard per-video cap like most streaming/upload apps use. Paid accounts
+// get a larger one (still well under their 5GB total library budget, so a subscriber can hold at least
+// a couple of full-size videos, not just one) — free accounts get the smaller, illustrative-example one.
+const LOOP_MAX_UPLOAD_BYTES_FREE = (Number(process.env.LOOP_MAX_UPLOAD_MB_FREE) || 1000) * 1024 ** 2;
+const LOOP_MAX_UPLOAD_BYTES_SUB = (Number(process.env.LOOP_MAX_UPLOAD_MB_SUB) || 2000) * 1024 ** 2;
+const loopMaxUploadBytesFor = (email) => (loopSlotsFor(email) > 0 ? LOOP_MAX_UPLOAD_BYTES_SUB : LOOP_MAX_UPLOAD_BYTES_FREE);
 if (r2.R2_ENABLED) {
   r2.listAllObjects().then((objs) => { r2UsedBytes = objs.reduce((n, o) => n + o.size, 0); }).catch(() => {});
 }
@@ -605,10 +607,14 @@ app.post("/pending-upload", rateLimit(15, 60000), upload.single("video"), async 
 // r2Unavailable (not a 5xx — this is an expected, normal outcome once the free-tier budget is spent)
 // tells the client to fall back to the local-disk upload path instead of treating it as a hard error.
 app.post("/r2/multipart/create", (req, res) => {
-  if (!readSession(req)) return res.status(401).json({ error: "Sign in first." });
+  const sessionEmail = readSession(req);
+  if (!sessionEmail) return res.status(401).json({ error: "Sign in first." });
   const size = Number(req.body.size) || 0;
-  if (req.get("X-Streamza-Client") === "loop" && size > LOOP_MAX_UPLOAD_BYTES) {
-    return res.status(400).json({ error: `Videos are limited to ${Math.round(LOOP_MAX_UPLOAD_BYTES / 1024 / 1024)} MB — trim it down or use a shorter clip.` });
+  if (req.get("X-Streamza-Client") === "loop") {
+    const maxBytes = loopMaxUploadBytesFor(sessionEmail);
+    if (size > maxBytes) {
+      return res.status(400).json({ error: `Videos are limited to ${Math.round(maxBytes / 1024 / 1024)} MB — trim it down or use a shorter clip.` });
+    }
   }
   if (!r2HasBudget(size)) return res.json({ ok: false, r2Unavailable: true, error: "Cloud upload is at its free-tier limit right now." });
   const name = (req.body.name || "video.mp4").toString();
@@ -660,7 +666,10 @@ app.post("/r2/multipart/abort", (req, res) => {
 // attempting R2 first and only finding out from /r2/multipart/create that the budget's spent. Not
 // authoritative on its own — /r2/multipart/create re-checks with the real file size, since a status
 // check with no size in mind can't know if this *specific* upload would tip it over the cap.
-app.get("/r2/status", (_req, res) => res.json({ available: r2HasBudget(0), maxUploadMB: Math.round(LOOP_MAX_UPLOAD_BYTES / 1024 / 1024) }));
+app.get("/r2/status", (req, res) => {
+  const maxBytes = loopMaxUploadBytesFor(readSession(req)); // no session / not signed in -> free-tier cap
+  res.json({ available: r2HasBudget(0), maxUploadMB: Math.round(maxBytes / 1024 / 1024) });
+});
 
 app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res) => {
   const file = req.file;
