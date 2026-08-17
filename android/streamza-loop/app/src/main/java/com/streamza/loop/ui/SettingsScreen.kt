@@ -53,11 +53,8 @@ fun SettingsScreen(viewModel: AppViewModel, activity: Activity, onOpenSubscripti
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(auth?.email ?: "-", style = MaterialTheme.typography.titleMedium)
                 Text(
-                    when {
-                        auth?.subscribed == true -> "Plan: ${auth?.maxDestinations ?: 1} slot${if ((auth?.maxDestinations ?: 1) == 1) "" else "s"}"
-                        auth?.trialAvailable == true -> "Free trial available"
-                        else -> "Free trial used"
-                    }
+                    if (auth?.subscribed == true) "Plan: ${auth?.maxDestinations ?: 1} slot${if ((auth?.maxDestinations ?: 1) == 1) "" else "s"}"
+                    else "Free 20-min streams"
                 )
             }
         }
@@ -89,7 +86,7 @@ fun SettingsScreen(viewModel: AppViewModel, activity: Activity, onOpenSubscripti
         SettingsSection(title = "Subscription") {
             Text(
                 if (auth?.subscribed == true) "You're on the ${auth?.maxDestinations ?: 1}-slot plan."
-                else "Buy slots to stream to more platforms at once, with no free-trial limit.",
+                else "Buy slots to stream to more platforms at once and unlock 24-hour sessions.",
                 style = MaterialTheme.typography.bodyMedium,
             )
             OutlinedButton(onClick = onOpenSubscription, modifier = Modifier.fillMaxWidth()) {

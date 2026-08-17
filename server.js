@@ -25,9 +25,12 @@ const ADMIN_KEY = process.env.ADMIN_KEY || "streamza-admin";
 const SLOT_COUNT = Number(process.env.SLOT_COUNT) || 10; // max safe on the free 1GB micro (-c copy is light; RAM + outbound bandwidth are the limit). Raise via env on a bigger instance.
 const SLOT_MS = 24 * 60 * 60 * 1000;  // every claim streams for this long, then the slot frees up
 // Streamza Loop app only (identified by the X-Streamza-Client header the app sends on every request —
-// see AppRepository.kt): a brand-new account gets ONE free 15-minute stream, then a hard paywall until
-// they subscribe. Web Studio (the website) is untouched by this — it keeps its own unrelated free model.
-const LOOP_TRIAL_MS = 15 * 60 * 1000;
+// see AppRepository.kt): every claim from an account with no active subscription gets a free 20-minute
+// stream, capped to one platform — repeatable, not a one-time trial (Play Billing isn't configured yet,
+// so a hard one-time lockout would leave an account with no way to ever stream again). The app nudges
+// toward Subscribe when a free session ends (see LiveScreen's onGoToSubscription), it doesn't block the
+// next one. Web Studio (the website) is untouched by this — it keeps its own unrelated free model.
+const LOOP_FREE_MS = 20 * 60 * 1000;
 // Streaming pipeline. By default we RE-ENCODE to a YouTube-Live-friendly stream (a keyframe every 2s) so
 // ANY uploaded MP4 goes live cleanly — uploaded files usually have ~5-10s keyframes, which makes YouTube
 // show "not receiving enough video / Preparing". Re-encoding costs CPU; set RELAY_COPY=1 to stream-copy
@@ -106,13 +109,6 @@ function loopSlotsFor(email) {
   return Number.isInteger(n) && n > 0 ? n : 0;
 }
 
-// Emails that have already spent their one free 15-minute Streamza Loop trial — persisted so it
-// survives restarts and can't just be re-granted by reinstalling the app (still keyed by Google
-// account email, not device, since sign-in is required).
-const LOOP_TRIALS_FILE = path.join(DATA_DIR, "looptrials.json");
-let loopTrialsUsed = new Set();
-try { loopTrialsUsed = new Set(JSON.parse(fs.readFileSync(LOOP_TRIALS_FILE, "utf8")) || []); } catch (_) {}
-function saveLoopTrials() { try { fs.writeFileSync(LOOP_TRIALS_FILE, JSON.stringify([...loopTrialsUsed])); } catch (_) {} }
 
 // Customer-portal links per email (captured by the Play Billing verify flow — see
 // /billing/verify-purchase) so a signed-in user can manage/cancel their subscription from Google Play.
@@ -227,8 +223,8 @@ app.get("/auth/config", (_req, res) => res.json({ enabled: AUTH_ON, clientId: GO
 // tierOf(). The Streamza Loop app (identified by X-Streamza-Client: loop, sent on every request — see
 // AppRepository.kt) sees its REAL entitlement instead, since it's the one product that actually gates
 // on it: maxDestinations is how many platforms it may stream to at once (0 until subscribed, in which
-// case a free-trial claim still gets exactly 1), trialAvailable is whether the free 15-minute stream
-// is still unclaimed.
+// case a free claim still gets exactly 1), trialAvailable is whether this account can start a free
+// 20-minute stream right now — always true while unsubscribed, since it's repeatable, not one-time.
 function authPayload(req, email, name) {
   const isLoopApp = req.get("X-Streamza-Client") === "loop";
   if (isLoopApp) {
@@ -237,7 +233,7 @@ function authPayload(req, email, name) {
       signedIn: true, email, name: name || "",
       subscribed: slots > 0, tier: slots > 0 ? String(slots) : null, multi: slots > 1,
       maxDestinations: slots > 0 ? slots : 1,
-      trialAvailable: slots === 0 && !loopTrialsUsed.has(email.toLowerCase()),
+      trialAvailable: slots === 0,
       portal: slots > 0 ? portalFor(email) : null, slot: mySlot(email),
     };
   }
@@ -645,14 +641,10 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
   if (req.body.agree !== "true" && req.body.agree !== "on") return bail(400, "Please confirm you have the rights to stream this content.");
 
   // Streamza Loop app only: real entitlement gating. loopSlots > 0 means a real subscription (that
-  // many destination slots); otherwise this claim can only be the one free 15-minute trial, and if
-  // that's already been used, it's a hard paywall — fail fast, before touching the upload at all.
+  // many destination slots); otherwise this claim is a free 20-minute, single-platform stream —
+  // repeatable every time, not a one-time trial (see the LOOP_FREE_MS comment above for why).
   const loopSlots = isLoopApp ? loopSlotsFor(email) : 0;
-  const loopTrialClaim = isLoopApp && loopSlots === 0;
-  if (loopTrialClaim && loopTrialsUsed.has(email.toLowerCase())) {
-    if (file) rm(file.path);
-    return res.status(402).json({ error: "Your free trial is over — subscribe to keep streaming.", trialExhausted: true });
-  }
+  const loopFreeClaim = isLoopApp && loopSlots === 0;
 
   // Source = a fresh upload, an already pre-uploaded (auto-uploaded on file-select) video, or one of
   // the account's saved videos (no re-upload needed either way). R2-backed sources (Streamza Loop's
@@ -742,21 +734,18 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
   // Signed in via Google (session cookie matches the claimed email), not just typed into the form —
   // this, or an active subscription, is what earns the video a spot in "Your recent videos".
   const signedIn = readSession(req) === email.toLowerCase();
-  const durationMs = loopTrialClaim ? LOOP_TRIAL_MS : SLOT_MS;
+  const durationMs = loopFreeClaim ? LOOP_FREE_MS : SLOT_MS;
   Object.assign(slot, {
     busy: true, email, dests: use.map((d) => d.url), dest: use[0].url, destsFull: use, loop: !!loop,
     file: srcName, filePath: srcStorage === "local" ? srcPath : null, fileSize: srcSize, storage: srcStorage, r2Key: srcR2Key,
-    startedAt: Date.now(), expiresAt: Date.now() + durationMs, token, log: [], loopTrial: loopTrialClaim,
+    startedAt: Date.now(), expiresAt: Date.now() + durationMs, token, log: [], loopTrial: loopFreeClaim,
     stopping: false, restartCount: 0, signedIn,
   });
-  // The trial is spent the moment it's claimed, win or lose — matches "one free stream", not "one free
-  // successful stream". Marked here (not on stream end) so a killed/short session still counts.
-  if (loopTrialClaim) { loopTrialsUsed.add(email.toLowerCase()); saveLoopTrials(); }
   // Videos are saved for reuse (appear under "Your recent videos") for anyone signed in.
   if (isNew) libAdd(email, srcStorage === "r2" ? srcR2Key : path.basename(srcPath), srcName, srcSize, signedIn, srcCanCopy, srcStorage); else libTouch(reuseId, signedIn, srcCanCopy);
-  slog(slot, `Slot ${slot.id} claimed — ${loopTrialClaim ? "15-min trial" : "24h"}${use.length > 1 ? ` · multistream ×${use.length}` : ""} ${loop ? "(loop) " : ""}${srcName} [${useCopy ? "stream-copy, original quality" : "re-encoded"}]`);
+  slog(slot, `Slot ${slot.id} claimed — ${loopFreeClaim ? "20-min free" : "24h"}${use.length > 1 ? ` · multistream ×${use.length}` : ""} ${loop ? "(loop) " : ""}${srcName} [${useCopy ? "stream-copy, original quality" : "re-encoded"}]`);
   launchFfmpeg(slot, args);
-  res.json({ ok: true, slot: slot.id, token, expiresAt: slot.expiresAt, destinations: use.length, multistreamLimited: limited, trial: loopTrialClaim });
+  res.json({ ok: true, slot: slot.id, token, expiresAt: slot.expiresAt, destinations: use.length, multistreamLimited: limited, trial: loopFreeClaim });
 });
 
 app.post("/stop", (req, res) => {

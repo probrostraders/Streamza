@@ -86,8 +86,9 @@ private fun LiveDashboard(repo: AppRepository, token: String, onStopped: () -> U
             if (res != null && res.running) wasTrial = res.trial
             if (res == null || !res.running) {
                 onStopped()
-                // The 15-minute trial just ran out — take them straight to Subscribe instead of
-                // leaving them staring at an empty dashboard wondering why it stopped.
+                // This free 20-minute session just ended — nudge toward Subscribe instead of leaving
+                // them staring at an empty dashboard wondering why it stopped. They can always start
+                // another free one right away; this isn't a lockout.
                 if (wasTrial) onGoToSubscription()
                 break
             }
@@ -112,7 +113,7 @@ private fun LiveDashboard(repo: AppRepository, token: String, onStopped: () -> U
             if (s.trial) {
                 Surface(color = StreamzaRed.copy(alpha = 0.15f), shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)) {
                     Text(
-                        "FREE TRIAL",
+                        "FREE",
                         style = MaterialTheme.typography.labelSmall,
                         color = StreamzaRed,
                         fontWeight = FontWeight.Bold,

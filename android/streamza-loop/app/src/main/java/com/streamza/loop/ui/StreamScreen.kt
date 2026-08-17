@@ -135,9 +135,9 @@ private fun NewStreamForm(
         if (auth?.trialAvailable == true) {
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text("Your first stream is free", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                    Text("This stream is free", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                     Text(
-                        "15 minutes, one platform, no card needed.",
+                        "20 minutes, one platform, no card needed.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

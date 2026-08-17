@@ -102,9 +102,9 @@ fun SubscriptionScreen(viewModel: AppViewModel, billingManager: BillingManager, 
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text("Free trial available", style = MaterialTheme.typography.titleMedium, color = androidx.compose.ui.graphics.Color.White, fontWeight = FontWeight.Bold)
+                        Text("Streaming is free right now", style = MaterialTheme.typography.titleMedium, color = androidx.compose.ui.graphics.Color.White, fontWeight = FontWeight.Bold)
                         Text(
-                            "Your first stream is free for 15 minutes — no card needed. Start it from the Stream tab.",
+                            "Every stream is free for 20 minutes on one platform, no card needed. Subscribe for longer sessions and more platforms at once.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.9f),
                         )
