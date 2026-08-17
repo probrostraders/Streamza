@@ -112,15 +112,7 @@ fun SubscriptionScreen(viewModel: AppViewModel, billingManager: BillingManager, 
             }
 
             if (!billingEnabled) {
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(20.dp)) {
-                        Text(
-                            "Subscriptions aren't available yet — check back soon.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
+                SubscriptionPreview()
             } else if (plans.isEmpty()) {
                 Box(Modifier.fillMaxWidth().padding(vertical = 40.dp), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
@@ -184,6 +176,54 @@ private fun ActiveSubscriptionCard(slots: Int, portal: String?) {
                         Toast.makeText(context, "Couldn't open the subscription page.", Toast.LENGTH_SHORT).show()
                     }
                 }) { Text("Manage subscription", color = androidx.compose.ui.graphics.Color.White) }
+            }
+        }
+    }
+}
+
+/** Shown while Play Billing isn't configured yet (no real prices to query) — explains the plan
+ *  structure itself instead of leaving the screen looking broken/empty. No prices are shown here;
+ *  those come from Play Console once billing is live, never hardcoded in the app. */
+@Composable
+private fun SubscriptionPreview() {
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("Subscriptions are coming soon", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(
+                    "Streaming is free for now. Here's how paid plans will work once they're switched on:",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+
+        listOf(
+            1 to "Stream to 1 platform at once",
+            2 to "Stream to 2 platforms at once, at the same time",
+            3 to "Stream to 3 platforms at once, at the same time",
+        ).forEach { (slots, desc) ->
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Surface(shape = RoundedCornerShape(50), color = StreamzaRed.copy(alpha = 0.15f)) {
+                        Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+                            Text("$slots", color = StreamzaRed, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                        }
+                    }
+                    Column {
+                        Text("$slots ${if (slots == 1) "Slot" else "Slots"}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        Text(desc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+        }
+
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("How billing works", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                FeatureLine("Pick weekly, monthly, or yearly billing for any plan")
+                FeatureLine("Managed entirely through Google Play — cancel anytime")
+                FeatureLine("One subscription unlocks the app on any device you sign into")
             }
         }
     }
