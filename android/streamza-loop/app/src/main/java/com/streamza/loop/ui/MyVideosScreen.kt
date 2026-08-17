@@ -67,6 +67,11 @@ fun MyVideosScreen(viewModel: AppViewModel) {
                         Column {
                             Text(v.name, style = MaterialTheme.typography.bodyLarge)
                             Text(formatFileSize(v.size), style = MaterialTheme.typography.bodySmall)
+                            Text(
+                                expiryLabel(v.expiresInMinutes),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
                         }
                         IconButton(onClick = {
                             scope.launch {
@@ -80,4 +85,11 @@ fun MyVideosScreen(viewModel: AppViewModel) {
             }
         }
     }
+}
+
+private fun expiryLabel(minutes: Int?): String = when {
+    minutes == null -> "Saved"
+    minutes <= 0 -> "Expiring…"
+    minutes < 60 -> "Expires in ${minutes}m"
+    else -> "Expires in ${minutes / 60}h ${minutes % 60}m"
 }

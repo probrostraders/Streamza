@@ -39,10 +39,14 @@ data class AuthMeResponse(
     val tier: String? = null,
     val multi: Boolean = false,
     // Real entitlement (server.js authPayload()'s app branch): how many destinations this account may
-    // stream to at once — 1 by default (covers the free-trial case), the purchased slot count once
-    // subscribed. trialAvailable is whether the one free 15-minute stream is still unclaimed.
+    // stream to at once — 1 by default (covers the free-session case), the purchased slot count once
+    // subscribed. trialAvailable is whether a free 20-minute stream can be started right now (always
+    // true while unsubscribed — it's repeatable, not one-time).
     val maxDestinations: Int = 1,
     val trialAvailable: Boolean = false,
+    // True exactly once: this account's last free stream ran out its 20 minutes while the app wasn't
+    // open to see it happen live. Clears itself the moment they start another stream (see /start).
+    val freeSessionJustEnded: Boolean = false,
     val portal: String? = null,
     val slot: MySlot? = null,
     val error: String? = null,
@@ -103,10 +107,10 @@ data class StatusResponse(
 )
 
 @Serializable
-data class SavedVideo(val id: String, val name: String, val size: Long, val uploadedAt: Long, val expiresInMinutes: Int)
+data class SavedVideo(val id: String, val name: String, val size: Long, val uploadedAt: Long, val expiresInMinutes: Int? = null)
 
 @Serializable
-data class MyUploadsResponse(val subscribed: Boolean, val signedIn: Boolean, val retentionDays: Int, val uploads: List<SavedVideo> = emptyList())
+data class MyUploadsResponse(val subscribed: Boolean, val signedIn: Boolean, val retentionDays: Int? = null, val uploads: List<SavedVideo> = emptyList())
 
 @Serializable
 data class DeleteUploadRequest(val email: String, val fileId: String)

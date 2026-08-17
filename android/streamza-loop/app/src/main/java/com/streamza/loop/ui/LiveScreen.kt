@@ -47,27 +47,40 @@ private const val POLL_INTERVAL_MS = 3000L
 @Composable
 fun LiveScreen(viewModel: AppViewModel, liveToken: String?, onGoToStream: () -> Unit, onGoToSubscription: () -> Unit) {
     val repo by viewModel.repo.collectAsState()
-    (repo ?: return)
+    val auth by (repo?.auth ?: return).collectAsState()
 
     if (liveToken == null) {
-        EmptyLiveState(onGoToStream)
+        EmptyLiveState(freeSessionJustEnded = auth?.freeSessionJustEnded == true, onGoToStream = onGoToStream, onGoToSubscription = onGoToSubscription)
     } else {
         LiveDashboard(repo = repo!!, token = liveToken, onStopped = viewModel::onStopped, onGoToSubscription = onGoToSubscription)
     }
 }
 
 @Composable
-private fun EmptyLiveState(onGoToStream: () -> Unit) {
+private fun EmptyLiveState(freeSessionJustEnded: Boolean, onGoToStream: () -> Unit, onGoToSubscription: () -> Unit) {
     Box(Modifier.fillMaxSize().padding(20.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Icon(Icons.Default.PlayCircle, contentDescription = null, modifier = Modifier.size(56.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("You're not live right now", style = MaterialTheme.typography.titleMedium)
-            Text(
-                "Start a stream and its live dashboard — uptime, destinations, and diagnostics — shows up here.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Button(onClick = onGoToStream) { Text("Start a stream") }
+            if (freeSessionJustEnded) {
+                Text("Your last stream stopped", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    "Its free 20 minutes ran out while the app was closed. Start another free one, or subscribe for longer sessions.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedButton(onClick = onGoToSubscription) { Text("See plans") }
+                    Button(onClick = onGoToStream) { Text("Start a stream") }
+                }
+            } else {
+                Text("You're not live right now", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    "Start a stream and its live dashboard — uptime, destinations, and diagnostics — shows up here.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Button(onClick = onGoToStream) { Text("Start a stream") }
+            }
         }
     }
 }

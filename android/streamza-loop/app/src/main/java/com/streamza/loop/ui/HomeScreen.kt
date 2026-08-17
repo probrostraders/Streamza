@@ -75,6 +75,26 @@ fun HomeScreen(
 
         val subscribed = auth?.subscribed == true
 
+        if (liveToken == null && auth?.freeSessionJustEnded == true) {
+            Card(
+                onClick = onGoToSubscription,
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+            ) {
+                Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Icon(Icons.Default.FlashOn, contentDescription = null, tint = StreamzaRed)
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text("Your last stream stopped", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        Text(
+                            "Its free 20 minutes ran out while the app was closed. Start another free stream anytime, or subscribe for longer sessions.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+        }
+
         if (liveToken != null) {
             LiveStatusCard(status = status, onClick = onGoToLive)
         } else {

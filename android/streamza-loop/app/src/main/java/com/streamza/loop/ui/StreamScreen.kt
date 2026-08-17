@@ -50,6 +50,7 @@ import com.streamza.loop.data.AppRepository
 import com.streamza.loop.data.AuthMeResponse
 import com.streamza.loop.data.Destination
 import com.streamza.loop.data.StartException
+import com.streamza.loop.data.StreamKeyStore
 import com.streamza.loop.data.formatFileSize
 import com.streamza.loop.data.resolvePickedVideo
 import kotlinx.coroutines.launch
@@ -273,6 +274,24 @@ private fun DestinationEditor(
     onChange: (DestinationDraft) -> Unit,
     onRemove: () -> Unit,
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val keyStore = remember { StreamKeyStore(context) }
+
+    // Auto-fill this platform's remembered key (and URL, for Custom) the moment it's selected — the
+    // platform-switch handler below always clears key/customUrl first, so this never leaks one
+    // platform's saved key into another's field.
+    LaunchedEffect(draft.platform) {
+        if (draft.key.isBlank()) {
+            val savedKey = keyStore.savedKey(draft.platform.name)
+            if (savedKey.isNotBlank()) onChange(draft.copy(key = savedKey))
+        }
+        if (draft.platform == StreamPlatform.Custom && draft.customUrl.isBlank()) {
+            val savedUrl = keyStore.savedUrl(draft.platform.name)
+            if (savedUrl.isNotBlank()) onChange(draft.copy(customUrl = savedUrl))
+        }
+    }
+
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
@@ -280,7 +299,7 @@ private fun DestinationEditor(
                     items(StreamPlatform.entries.toList()) { platform ->
                         FilterChip(
                             selected = draft.platform == platform,
-                            onClick = { onChange(draft.copy(platform = platform)) },
+                            onClick = { onChange(draft.copy(platform = platform, key = "", customUrl = "")) },
                             label = { Text(platform.label) },
                         )
                     }
@@ -292,7 +311,10 @@ private fun DestinationEditor(
             if (draft.platform == StreamPlatform.Custom) {
                 OutlinedTextField(
                     value = draft.customUrl,
-                    onValueChange = { onChange(draft.copy(customUrl = it)) },
+                    onValueChange = { v ->
+                        onChange(draft.copy(customUrl = v))
+                        scope.launch { keyStore.save(draft.platform.name, draft.key, v) }
+                    },
                     label = { Text("RTMP server URL") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
@@ -306,7 +328,10 @@ private fun DestinationEditor(
             }
             OutlinedTextField(
                 value = draft.key,
-                onValueChange = { onChange(draft.copy(key = it)) },
+                onValueChange = { v ->
+                    onChange(draft.copy(key = v))
+                    scope.launch { keyStore.save(draft.platform.name, v) }
+                },
                 label = { Text("Stream key") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,

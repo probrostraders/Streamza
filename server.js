@@ -234,6 +234,10 @@ function authPayload(req, email, name) {
       subscribed: slots > 0, tier: slots > 0 ? String(slots) : null, multi: slots > 1,
       maxDestinations: slots > 0 ? slots : 1,
       trialAvailable: slots === 0,
+      // True exactly once, the first time this account checks in after its free 20-minute stream ran
+      // out while nobody was watching (see noteEnding/lastFreeEnd above) — cleared the moment they
+      // claim another slot, in /start below.
+      freeSessionJustEnded: slots === 0 && lastFreeEnd.has(email.toLowerCase()),
       portal: slots > 0 ? portalFor(email) : null, slot: mySlot(email),
     };
   }
@@ -294,18 +298,35 @@ const libPath = (id) => path.join(UPLOAD_DIR, id);
 const libExists = (u) => { if (u.storage === "r2") return true; try { return fs.existsSync(libPath(u.id)); } catch (_) { return false; } };
 const libFor = (email) => { const e = (email || "").trim().toLowerCase(); return library.filter((u) => u.email === e && libExists(u)); };
 const libRetentionMs = (email) => (isSubscribed(email) ? LIB_UNUSED_MS : LIB_UNUSED_MS_FREE);
+// Streamza Loop app library entries (client==="loop") follow their OWN policy instead of Web Studio's
+// blanket free-for-everyone one above, since the app has real per-account entitlement: a free account's
+// saved videos are a short-lived convenience (auto-deleted a couple hours after last use, matching the
+// free 20-minute stream itself being throwaway), while a subscribed account's persist indefinitely —
+// bounded instead by LOOP_SUB_MAX_TOTAL_BYTES below, not by time.
+const LOOP_FREE_RETENTION_MS = (Number(process.env.LOOP_FREE_RETENTION_HOURS) || 2) * 3600000;
+const LOOP_SUB_MAX_TOTAL_BYTES = (Number(process.env.LOOP_SUB_MAX_TOTAL_GB) || 5) * 1024 ** 3;
 // Deletes a saved video's actual bytes, wherever they live — local disk (Web Studio) or R2 (Streamza
 // Loop). Every eviction path below goes through this instead of calling rm()/r2.deleteObject() directly.
 function rmVideo(u) {
   if (u.storage === "r2") { r2.deleteObject(u.id); r2UsedBytes = Math.max(0, r2UsedBytes - (u.size || 0)); }
   else rm(libPath(u.id));
 }
-function libAdd(email, fileId, name, size, signedIn, canCopy, storage) {
+function libAdd(email, fileId, name, size, signedIn, canCopy, storage, client) {
   const e = (email || "").trim().toLowerCase();
   library = library.filter((u) => u.id !== fileId); // de-dupe (also refreshes lastUsedAt on reuse)
-  library.push({ id: fileId, email: e, name: name || "video.mp4", size: size || 0, uploadedAt: Date.now(), lastUsedAt: Date.now(), signedIn: !!signedIn, canCopy: !!canCopy, storage: storage || "local" });
+  library.push({ id: fileId, email: e, name: name || "video.mp4", size: size || 0, uploadedAt: Date.now(), lastUsedAt: Date.now(), signedIn: !!signedIn, canCopy: !!canCopy, storage: storage || "local", client: client || "web" });
   const mine = library.filter((u) => u.email === e).sort((a, b) => b.lastUsedAt - a.lastUsedAt);
   mine.slice(LIB_MAX_PER_USER).forEach((u) => { rmVideo(u); library = library.filter((x) => x.id !== u.id); }); // keep newest N
+  // Subscribed Loop accounts have no time-based expiry, so they need their own size-based eviction
+  // instead — oldest (by last use) evicted first once this account's own saved videos pass 5GB.
+  if (client === "loop" && loopSlotsFor(e) > 0) {
+    let total = mine.reduce((n, u) => n + (u.size || 0), 0);
+    for (let i = mine.length - 1; i >= 0 && total > LOOP_SUB_MAX_TOTAL_BYTES; i--) {
+      const u = mine[i];
+      if (!library.includes(u)) continue; // already evicted by the per-user-count pass above
+      rmVideo(u); library = library.filter((x) => x.id !== u.id); total -= (u.size || 0);
+    }
+  }
   saveLib();
 }
 const libTouch = (fileId, signedIn, canCopy) => { const u = library.find((x) => x.id === fileId); if (u) { u.lastUsedAt = Date.now(); if (signedIn) u.signedIn = true; if (typeof canCopy === "boolean") u.canCopy = canCopy; saveLib(); } };
@@ -318,11 +339,10 @@ const libTouch = (fileId, signedIn, canCopy) => { const u = library.find((x) => 
 const R2_MAX_TOTAL_BYTES = (Number(process.env.R2_MAX_TOTAL_GB) || 9) * 1024 ** 3;
 let r2UsedBytes = 0; // kept approximately current by direct increment/decrement, corrected hourly (see the R2 sweep) so it can never drift far from reality
 function r2HasBudget(size) { return r2.R2_ENABLED && (r2UsedBytes + (size || 0)) <= R2_MAX_TOTAL_BYTES; }
-// Streamza Loop app only — loop videos are short clips meant to play on repeat, not full movies, so
-// cap them well under Web Studio's 1.5GB local-disk limit. Bounds one subscriber's worst case
-// (LIB_MAX_PER_USER videos, each at this cap) instead of letting a single account's saved library
-// alone threaten the whole shared 9GB R2 budget above.
-const LOOP_MAX_UPLOAD_BYTES = (Number(process.env.LOOP_MAX_UPLOAD_MB) || 300) * 1024 ** 2;
+// Streamza Loop app only — a standard per-video cap like most streaming/upload apps use, not tied to
+// subscription status (that's what LOOP_SUB_MAX_TOTAL_BYTES and the free-tier 2-hour retention above
+// are for instead — this just stops any single upload from being unreasonably huge).
+const LOOP_MAX_UPLOAD_BYTES = (Number(process.env.LOOP_MAX_UPLOAD_MB) || 1000) * 1024 ** 2;
 if (r2.R2_ENABLED) {
   r2.listAllObjects().then((objs) => { r2UsedBytes = objs.reduce((n, o) => n + o.size, 0); }).catch(() => {});
 }
@@ -341,17 +361,29 @@ function slog(s, line) { if (!line) return; s.log.push(line); if (s.log.length >
 // we couldn't reach your RTMP destination", which look identical from the frontend's polling otherwise.
 const recentEndings = new Map(); // token -> { reason: "expired"|"stopped"|"connection_failed", message, at }
 const END_REASON_TTL_MS = 5 * 60 * 1000;
-function noteEnding(slot, reason, message) { if (slot.token) recentEndings.set(slot.token, { reason, message: message || null, at: Date.now() }); }
+// Separate from recentEndings above: that one is keyed by token and only lives 5 minutes, which covers
+// "still watching the Live tab when it ends" but not "closed the app entirely and comes back later" —
+// by then the app has lost the token and can't ask /status about it at all. This is keyed by email
+// instead (so a freshly-reopened app can learn about it via /auth/me) and lives much longer. Only set
+// when a free (unsubscribed) session actually ran out the clock — not for a manual stop or a connection
+// failure, since those aren't a "subscribe to keep going" moment. Cleared the moment that email claims
+// another slot, so it only surfaces once, until their next stream.
+const lastFreeEnd = new Map(); // email -> { at }
+const FREE_END_TTL_MS = 24 * 60 * 60 * 1000;
+function noteEnding(slot, reason, message) {
+  if (slot.token) recentEndings.set(slot.token, { reason, message: message || null, at: Date.now() });
+  if (reason === "expired" && slot.loopTrial && slot.email) lastFreeEnd.set(slot.email.toLowerCase(), { at: Date.now() });
+}
 
 function release(s) {
   // Videos are kept for reuse (appear under "Your recent videos") rather than deleted on release.
-  if (s.filePath) libAdd(s.email, path.basename(s.filePath), s.file, s.fileSize, s.signedIn, undefined, "local");
-  else if (s.r2Key) libAdd(s.email, s.r2Key, s.file, s.fileSize, s.signedIn, undefined, "r2");
+  if (s.filePath) libAdd(s.email, path.basename(s.filePath), s.file, s.fileSize, s.signedIn, undefined, "local", s.client);
+  else if (s.r2Key) libAdd(s.email, s.r2Key, s.file, s.fileSize, s.signedIn, undefined, "r2", s.client);
   Object.assign(s, {
     busy: false, email: null, dest: null, dests: [], destsFull: [], loop: true,
     file: null, filePath: null, fileSize: 0, storage: "local", r2Key: null,
     startedAt: 0, expiresAt: 0, proc: null, token: null, log: [],
-    stopping: false, restartCount: 0, ffmpegArgs: null, signedIn: false, everStreamed: false,
+    stopping: false, restartCount: 0, ffmpegArgs: null, signedIn: false, everStreamed: false, client: null,
   });
 }
 // Spawns (or re-spawns) the ffmpeg relay process for a slot. If it dies unexpectedly mid-stream — an RTMP
@@ -406,13 +438,19 @@ setInterval(() => {
     }
   }
   // saved-video cleanup: drop a library entry once its owner is neither subscribed nor was signed in
-  // when it was saved, the file is gone, or it's passed its retention window (30d subscriber / 7d signed-in
-  // free — see LIB_UNUSED_MS / LIB_UNUSED_MS_FREE); never touch a file that's streaming right now.
+  // when it was saved, the file is gone, or it's passed its retention window; never touch a file that's
+  // streaming right now. Loop app entries (client==="loop") use their own real-entitlement policy
+  // (LOOP_FREE_RETENTION_MS / LOOP_SUB_MAX_TOTAL_BYTES) instead of Web Studio's blanket one.
   try {
     const live = new Set(slots.filter((s) => s.filePath || s.r2Key).map((s) => s.filePath ? path.basename(s.filePath) : s.r2Key));
     library = library.filter((u) => {
       if (live.has(u.id)) return true;
       if (!libExists(u)) return false;
+      if (u.client === "loop") {
+        const subscribed = loopSlotsFor(u.email) > 0;
+        if (!subscribed && now - u.lastUsedAt > LOOP_FREE_RETENTION_MS) { rmVideo(u); return false; }
+        return true; // subscribed loop accounts: no time expiry, just the per-user GB cap in libAdd()
+      }
       const eligible = isSubscribed(u.email) || u.signedIn;
       if (!eligible || now - u.lastUsedAt > libRetentionMs(u.email)) { rmVideo(u); return false; }
       return true;
@@ -446,6 +484,7 @@ setInterval(() => {
   // prune stale rate-limit records
   for (const [ip, rec] of rlHits) { if (now > rec.reset) rlHits.delete(ip); }
   for (const [tok, rec] of recentEndings) { if (now - rec.at > END_REASON_TTL_MS) recentEndings.delete(tok); }
+  for (const [email, rec] of lastFreeEnd) { if (now - rec.at > FREE_END_TTL_MS) lastFreeEnd.delete(email); }
 }, 20000);
 
 // R2 hygiene sweep — a separate, much slower interval than the 20s loop above. Listing the whole bucket
@@ -645,6 +684,7 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
   // repeatable every time, not a one-time trial (see the LOOP_FREE_MS comment above for why).
   const loopSlots = isLoopApp ? loopSlotsFor(email) : 0;
   const loopFreeClaim = isLoopApp && loopSlots === 0;
+  if (isLoopApp) lastFreeEnd.delete(email.toLowerCase()); // starting again — the old "your free stream ended" notice no longer applies
 
   // Source = a fresh upload, an already pre-uploaded (auto-uploaded on file-select) video, or one of
   // the account's saved videos (no re-upload needed either way). R2-backed sources (Streamza Loop's
@@ -739,10 +779,10 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
     busy: true, email, dests: use.map((d) => d.url), dest: use[0].url, destsFull: use, loop: !!loop,
     file: srcName, filePath: srcStorage === "local" ? srcPath : null, fileSize: srcSize, storage: srcStorage, r2Key: srcR2Key,
     startedAt: Date.now(), expiresAt: Date.now() + durationMs, token, log: [], loopTrial: loopFreeClaim,
-    stopping: false, restartCount: 0, signedIn,
+    stopping: false, restartCount: 0, signedIn, client: isLoopApp ? "loop" : "web",
   });
   // Videos are saved for reuse (appear under "Your recent videos") for anyone signed in.
-  if (isNew) libAdd(email, srcStorage === "r2" ? srcR2Key : path.basename(srcPath), srcName, srcSize, signedIn, srcCanCopy, srcStorage); else libTouch(reuseId, signedIn, srcCanCopy);
+  if (isNew) libAdd(email, srcStorage === "r2" ? srcR2Key : path.basename(srcPath), srcName, srcSize, signedIn, srcCanCopy, srcStorage, isLoopApp ? "loop" : "web"); else libTouch(reuseId, signedIn, srcCanCopy);
   slog(slot, `Slot ${slot.id} claimed — ${loopFreeClaim ? "20-min free" : "24h"}${use.length > 1 ? ` · multistream ×${use.length}` : ""} ${loop ? "(loop) " : ""}${srcName} [${useCopy ? "stream-copy, original quality" : "re-encoded"}]`);
   launchFfmpeg(slot, args);
   res.json({ ok: true, slot: slot.id, token, expiresAt: slot.expiresAt, destinations: use.length, multistreamLimited: limited, trial: loopFreeClaim });
@@ -759,18 +799,21 @@ app.post("/stop", (req, res) => {
 // signed-in Google account (verified by session, not just the typed email) for that account's own videos.
 app.get("/myuploads", (req, res) => {
   const email = (req.query.email || "").trim();
-  const subscribed = isSubscribed(email);
+  const isLoopApp = req.get("X-Streamza-Client") === "loop";
   const signedIn = !!email && readSession(req) === email.toLowerCase();
-  const retentionMs = libRetentionMs(email);
-  const retentionDays = Math.round(retentionMs / 86400000);
+  // Loop app: real entitlement — free accounts get the 2-hour window, subscribed accounts never expire
+  // by time (retentionMs null), just the 5GB per-account cap enforced in libAdd(). Web Studio: unchanged.
+  const subscribed = isLoopApp ? loopSlotsFor(email) > 0 : isSubscribed(email);
+  const retentionMs = isLoopApp ? (subscribed ? null : LOOP_FREE_RETENTION_MS) : libRetentionMs(email);
+  const retentionDays = retentionMs != null ? Math.round(retentionMs / 86400000) : null;
   const authorized = subscribed || signedIn;
   const uploads = authorized
     ? libFor(email).sort((a, b) => b.lastUsedAt - a.lastUsedAt)
         .map((u) => ({
           id: u.id, name: u.name, size: u.size, uploadedAt: u.uploadedAt,
-          // minutes, not days — the free (never-subscribed) tier's window is only 1 hour, so day
-          // granularity would round that up to a misleading "deletes in 1d".
-          expiresInMinutes: Math.max(0, Math.ceil((retentionMs - (Date.now() - u.lastUsedAt)) / 60000)),
+          // minutes, not days — a free window can be under a day, so day granularity would round that
+          // up to a misleading "deletes in 1d". null = doesn't expire by time (subscribed Loop account).
+          expiresInMinutes: retentionMs != null ? Math.max(0, Math.ceil((retentionMs - (Date.now() - u.lastUsedAt)) / 60000)) : null,
         }))
     : [];
   res.json({ subscribed, signedIn, retentionDays, uploads });
