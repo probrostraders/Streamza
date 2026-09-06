@@ -74,11 +74,11 @@ const FFMPEG_RESTART_DELAY_MS = Number(process.env.FFMPEG_RESTART_DELAY_MS) || 3
 const MULTISTREAM_MAX = Number(process.env.MULTISTREAM_MAX) || 3;    // max simultaneous platforms on the multistream plan
 
 // --- Paddle Billing (v2) ---
-const PADDLE_ENV = process.env.PADDLE_ENV === "sandbox" ? "sandbox" : "production";
-const PADDLE_CLIENT_TOKEN = process.env.PADDLE_CLIENT_TOKEN || "";
-const PADDLE_PRICE_ID = process.env.PADDLE_PRICE_ID || "";
+const PADDLE_ENV = process.env.PADDLE_ENV || "production";
+const PADDLE_CLIENT_TOKEN = process.env.PADDLE_CLIENT_TOKEN || "live_a252ff2f599b755a1d7a4400436";
+const PADDLE_PRICE_ID = process.env.PADDLE_PRICE_ID || "pri_01kzhg1k82g43x4z3v72bc999q";
 const PADDLE_PRICE_ID_MULTI = process.env.PADDLE_PRICE_ID_MULTI || "pri_01kzhfwz194cd7tjhrhxrvb4m8";
-const PADDLE_WEBHOOK_SECRET = process.env.PADDLE_WEBHOOK_SECRET || "";
+const PADDLE_WEBHOOK_SECRET = process.env.PADDLE_WEBHOOK_SECRET || "pdl_ntfset_01kzhgp3prbzbfkwpy98x0dgv8_A4lXFj0l+QOuMZmbvEakhgzhKp2TRUet";
 const PADDLE_PRICE_LABEL = process.env.PADDLE_PRICE_LABEL || "$4.99/mo";
 const PADDLE_PRICE_LABEL_MULTI = process.env.PADDLE_PRICE_LABEL_MULTI || "$9.99/mo";
 const PADDLE_ENABLED = !!(PADDLE_CLIENT_TOKEN && (PADDLE_PRICE_ID || PADDLE_PRICE_ID_MULTI));
