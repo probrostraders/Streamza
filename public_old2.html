@@ -1,0 +1,2206 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stream a Video 24/7 with a Stream Key: Streamza Web Studio</title>
+  <meta name="description" content="Upload a pre-recorded video, paste your RTMP URL and stream key, and go live on YouTube, Twitch, Facebook or Kick, looping 24/7. No software, no PC needed." />
+  <meta name="keywords" content="stream pre-recorded video, stream video with stream key, RTMP URL stream key, upload video go live, 24/7 loop live stream, stream mp4 to youtube, browser live streaming, no software live stream" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="icon" type="image/svg+xml" href="logo.svg" />
+  <link rel="canonical" href="https://streamza.live/studio" />
+
+  <!-- Open Graph -->
+  <meta property="og:site_name" content="Streamza" />
+  <meta property="og:title" content="Stream a Video 24/7 with a Stream Key: Streamza Web Studio" />
+  <meta property="og:description" content="Upload a pre-recorded video, paste your RTMP URL and stream key, and go live on YouTube, Twitch, Facebook, Kick or any RTMP server, looping 24/7. No software, no PC." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://streamza.live/studio" />
+  <meta property="og:image" content="https://streamza.live/og-banner.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Stream a Video 24/7 with a Stream Key: Streamza Web Studio" />
+  <meta name="twitter:description" content="Upload a video, paste your RTMP URL and stream key, and go live 24/7, no software, no PC needed." />
+  <meta name="twitter:image" content="https://streamza.live/og-banner.png" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "name": "Streamza Web Studio",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "Any (web browser)",
+        "browserRequirements": "Requires a modern web browser",
+        "description": "Upload a pre-recorded video, paste your RTMP URL and stream key, and Streamza streams it to YouTube, Twitch, Facebook, Kick or any RTMP server, looping 24/7 from the cloud, no software or PC required.",
+        "url": "https://streamza.live/studio",
+        "offers": [
+          { "@type": "Offer", "name": "Free trial", "price": "0", "priceCurrency": "USD" },
+          { "@type": "Offer", "name": "Single platform", "price": "4.99", "priceCurrency": "USD" },
+          { "@type": "Offer", "name": "Multistream", "price": "9.99", "priceCurrency": "USD" }
+        ]
+      },
+      {
+        "@type": "HowTo",
+        "name": "How to stream a pre-recorded video with a stream key",
+        "description": "Stream any video file to YouTube, Twitch, Facebook, Kick or a custom RTMP server using just a stream key, no software or PC needed.",
+        "step": [
+          { "@type": "HowToStep", "name": "Tap a free slot", "text": "No payment needed. Every slot starts a free 15-minute trial." },
+          { "@type": "HowToStep", "name": "Upload & paste your key", "text": "Pick an MP4 (H.264 + AAC), choose your platform and paste your RTMP URL and stream key." },
+          { "@type": "HowToStep", "name": "Go live", "text": "Your trial streams instantly, looping non-stop if you turn on Loop the video. Subscribe anytime to keep streaming the full 24 hours." }
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "Can I stream a pre-recorded video using just a URL and stream key?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Upload your video file in Streamza Web Studio, paste the RTMP URL and stream key from YouTube, Twitch, Facebook, Kick or any custom RTMP server, and it goes live immediately." } },
+          { "@type": "Question", "name": "Do I need OBS or any software installed?", "acceptedAnswer": { "@type": "Answer", "text": "No. Streamza Web Studio runs entirely in your browser and streams from the cloud. No OBS, no software install, and no PC needs to stay on." } },
+          { "@type": "Question", "name": "Can the video loop 24/7 automatically?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Turn on Loop the video and Streamza replays it seamlessly, non-stop, for as long as your slot or subscription is active." } },
+          { "@type": "Question", "name": "Where do I get my RTMP URL and stream key?", "acceptedAnswer": { "@type": "Answer", "text": "Every platform provides one in its live-streaming dashboard, for example YouTube Studio > Go Live > Stream, or Twitch Creator Dashboard > Settings > Stream." } }
+        ]
+      }
+    ]
+  }
+  </script>
+  <link rel="preconnect" href="https://app.lemonsqueezy.com" crossorigin />
+  <link rel="preconnect" href="https://accounts.google.com" crossorigin />
+  <script src="https://app.lemonsqueezy.com/js/lemon.js" defer></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    @font-face{font-family:'Roboto';font-style:normal;font-weight:400;font-display:swap;src:url('/fonts/roboto-var.woff2') format('woff2');}
+    @font-face{font-family:'Roboto';font-style:normal;font-weight:500;font-display:swap;src:url('/fonts/roboto-var.woff2') format('woff2');}
+    @font-face{font-family:'Roboto';font-style:normal;font-weight:700;font-display:swap;src:url('/fonts/roboto-var.woff2') format('woff2');}
+    @font-face{font-family:'Roboto';font-style:normal;font-weight:900;font-display:swap;src:url('/fonts/roboto-var.woff2') format('woff2');}
+    :root{--red:#FF3B30;--red2:#FF2D55;--bg:#000;--card:#141417;--card2:#0c0c0e;--line:#26262c;--txt:#fff;--sub:#9b9ba3;--ok:#10B981;--gold:#FFC940;}
+    .pro-badge{display:inline-flex;align-items:center;gap:3px;background:linear-gradient(135deg,#FFD75E,#FFB800);color:#241a00;font-size:10.5px;font-weight:800;letter-spacing:.04em;padding:2px 8px 2px 6px;border-radius:20px;text-transform:uppercase;vertical-align:middle;white-space:nowrap;}
+    .pro-badge svg{width:10px;height:10px;flex:none;}
+    .plan.your-plan{border-color:var(--gold)!important;box-shadow:0 0 0 1px var(--gold),0 14px 32px rgba(255,201,64,.18);}
+    .plan.your-plan .tag{background:linear-gradient(135deg,#FFD75E,#FFB800)!important;color:#241a00!important;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    html{scroll-behavior:smooth;}
+    body{background:radial-gradient(1100px 620px at 50% -8%,rgba(255,59,48,.08),transparent 60%),radial-gradient(900px 500px at 100% 0%,rgba(255,255,255,.035),transparent 55%),var(--bg);background-attachment:fixed;color:var(--txt);font-family:'Roboto',Arial,Helvetica,sans-serif;line-height:1.6;}
+    a{color:inherit;text-decoration:none;}
+    .wrap{max-width:1080px;margin:0 auto;padding:0 20px;}
+    .btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:30px;padding:13px 24px;font-size:15px;font-weight:700;cursor:pointer;transition:.15s;}
+    .btn-primary{background:var(--red);color:#fff;} .btn-primary:hover{background:#ff5247;}
+    .btn-ghost{background:transparent;color:#fff;border:1px solid var(--line);}
+    .btn-block{width:100%;justify-content:center;}
+    .btn:disabled{opacity:.5;cursor:not-allowed;}
+    .eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:13px;color:var(--sub);font-weight:500;background:linear-gradient(180deg,rgba(255,59,48,.10),rgba(255,59,48,.02));border:1px solid rgba(255,59,48,.25);padding:7px 16px 7px 12px;border-radius:30px;margin-bottom:20px;box-shadow:0 1px 0 rgba(255,255,255,.05) inset;}
+    .live-dot{position:relative;width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 0 3px rgba(255,59,48,.2);flex:none;}
+    .live-dot::before{content:"";position:absolute;inset:-5px;border-radius:50%;border:1px solid rgba(255,59,48,.55);animation:eyebrowPing 1.8s cubic-bezier(0,0,.2,1) infinite;}
+    @keyframes eyebrowPing{0%{transform:scale(.5);opacity:.8;}75%,100%{transform:scale(1.9);opacity:0;}}
+    h1{font-size:clamp(30px,5vw,50px);line-height:1.1;letter-spacing:-.02em;}
+    h2{font-size:clamp(24px,3.5vw,32px);letter-spacing:-.01em;}
+    .red{color:var(--red);}
+    header{position:sticky;top:0;z-index:50;padding:14px 16px 0;background:linear-gradient(180deg,rgba(0,0,0,.9),transparent);}
+    header .wrap{display:flex;align-items:center;justify-content:space-between;height:62px;max-width:1100px;padding-left:12px;padding-right:12px;background:rgba(20,20,22,.68);backdrop-filter:saturate(180%) blur(18px);-webkit-backdrop-filter:saturate(180%) blur(18px);border:1px solid rgba(255,255,255,.08);border-radius:999px;box-shadow:0 18px 40px rgba(0,0,0,.35);}
+    .brand{display:flex;align-items:center;gap:9px;font-size:20px;font-weight:800;}
+    .brand img{width:30px;height:30px;} .brand b{color:var(--red);}
+    nav.links{display:flex;gap:24px;font-size:14px;color:var(--sub);}
+    nav.links a:hover{color:#fff;}
+    @media(max-width:760px){nav.links{display:none;}}
+    @media(max-width:560px){.hide-sm{display:none;}}
+    .hero{text-align:center;padding:64px 0 36px;}
+    .hero p.lead{font-size:18px;color:var(--sub);max-width:660px;margin:18px auto 26px;}
+    .hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+    section{padding:54px 0;}
+    .head{text-align:center;max-width:640px;margin:0 auto 36px;}
+    .kicker{color:var(--red);font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;}
+    .head p{color:var(--sub);margin-top:10px;}
+    /* slots board */
+    .slotboard{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:12px;}
+    @media(max-width:760px){.slotboard{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));} }
+    .slot{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 12px;text-align:center;}
+    .slot .sid{font-size:12px;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;}
+    .slot .ring{width:46px;height:46px;border-radius:50%;margin:10px auto;display:flex;align-items:center;justify-content:center;border:2px solid #2c2c33;}
+    .slot.free .ring{border-color:var(--ok);color:var(--ok);}
+    .slot.busy .ring{border-color:var(--red);color:var(--red);}
+    .slot .st{font-size:14px;font-weight:700;}
+    .slot.free .st{color:var(--ok);} .slot.busy .st{color:var(--red);}
+    .slot .left{font-size:11px;color:var(--sub);margin-top:2px;min-height:14px;}
+    .availline{text-align:center;color:var(--sub);font-size:14px;margin-top:16px;}
+    .availline b{color:#fff;}
+    .slot.free{cursor:pointer;transition:border-color .15s,transform .15s,box-shadow .15s;}
+    .slot.free:hover{border-color:var(--red);transform:translateY(-2px);}
+    .slot.free .left{color:var(--red);font-weight:700;}
+    .slot.sel{border-color:var(--red);box-shadow:0 0 0 2px rgba(255,59,48,.35);}
+    .selslot{background:rgba(255,59,48,.10);border:1px solid rgba(255,59,48,.4);border-radius:10px;padding:10px 13px;margin-bottom:14px;font-size:13px;color:#f0d0cd;}
+    .selslot b{color:#fff;} .selslot a{color:var(--red);font-weight:700;text-decoration:underline;cursor:pointer;}
+    /* the signed-in-to-this-browser user's own live slot: enlarged and highlighted so it reads as
+       "yours" at a glance instead of blending into the anonymous public board. */
+    .slot.mine{border-color:var(--red);box-shadow:0 0 0 2px rgba(255,59,48,.4),0 10px 26px rgba(255,59,48,.18);transform:scale(1.08);cursor:pointer;position:relative;z-index:1;opacity:1;}
+    .slot.mine .ring{border-color:var(--red);color:var(--red);}
+    .slot.mine .st{color:var(--red);}
+    .slot.mine .left{color:var(--red);font-weight:700;}
+    /* "Your live stream" hero card: shown above the slot board whenever this browser holds an active
+       manage token, with a live snapshot (uptime, time left, health) and a one-tap way back into the
+       exact same studio session, so returning after closing the browser feels continuous, not reset. */
+    .mylive{display:none;align-items:center;gap:18px;flex-wrap:wrap;background:linear-gradient(135deg,rgba(255,59,48,.14),rgba(255,45,85,.05));border:1px solid rgba(255,59,48,.4);border-radius:18px;padding:20px 24px;margin-bottom:22px;box-shadow:0 14px 34px rgba(255,59,48,.14);}
+    .mylive .mlc-badge{display:inline-flex;align-items:center;gap:7px;background:var(--red);color:#fff;font-size:12px;font-weight:800;letter-spacing:.05em;padding:6px 12px;border-radius:20px;text-transform:uppercase;flex:none;}
+    .mylive .mlc-badge .dot{width:7px;height:7px;border-radius:50%;background:#fff;animation:mlcpulse 1.4s infinite;}
+    @keyframes mlcpulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+    .mylive .mlc-main{flex:1;min-width:220px;}
+    .mylive .mlc-title{font-size:17px;font-weight:800;letter-spacing:-.01em;margin-bottom:3px;}
+    .mylive .mlc-sub{font-size:13px;color:var(--sub);}
+    .mylive .mlc-stats{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--sub);}
+    .mylive .mlc-stats b{color:#fff;}
+    .mylive .mlc-stats b.good{color:var(--ok);}
+    .mylive .mlc-stats b.weak{color:var(--gold);}
+    .mylive .mlc-btn{flex:none;}
+    @media(max-width:560px){.mylive{padding:16px 18px;} .mylive .mlc-btn{width:100%;}}
+    /* steps */
+    .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+    @media(max-width:760px){.grid3{grid-template-columns:1fr;}}
+    .step{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;}
+    .step .n{width:36px;height:36px;border-radius:50%;background:var(--red);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
+    .step h3{font-size:17px;margin-bottom:6px;} .step p{color:var(--sub);font-size:15px;}
+    /* studio */
+    #studio{background:linear-gradient(180deg,#0a0a0c,#000);}
+    .studio-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;}
+    @media(max-width:860px){.studio-grid{grid-template-columns:1fr;}}
+    .panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;}
+    .beta{background:#1a1a1f;border:1px solid #2a2a30;border-left:3px solid var(--red);border-radius:10px;padding:11px 13px;margin-bottom:18px;font-size:13px;color:#c9c9d2;}
+    label{display:block;font-size:13px;color:var(--sub);margin:14px 0 6px;}
+    label:first-of-type{margin-top:0;}
+    input[type=text],input[type=email],input[type=password],input[type=file]{width:100%;background:var(--card2);border:1px solid var(--line);color:#fff;border-radius:10px;padding:12px;font-size:15px;}
+    .checkrow{display:flex;align-items:flex-start;gap:9px;margin-top:14px;font-size:13px;color:var(--sub);}
+    .checkrow input{margin-top:3px;}
+    /* platform presets */
+    .platrow{display:flex;flex-wrap:wrap;gap:8px;}
+    .chip{background:var(--card2);border:1px solid var(--line);color:#cfcfd6;border-radius:20px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;}
+    .chip:hover{border-color:#3a3a44;}
+    .chip.active{background:rgba(255,59,48,.14);border-color:var(--red);color:#fff;}
+    .keyhelp{font-size:12px;color:var(--red);font-weight:600;margin-left:8px;}
+    .keywrap{position:relative;}
+    .keywrap input{padding-right:62px;}
+    .eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:transparent;border:0;color:var(--sub);font-size:12px;font-weight:700;cursor:pointer;padding:7px 9px;text-transform:uppercase;letter-spacing:.03em;}
+    .eye:hover{color:#fff;}
+    /* loop toggle switch */
+    .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:16px;}
+    .toggle-title{font-size:14px;font-weight:700;color:#fff;}
+    .toggle-sub{font-size:12px;color:var(--sub);margin-top:2px;}
+    .switch{position:relative;display:inline-block;width:48px;height:28px;flex:none;}
+    .switch input{opacity:0;width:0;height:0;}
+    .slider{position:absolute;inset:0;background:#3a3a44;border-radius:30px;transition:.2s;cursor:pointer;}
+    .slider:before{content:"";position:absolute;height:22px;width:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;}
+    .switch input:checked + .slider{background:var(--ok);}
+    .switch input:checked + .slider:before{transform:translateX(20px);}
+    /* multistream extra destinations */
+    .dest-extra{display:flex;gap:6px;margin-bottom:8px;align-items:center;}
+    .dest-extra select,.dest-extra input{background:var(--card2);border:1px solid var(--line);color:#fff;border-radius:8px;padding:9px;font-size:13px;min-width:0;}
+    .dest-extra .dPlat{flex:0 0 84px;} .dest-extra .dUrl{flex:1;} .dest-extra .dKey{flex:1;}
+    .dest-extra .dRemove{flex:0 0 auto;background:transparent;border:0;color:var(--sub);cursor:pointer;font-size:18px;padding:2px 6px;}
+    .dest-extra .dRemove:hover{color:var(--red);}
+    #addDest{margin-top:6px;font-size:14px;border-style:dashed;}
+    .price-grid.price-grid-3{grid-template-columns:repeat(3,1fr);max-width:1000px;}
+    @media(max-width:820px){.price-grid.price-grid-3{grid-template-columns:1fr;}}
+    .videoframe{position:relative;width:100%;aspect-ratio:16/9;background:#000;border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+    .videoframe video{width:100%;height:100%;object-fit:contain;background:#000;}
+    .videoframe .placeholder{color:#55555e;font-size:14px;text-align:center;padding:20px;}
+    .livebadge{position:absolute;top:10px;left:10px;display:none;align-items:center;gap:6px;background:rgba(255,59,48,.92);color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:20px;}
+    .livebadge.on{display:flex;} .livebadge i{width:7px;height:7px;border-radius:50%;background:#fff;animation:blink 1.2s infinite;}
+    @keyframes blink{50%{opacity:.25;}}
+    .countdown{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:14px;}
+    .countdown .cd-info{display:flex;align-items:center;gap:10px;}
+    .countdown .cd-icon{color:var(--red);flex:none;}
+    .countdown .t{font-size:22px;font-weight:800;color:var(--red);line-height:1;} .countdown .l{font-size:12px;color:var(--sub);margin-top:3px;}
+    /* manage link + resume */
+    .managebox{background:var(--card2);border:1px solid #3a3a44;border-radius:12px;padding:12px 13px;margin-top:12px;}
+    .ml-label{font-size:12px;color:#d0d0d8;margin-bottom:8px;font-weight:600;}
+    .ml-row{display:flex;gap:8px;}
+    .ml-row input{flex:1;background:#000;border:1px solid var(--line);color:#fff;border-radius:8px;padding:9px 10px;font-size:12px;font-family:ui-monospace,Menlo,Consolas,monospace;}
+    .ml-hint{font-size:11px;color:var(--sub);margin-top:7px;}
+    details.resume{margin-bottom:14px;border:1px solid var(--line);border-radius:10px;background:var(--card2);}
+    details.resume summary{padding:11px 13px;cursor:pointer;font-size:13px;color:var(--sub);list-style:none;font-weight:600;}
+    details.resume summary::-webkit-details-marker{display:none;}
+    .resume-body{display:flex;gap:8px;padding:0 13px 12px;}
+    .resume-body input{flex:1;background:#000;border:1px solid var(--line);color:#fff;border-radius:8px;padding:10px;font-size:14px;}
+    .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:10px;margin-top:12px;}
+    .stat{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-align:center;}
+    .stat .k{font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;}
+    .stat .v{font-size:16px;font-weight:800;margin-top:2px;} .stat .v.green{color:var(--ok);}
+    .stat .v.warn{color:var(--red);} .stat .v.dim{color:var(--sub);font-size:13px;}
+    details.logwrap{margin-top:12px;border:1px solid var(--line);border-radius:10px;background:var(--card2);}
+    details.logwrap summary{padding:10px 14px;cursor:pointer;font-size:13px;color:var(--sub);list-style:none;}
+    details.logwrap summary::-webkit-details-marker{display:none;}
+    .logbox{padding:0 14px 12px;height:110px;overflow:auto;font:11px/1.5 ui-monospace,Menlo,Consolas,monospace;color:#cfcfd6;white-space:pre-wrap;}
+    .hint{font-size:12px;color:var(--sub);margin-top:8px;}
+    /* pricing */
+    .price-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:760px;margin:0 auto;}
+    @media(max-width:640px){.price-grid{grid-template-columns:1fr;}}
+    .plan{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px;position:relative;}
+    .plan.feat{border-color:var(--red);}
+    .plan .tag{position:absolute;top:-11px;right:18px;background:var(--red);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;}
+    .plan h3{font-size:20px;} .plan .pr{font-size:34px;font-weight:800;margin:8px 0 2px;}
+    .plan .pr small{font-size:14px;color:var(--sub);font-weight:500;}
+    .plan ul{list-style:none;margin:16px 0;}
+    .plan li{padding:7px 0;color:#d0d0d8;font-size:14px;display:flex;gap:9px;} .plan li svg{flex:none;margin-top:3px;}
+    .wait{display:flex;gap:8px;margin-top:6px;} .wait input{flex:1;}
+    details.faq{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:0 18px;margin-bottom:10px;max-width:720px;margin-left:auto;margin-right:auto;}
+    details.faq summary{padding:16px 0;cursor:pointer;font-weight:600;list-style:none;}
+    details.faq summary::-webkit-details-marker{display:none;}
+    details.faq p{color:var(--sub);padding-bottom:16px;font-size:15px;}
+    footer{border-top:1px solid var(--line);padding:30px 0;color:var(--sub);font-size:13px;text-align:center;}
+    footer img{width:26px;height:26px;vertical-align:middle;margin-right:6px;}
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1c1c22;border:1px solid #3a3a44;padding:13px 20px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;transition:.3s;pointer-events:none;z-index:9999;max-width:90%;text-align:center;box-shadow:0 12px 30px rgba(0,0,0,.5);}
+    .toast.show{opacity:1;}
+
+    /* ============================================================
+       Refined layer: restrained, credible, fast (no flashy gradients/glows)
+       ============================================================ */
+    body{background:#08080b;-webkit-font-smoothing:antialiased;letter-spacing:-.003em;}
+    .wrap{max-width:1120px;padding:0 24px;}
+    header{background:rgba(8,8,11,.82);border-bottom:1px solid rgba(255,255,255,.07);backdrop-filter:blur(14px);}
+    .brand img{border-radius:8px;}
+    .btn{border-radius:11px;padding:13px 22px;font-weight:600;letter-spacing:-.01em;transition:background .15s ease,border-color .15s ease,opacity .15s ease;}
+    .btn-primary{background:var(--red);} .btn-primary:hover{background:#e5332a;}
+    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,.14);} .btn-ghost:hover{border-color:rgba(255,255,255,.30);}
+    .hero{padding:80px 0 48px;}
+    .hero h1{font-weight:800;letter-spacing:-.03em;line-height:1.05;font-size:clamp(32px,5.5vw,56px);}
+    .hero .red{color:var(--red);}
+    .hero p.lead{font-size:18px;line-height:1.6;color:#a3a3ad;}
+    section{padding:64px 0;}
+    .head h2{font-weight:800;letter-spacing:-.02em;font-size:clamp(26px,4vw,36px);}
+    .head p{font-size:17px;color:#a3a3ad;}
+    .kicker{letter-spacing:.09em;}
+    .plan,.step,.panel,.slot{background:#121216;border:1px solid rgba(255,255,255,.08);}
+    .step,.plan{transition:border-color .15s ease,transform .15s ease;}
+    .step:hover,.plan:hover{border-color:rgba(255,255,255,.16);transform:translateY(-2px);}
+    .step .n{background:var(--red);}
+    .panel{border-radius:18px;padding:24px;}
+    .plan{border-radius:18px;}
+    .plan.feat{border-color:rgba(255,59,48,.5);}
+    .plan .pr{font-size:38px;letter-spacing:-.02em;}
+    .plan .tag{letter-spacing:.05em;}
+    input[type=text],input[type=email],input[type=password],input[type=file],.dest-extra input,.dest-extra select,.resume-body input{background:#24242c;border:1px solid rgba(255,255,255,.16);border-radius:11px;transition:border-color .15s ease,background .15s ease;}
+    input[type=text]:hover,input[type=email]:hover,input[type=password]:hover{background:#2a2a33;}
+    input[type=text]:focus,input[type=email]:focus,input[type=password]:focus,.dest-extra input:focus,.dest-extra select:focus,.resume-body input:focus{outline:none;background:#2a2a33;border-color:rgba(255,59,48,.7);}
+    input::placeholder{color:#85858f;}
+    /* same autofill-background override as #studioApp, for inputs outside it (e.g. the subscribe modal) */
+    input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus{
+      -webkit-box-shadow:0 0 0 1000px #24242c inset;box-shadow:0 0 0 1000px #24242c inset;
+      -webkit-text-fill-color:#fff;caret-color:#fff;transition:background-color 9999s ease-in-out 0s;
+    }
+    .slot{border-radius:14px;}
+    .chip{border-radius:10px;}
+    footer{border-top:1px solid rgba(255,255,255,.07);padding:40px 0;}
+
+    /* subscribe modal */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.66);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;z-index:300;padding:20px;}
+    .modal.show{display:flex;}
+    .modal .box{background:#141418;border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:26px;width:100%;max-width:392px;box-shadow:0 24px 60px rgba(0,0,0,.5);}
+    .modal .box img{width:40px;height:40px;border-radius:10px;margin-bottom:13px;}
+    .modal h3{font-size:20px;font-weight:800;letter-spacing:-.01em;}
+    .modal p{color:var(--sub);font-size:14px;margin:6px 0 18px;line-height:1.5;}
+    .modal input{width:100%;background:#24242c;border:1px solid rgba(255,255,255,.16);color:#fff;border-radius:11px;padding:13px;font-size:15px;margin-bottom:14px;}
+    .modal input:focus{outline:none;border-color:rgba(255,59,48,.6);}
+    .modal .mrow{display:flex;gap:10px;} .modal .mrow .btn{flex:1;justify-content:center;}
+    .modal .secure{font-size:11px;color:var(--sub);text-align:center;margin-top:12px;}
+    /* label + price as two flex children, not a bare text node beside a span, avoids the price
+       orphaning onto its own line when the button wraps at narrow widths */
+    .trial-btn{justify-content:space-between;text-align:left;gap:10px;}
+    .trial-btn span{flex:1;min-width:0;}
+    .trial-btn b{font-weight:800;white-space:nowrap;flex:none;}
+
+    /* studio mode tabs + multistream destination cards */
+    .modetabs{display:flex;gap:6px;background:#0c0c0f;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:5px;margin:0 0 16px;}
+    .modetab{flex:1;border:0;background:transparent;color:var(--sub);font-weight:700;font-size:14px;padding:11px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:background .15s ease,color .15s ease;}
+    .modetab.active{background:var(--red);color:#fff;}
+    .modetab .mtag{font-size:11px;font-weight:700;background:rgba(255,255,255,.16);padding:1px 7px;border-radius:20px;}
+    .modetab.active .mtag{background:rgba(0,0,0,.22);}
+    .modehint{font-size:12.5px;color:var(--sub);margin-bottom:13px;line-height:1.5;}
+    .dcard{background:#0c0c0f;border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:12px;margin-bottom:10px;}
+    .dcard-top{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
+    .dcard .dPlat{flex:1;background:#24242c;border:1px solid rgba(255,255,255,.16);color:#fff;border-radius:9px;padding:9px;font-size:13px;font-weight:600;}
+    .dcard .dRemove{flex:0 0 auto;background:transparent;border:0;color:var(--sub);font-size:19px;line-height:1;cursor:pointer;padding:2px 6px;}
+    .dcard .dRemove:hover{color:var(--red);}
+    .dcard input{width:100%;margin-bottom:8px;} .dcard input:last-child{margin-bottom:0;}
+
+    /* header brand lockup */
+    .brand{gap:10px;}
+    .bname{font-weight:800;font-size:19px;letter-spacing:-.02em;}
+    .bbadge{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--red);border:1px solid rgba(255,59,48,.4);border-radius:6px;padding:2px 7px;}
+    .hcta{display:flex;align-items:center;gap:10px;}
+    .hcta .btn{padding:9px 16px;font-size:14px;}
+    /* keep the studio header on one row on phones (compact Google icon + tighter spacing) */
+    @media(max-width:600px){
+      header .wrap{gap:8px;}
+      .hcta{gap:7px;}
+      .hcta .btn{padding:9px 13px;font-size:13px;}
+      .brand{font-size:17px;gap:7px;} .brand img{width:26px;height:26px;}
+      .bbadge{display:none;}
+      #hdrGbtn{display:flex;align-items:center;}
+    }
+
+    /* header account chip / sign-in */
+    .hdrauth{display:flex;align-items:center;}
+    #hdrGbtn{display:flex;}
+    .hdrchip{display:flex;align-items:center;gap:9px;background:#16161b;border:1px solid var(--line);border-radius:30px;padding:5px 12px 5px 6px;cursor:pointer;position:relative;user-select:none;transition:border-color .15s ease;}
+    .hdrchip:hover{border-color:rgba(255,255,255,.28);}
+    .hdrchip .av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--red),#ff7a5c);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:14px;flex:none;}
+    .hdrchip .av.live{box-shadow:0 0 0 2px #16161b,0 0 0 4px #ff3b30;animation:avpulse 1.6s ease-in-out infinite;}
+    @keyframes avpulse{0%,100%{box-shadow:0 0 0 2px #16161b,0 0 0 4px #ff3b30;}50%{box-shadow:0 0 0 2px #16161b,0 0 0 4px rgba(255,59,48,.35);}}
+    .hdrchip .em{font-size:13px;color:#d4d4dc;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .hdrchip .caret{color:var(--sub);font-size:11px;}
+    .hdrmenu{position:absolute;top:48px;right:0;background:#15151a;border:1px solid var(--line);border-radius:14px;padding:6px;min-width:200px;box-shadow:0 16px 40px rgba(0,0,0,.55);display:none;z-index:250;}
+    .hdrmenu.show{display:block;}
+    .hdrmenu .who{padding:9px 12px 10px;border-bottom:1px solid var(--line);margin-bottom:4px;}
+    .hdrmenu .who .e{font-size:13px;color:#e6e6ee;font-weight:600;word-break:break-all;}
+    .hdrmenu .who .p{font-size:12px;margin-top:2px;}
+    .hdrmenu a{display:block;padding:10px 12px;border-radius:9px;font-size:14px;color:#d4d4dc;cursor:pointer;text-decoration:none;}
+    .hdrmenu a:hover{background:#222;}
+    @media(max-width:560px){.hdrchip .em{display:none;} .hdrchip{padding:5px;}}
+
+    /* mode cards: the primary gateway into the product, so this section carries more visual
+       weight than a plain feature list: a soft spotlight backdrop, roomier cards, a real feature
+       checklist per plan, and pill CTAs instead of a bare text link. */
+    #modes{position:relative;}
+    #modes::before{content:"";position:absolute;left:50%;top:6%;width:1000px;max-width:94%;height:460px;transform:translateX(-50%);background:radial-gradient(ellipse at center,rgba(255,59,48,.11),transparent 72%);pointer-events:none;z-index:0;}
+    #modes .wrap{position:relative;z-index:1;}
+    .modes{display:grid;grid-template-columns:1fr 1fr;gap:22px;max-width:920px;margin:16px auto 0;position:relative;}
+    @media(max-width:680px){.modes{grid-template-columns:1fr;gap:34px;}}
+    /* a small "or" divider centered between the two cards: reinforces this is a two-path choice */
+    .modes-or{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:38px;height:38px;border-radius:50%;background:#0c0c0f;border:1px solid rgba(255,255,255,.14);color:var(--sub);font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;z-index:2;box-shadow:0 6px 18px rgba(0,0,0,.4);}
+    @media(max-width:680px){.modes-or{top:calc(50% - 17px);}}
+    .modecard{text-align:left;background:linear-gradient(180deg,#141418,#101013);border:1px solid rgba(255,255,255,.09);border-radius:22px;padding:32px 28px;cursor:pointer;transition:border-color .2s ease,transform .2s ease,box-shadow .2s ease;display:flex;flex-direction:column;gap:9px;width:100%;font:inherit;color:inherit;}
+    .modecard:hover{border-color:var(--red);transform:translateY(-5px);}
+    .modecard .ic{width:54px;height:54px;border-radius:15px;background:rgba(255,59,48,.12);color:var(--red);display:flex;align-items:center;justify-content:center;margin-bottom:6px;transition:transform .2s ease;}
+    .modecard .ic svg{width:27px;height:27px;}
+    .modecard:hover .ic{transform:scale(1.08) rotate(-2deg);}
+    .modecard h3{font-size:22px;font-weight:800;letter-spacing:-.015em;}
+    .modecard p{color:var(--sub);font-size:14.5px;line-height:1.55;}
+    .modecard .mc-feat{list-style:none;margin:6px 0 4px;display:flex;flex-direction:column;gap:8px;}
+    .modecard .mc-feat li{display:flex;align-items:flex-start;gap:9px;font-size:13.5px;color:#d0d0d8;line-height:1.4;}
+    .modecard .mc-feat svg{flex:none;margin-top:2px;}
+    .modecard .mc-foot{margin-top:auto;padding-top:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid rgba(255,255,255,.08);}
+    /* two <span> children (label, amount), not bare text runs. A flex column container turns each
+       untagged text node into its own anonymous flex item, so mixed text+<b> would otherwise wrap
+       one word per line instead of reading as two sentences (see .beta/.selslot for the same fix). */
+    .modecard .cardprice{display:flex;flex-direction:column;gap:1px;font-size:12px;color:var(--sub);font-weight:600;}
+    .modecard .cardprice span{display:block;}
+    .modecard .cardprice b{font-size:19px;color:#fff;font-weight:800;letter-spacing:-.01em;}
+    .modecard .go{flex:none;display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:13.5px;padding:10px 16px;border-radius:11px;background:rgba(255,59,48,.12);color:var(--red);transition:background .2s ease,gap .2s ease;}
+    .modecard .go svg{transition:transform .2s ease;}
+    .modecard:hover .go svg{transform:translateX(3px);}
+
+    /* full-screen studio app (OBS/Streamlabs style) */
+    #studioApp{position:fixed;inset:0;z-index:200;background:#08080b;display:none;flex-direction:column;overflow:auto;}
+    #studioApp.show{display:flex;}
+    body.studio-open{overflow:hidden;}
+    .sapp-bar{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 20px;background:rgba(8,8,11,.92);border-bottom:1px solid rgba(255,255,255,.08);backdrop-filter:blur(12px);z-index:5;}
+    .sapp-bar .l{display:flex;align-items:center;gap:12px;}
+    .sapp-brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:16px;}
+    .sapp-brand img{width:26px;height:26px;border-radius:7px;}
+    .sapp-modepill{font-size:12px;font-weight:700;color:#fff;background:var(--red);border-radius:20px;padding:4px 12px;}
+    .sapp-r{display:flex;align-items:center;gap:12px;}
+    .sapp-status{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:var(--sub);}
+    .sapp-status .d{width:8px;height:8px;border-radius:50%;background:#555;}
+    .sapp-status.on{color:var(--red);} .sapp-status.on .d{background:var(--red);box-shadow:0 0 0 4px rgba(255,59,48,.2);animation:blink 1.2s infinite;}
+    .sapp-close{background:transparent;border:1px solid rgba(255,255,255,.16);color:#fff;border-radius:10px;padding:8px 14px;font-weight:600;cursor:pointer;font-size:14px;}
+    .sapp-close:hover{border-color:rgba(255,255,255,.32);}
+    .sapp-stop{background:var(--red);color:#fff;border:0;border-radius:10px;padding:8px 16px;font-weight:700;cursor:pointer;font-size:14px;}
+    .sapp-stop:hover{background:#e5332a;}
+    .liveinfo{background:rgba(255,59,48,.10);border:1px solid rgba(255,59,48,.35);border-radius:10px;padding:11px 14px;font-size:13.5px;color:#f3d4d1;font-weight:600;}
+    .liveinfo b{color:#fff;}
+    .sapp-body{flex:1;display:grid;grid-template-columns:1.55fr .95fr;gap:18px;max-width:1300px;width:100%;margin:0 auto;padding:20px 20px 48px;}
+    @media(max-width:920px){.sapp-body{grid-template-columns:1fr;}}
+    .stage{display:flex;flex-direction:column;gap:14px;min-width:0;}
+    .stage .head2{font-size:12px;color:var(--sub);font-weight:700;text-transform:uppercase;letter-spacing:.06em;}
+    .dock{background:#121216;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px;align-self:start;}
+    .dock #startBtn{padding:15px;font-size:16px;}
+    .authbox{margin-bottom:14px;}
+    .authhint{font-size:12px;color:var(--sub);margin-top:8px;}
+    #authUser{background:#1a1a1f;border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:13px;color:#d0d0d8;display:flex;align-items:center;gap:11px;}
+    #authUser .au-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--red),#ff7a5c);color:#fff;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;flex:none;}
+    #authUser .au-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+    #authUser .au-email{font-size:13.5px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    #authUser .au-plan{font-size:11.5px;color:var(--sub);}
+    #authUser .so{color:var(--red);cursor:pointer;font-weight:700;flex:none;}
+    .sapp-brand{cursor:pointer;}
+
+    /* colour-coded mode cards */
+    .modecard{position:relative;}
+    .modecard.single .ic{background:rgba(10,132,255,.14);color:#0A84FF;}
+    .modecard.single:hover{border-color:#0A84FF;box-shadow:0 20px 44px rgba(10,132,255,.16);}
+    .modecard.single .mc-feat svg{color:#0A84FF;}
+    .modecard.single .go{background:rgba(10,132,255,.14);color:#0A84FF;}
+    .modecard.single:hover .go{background:rgba(10,132,255,.24);}
+    .modecard.multi{border-color:rgba(255,59,48,.45);background:linear-gradient(180deg,rgba(255,59,48,.08),#121216 55%);box-shadow:0 20px 50px rgba(255,59,48,.12);}
+    .modecard.multi:hover{border-color:var(--red);box-shadow:0 24px 56px rgba(255,59,48,.22);}
+    .modecard.multi .mc-feat svg{color:var(--red);}
+    .modecard.multi:hover .go{background:rgba(255,59,48,.22);}
+    .cardbadge{position:absolute;top:-13px;right:24px;display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,var(--red),#ff5a4d);color:#fff;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:6px 13px;border-radius:20px;box-shadow:0 8px 18px rgba(255,59,48,.4);}
+
+    /* responsive: studio app + cards on phones */
+    @media(max-width:560px){
+      .sapp-bar{flex-wrap:wrap;height:auto;padding:10px 14px;gap:8px;}
+      .sapp-bar .l{gap:8px;} .sapp-brand{font-size:15px;} .sapp-brand img{width:24px;height:24px;}
+      .sapp-modepill{font-size:11px;padding:3px 9px;}
+      .sapp-close{padding:7px 11px;font-size:13px;}
+      .sapp-body{padding:14px 12px 36px;gap:14px;}
+      .modecard{padding:20px;} .modal .box{padding:22px;}
+      h1{font-size:30px;}
+    }
+  #recentList{display:flex;flex-direction:column;gap:8px;}
+  .recentCard{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #2a2a2a;border-radius:10px;background:#161616;cursor:pointer;transition:.15s;}
+  .recentCard:hover{border-color:#3a3a3a;}
+  .recentCard.sel{border-color:#FF3B30;background:#1f1413;}
+  .recentCard .rc-name{flex:1;font-weight:600;font-size:14px;color:#eee;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .recentCard .rc-meta{color:#8a8a8a;font-size:12px;white-space:nowrap;}
+  .recentCard .rc-del{background:none;border:none;color:#8a8a8a;font-size:15px;cursor:pointer;padding:2px 6px;border-radius:6px;line-height:1;}
+  .recentCard .rc-del:hover{color:#FF3B30;background:#241414;}
+  .recentHint{padding:10px 12px;border:1px dashed #333;border-radius:10px;color:#bbb;font-size:13px;background:#141414;}
+
+  /* ============================================================
+     Premium redesign layer: visual polish only. No IDs/classes
+     used by JS are removed or renamed here, only new rules added
+     and a few purely-cosmetic overrides.
+     ============================================================ */
+
+  /* subtle depth instead of flat black */
+  body{background:radial-gradient(ellipse 1200px 600px at 50% -10%, rgba(255,59,48,.08), transparent 60%), #08080b;}
+
+  /* hero: two-column layout with a product mockup */
+  .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:44px;align-items:center;}
+  @media(max-width:900px){.hero-grid{grid-template-columns:1fr;} .hero-visual{order:-1;max-width:420px;margin:0 auto;}}
+  .hero-copy h1{margin-top:18px;}
+  .hero-cta{margin-top:28px;}
+  .btn-primary{box-shadow:0 10px 26px rgba(255,59,48,.28);}
+  .btn-primary:hover{box-shadow:0 12px 30px rgba(255,59,48,.36);}
+
+  /* Ultra-Professional Web Studio Mockup */
+  .hmock {
+    background: linear-gradient(165deg, #121218 0%, #09090d 100%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 
+      0 30px 80px rgba(0, 0, 0, 0.7),
+      0 0 40px rgba(255, 59, 48, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    position: relative;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .hmock:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      0 35px 90px rgba(0, 0, 0, 0.8),
+      0 0 50px rgba(255, 59, 48, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+  .hmock-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 16px;
+    background: rgba(14, 14, 18, 0.95);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+  }
+  .hmock-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .hdot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .hdot.r { background: #ff5f57; box-shadow: 0 0 6px rgba(255,95,87,0.4); }
+  .hdot.y { background: #febc2e; }
+  .hdot.g { background: #28c840; }
+  .hmock-url {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #a1a1aa;
+    letter-spacing: 0.01em;
+  }
+  .hmock-url svg { color: #34c759; }
+  .hmock-tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.04);
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+  .hmock-body { padding: 18px; }
+  
+  /* Video monitor area */
+  .hmock-frame {
+    aspect-ratio: 16/9;
+    background: radial-gradient(circle at center, #181822 0%, #0d0d12 100%);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 14px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+    box-shadow: inset 0 0 25px rgba(0,0,0,0.8);
+  }
+  .hmock-frame::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 24px 24px;
+    pointer-events: none;
+  }
+  .hmock-overlay-top {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 2;
+  }
+  .hmock-live-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 59, 48, 0.16);
+    border: 1px solid rgba(255, 59, 48, 0.4);
+    color: #ff6259;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    padding: 4px 10px;
+    border-radius: 20px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 0 12px rgba(255,59,48,0.25);
+  }
+  .hmock-live-dot {
+    width: 7px;
+    height: 7px;
+    background: #ff3b30;
+    border-radius: 50%;
+    animation: hpulse 1.8s infinite;
+  }
+  @keyframes hpulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); }
+    70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(255, 59, 48, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
+  }
+  .hmock-res-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #e4e4e7;
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 6px;
+    backdrop-filter: blur(8px);
+  }
+  .hmock-plat-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255, 0, 0, 0.12);
+    border: 1px solid rgba(255, 0, 0, 0.3);
+    color: #ff4d4d;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 6px;
+    backdrop-filter: blur(8px);
+  }
+  .hmock-play-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(255,59,48,0.9), rgba(220,38,38,0.9));
+    border: 1px solid rgba(255,255,255,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    box-shadow: 0 0 25px rgba(255, 59, 48, 0.5), inset 0 1px 0 rgba(255,255,255,0.4);
+    z-index: 2;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .hmock-frame:hover .hmock-play-btn {
+    transform: scale(1.08);
+    box-shadow: 0 0 35px rgba(255, 59, 48, 0.7), inset 0 1px 0 rgba(255,255,255,0.5);
+  }
+  /* Bottom Audio VU Waveform */
+  .hmock-vu-bars {
+    position: absolute;
+    bottom: 10px;
+    left: 14px;
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 16px;
+    z-index: 2;
+  }
+  .hmock-vu-bar {
+    width: 3px;
+    background: #34c759;
+    border-radius: 2px;
+    animation: vuAnim 1.2s ease-in-out infinite alternate;
+  }
+  .hmock-vu-bar:nth-child(2) { animation-delay: 0.2s; }
+  .hmock-vu-bar:nth-child(3) { animation-delay: 0.4s; }
+  .hmock-vu-bar:nth-child(4) { animation-delay: 0.1s; }
+  .hmock-vu-bar:nth-child(5) { animation-delay: 0.3s; }
+  @keyframes vuAnim {
+    0% { height: 4px; opacity: 0.5; }
+    100% { height: 16px; opacity: 1; }
+  }
+
+  /* Telemetry Stat Cards */
+  .hmock-stat-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .hmock-stat {
+    background: rgba(14, 14, 18, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 10px 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hmock-stat-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+  .hmock-stat span {
+    font-size: 10px;
+    color: #8e8e93;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+  }
+  .hmock-stat b {
+    font-size: 14.5px;
+    font-weight: 800;
+    color: #f4f4f5;
+    display: block;
+  }
+  .hmock-stat b.good { color: #34c759; }
+  .hmock-sparkline {
+    width: 100%;
+    height: 14px;
+    margin-top: 4px;
+  }
+
+  /* Server Engine Slot Matrix */
+  .hmock-matrix-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding: 0 2px;
+  }
+  .hmock-matrix-title span {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #71717a;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .hmock-matrix-title b {
+    font-size: 10.5px;
+    color: #34c759;
+    font-weight: 700;
+  }
+  .hmock-slots {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+  .hs {
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 8px;
+    font-size: 10px;
+    font-weight: 700;
+    transition: all 0.2s ease;
+  }
+  .hs.free {
+    background: rgba(52, 199, 89, 0.1);
+    border: 1px solid rgba(52, 199, 89, 0.35);
+    color: #34c759;
+  }
+  .hs.free:hover {
+    background: rgba(52, 199, 89, 0.2);
+    border-color: rgba(52, 199, 89, 0.6);
+    box-shadow: 0 0 10px rgba(52, 199, 89, 0.2);
+  }
+  .hs.busy {
+    background: rgba(255, 59, 48, 0.1);
+    border: 1px solid rgba(255, 59, 48, 0.3);
+    color: #ff6259;
+  }
+  .hs-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .hs.free .hs-dot { background: #34c759; box-shadow: 0 0 5px #34c759; }
+  .hs.busy .hs-dot { background: #ff3b30; box-shadow: 0 0 5px #ff3b30; }
+
+  /* slot board: more premium than flat squares */
+  .slot{position:relative;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease;}
+  .slot.free{cursor:pointer;}
+  .slot.free:hover{transform:translateY(-3px);border-color:rgba(52,199,89,.55);box-shadow:0 10px 26px rgba(52,199,89,.14);}
+  .slot.busy{opacity:.72;}
+  .slot .ring{transition:transform .15s ease;}
+  .slot.free:hover .ring{transform:scale(1.12);}
+
+  /* mode + plan + feature cards: consistent soft elevation */
+  .modecard,.plan,.step,.panel{box-shadow:0 1px 0 rgba(255,255,255,.02) inset;}
+  .modecard:hover{box-shadow:0 16px 34px rgba(0,0,0,.35);}
+  .plan.feat{box-shadow:0 16px 40px rgba(255,59,48,.14);}
+
+  /* full-screen studio: slightly richer dock + stage framing */
+  .dock{box-shadow:0 1px 0 rgba(255,255,255,.02) inset;}
+  .videoframe{box-shadow:0 20px 50px rgba(0,0,0,.4);}
+
+  /* fix: video + placeholder used to sit side-by-side (flex children) instead of overlaid */
+  .videoframe #preview{display:none;position:absolute;inset:0;}
+  .videoframe .placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;}
+  .videoframe .placeholder svg{opacity:.35;}
+
+  /* custom file dropzone (replaces the raw native file-input look) */
+  .dropzone{position:relative;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;background:var(--card2);border:1.5px dashed rgba(255,255,255,.18);border-radius:12px;padding:22px 16px;cursor:pointer;text-align:center;transition:border-color .15s ease,background .15s ease;}
+  .dropzone:hover{border-color:rgba(255,59,48,.55);background:#282830;}
+  .dropzone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+  .dz-empty,.dz-filled{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;pointer-events:none;}
+  .dz-empty svg{color:var(--sub);}
+  .dz-title{font-size:14px;font-weight:700;color:#fff;}
+  .dz-sub{font-size:12px;color:var(--sub);}
+  .dz-filled{display:none;flex-direction:row;align-items:center;gap:12px;width:100%;}
+  .dropzone.has-file{border-style:solid;border-color:rgba(52,199,89,.4);background:rgba(52,199,89,.06);padding:14px 16px;}
+  .dropzone.has-file .dz-empty{display:none;}
+  .dropzone.has-file .dz-filled{display:flex;}
+  .dz-thumb{width:60px;height:60px;border-radius:10px;background:#000;border:1px solid rgba(255,255,255,.14);flex:none;display:flex;align-items:center;justify-content:center;background-size:cover;background-position:center;overflow:hidden;}
+  .dz-thumb svg{color:rgba(255,255,255,.5);flex:none;}
+  .dz-thumb.has-frame svg{display:none;}
+  .dz-meta{flex:1;min-width:0;text-align:left;display:flex;flex-direction:column;gap:4px;}
+  .dz-filename{font-size:13.5px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .dz-size{font-size:11.5px;color:var(--sub);}
+  .dz-progress-wrap{display:flex;align-items:center;gap:8px;margin-top:2px;}
+  .dz-progress-bar{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,.14);overflow:hidden;}
+  .dz-progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--red),#ff7a5c);border-radius:3px;transition:width .2s ease;}
+  .dz-progress-label{font-size:11px;color:var(--sub);white-space:nowrap;flex:none;}
+  .dz-change{font-size:12px;font-weight:700;color:var(--red);flex:none;}
+  /* the dropzone label sets pointer-events:none on its contents so any click opens the file picker;
+     Delete needs to opt back in and stop that click reaching the label (see the JS handler). */
+  .dz-delete{font-size:12px;font-weight:700;color:var(--sub);flex:none;background:none;border:0;padding:0;margin-left:10px;cursor:pointer;pointer-events:auto;font-family:inherit;}
+  .dz-delete:hover{color:var(--red);}
+
+  /* notice boxes: icon-led banners. Content is wrapped in ONE <span> (see markup/JS) so the
+     whole sentence is a single flex item and wraps like a normal paragraph. Previously each
+     bare text run and <b> next to it became its own shrinking flex item, breaking the sentence
+     into a jumbled multi-column mess under any width pressure. */
+  .beta,.selslot{display:flex;align-items:flex-start;gap:10px;line-height:1.5;}
+  .beta > span,.selslot > span{flex:1;min-width:0;}
+  .beta::before{content:"";flex:none;width:18px;height:18px;margin-top:1px;background:var(--red);-webkit-mask:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222%22><circle cx=%2212%22 cy=%2212%22 r=%2210%22/><path d=%22M12 8v5%22/><path d=%22M12 16h.01%22/></svg>') center/contain no-repeat;mask:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222%22><circle cx=%2212%22 cy=%2212%22 r=%2210%22/><path d=%22M12 8v5%22/><path d=%22M12 16h.01%22/></svg>') center/contain no-repeat;}
+  .beta.is-sub{border-left-color:var(--gold);}
+  .beta.is-sub::before{background:var(--gold);-webkit-mask:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222.5%22><path d=%22m5 13 4 4L19 7%22/></svg>') center/contain no-repeat;mask:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222.5%22><path d=%22m5 13 4 4L19 7%22/></svg>') center/contain no-repeat;}
+  .selslot::before{content:"";flex:none;width:16px;height:16px;margin-top:2px;background:#909090;-webkit-mask:url('data:image/svg+xml;utf8,<svg xmlns=%22www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222.2%22><path d=%22M13 2 3 14h7l-1 8 10-12h-7z%22/></svg>') center/contain no-repeat;mask:url('data:image/svg+xml;utf8,<svg xmlns=%22www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222.2%22><path d=%22M13 2 3 14h7l-1 8 10-12h-7z%22/></svg>') center/contain no-repeat;}
+  details.resume summary{display:flex;align-items:center;gap:9px;}
+  details.resume summary::before{content:"Γå╗";color:var(--red);font-weight:800;}
+
+  /* labels: slightly more structured, section-like */
+  label{font-weight:600;color:#d4d4dc;}
+
+  /* ============================================================
+     STUDIO CONSOLE: a YouTube Studio-inspired redesign of #studioApp.
+     Roboto, bold labels/values, flat YouTube dark palette (#0f0f0f /
+     #1f1f1f / #272727), pure YouTube red reserved for the primary
+     action and live/status states. One surface + one radius scale
+     throughout so every panel reads as part of the same system,
+     no stacked gradients or glow shadows. Scoped to #studioApp so
+     the marketing/landing page is untouched; every id/class the JS
+     relies on is preserved.
+     ============================================================ */
+  #studioApp{
+    --red:#FF0000; --red-dark:#CC0000; --sub:#aaaaaa;
+    --yt-bg:#0f0f0f; --yt-surface:#1f1f1f; --yt-surface-2:#272727;
+    --yt-border:rgba(255,255,255,.1); --yt-border-2:rgba(255,255,255,.16); --yt-dim:#aaaaaa;
+    background:var(--yt-bg);
+    font-family:'Roboto',Arial,Helvetica,sans-serif; /* YouTube's actual font stack. "YouTube Sans" is a proprietary in-house font Google never released for embedding */
+  }
+
+  /* command bar */
+  #studioApp .sapp-bar{padding:12px 22px;gap:16px;background:rgba(15,15,15,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--yt-border);}
+  #studioApp .sapp-bar .l{gap:14px;}
+  #studioApp .sapp-brand{gap:9px;font-size:16px;font-weight:700;letter-spacing:-.01em;padding:4px 7px;border-radius:9px;transition:background .15s ease;}
+  #studioApp .sapp-brand:hover{background:var(--yt-surface);}
+  #studioApp .sapp-brand img{width:26px;height:26px;border-radius:7px;}
+  #studioApp .sapp-modepill{font-size:12px;font-weight:700;color:#fff;background:var(--red);border-radius:8px;padding:5px 12px;}
+  #studioApp .sapp-status{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--yt-dim);background:var(--yt-surface);border:1px solid var(--yt-border);border-radius:9px;padding:7px 12px;}
+  #studioApp .sapp-status.on{color:#fff;border-color:var(--red);background:rgba(255,0,0,.14);}
+  #studioApp .sapp-status.on .d{background:var(--red);box-shadow:0 0 0 4px rgba(255,0,0,.25);}
+  #studioApp .sapp-stop{border-radius:10px;padding:9px 18px;font-weight:700;background:var(--red);}
+  #studioApp .sapp-stop:hover{background:var(--red-dark);}
+  #studioApp .sapp-close{border-radius:10px;padding:9px 15px;font-weight:500;}
+
+  /* body grid */
+  #studioApp .sapp-body{grid-template-columns:minmax(0,1.6fr) minmax(348px,.95fr);gap:24px;max-width:1340px;padding:24px 22px 64px;}
+  @media(max-width:960px){#studioApp .sapp-body{grid-template-columns:1fr;}}
+
+  /* stage */
+  #studioApp .stage{gap:16px;}
+  #studioApp .head2{font-size:11px;letter-spacing:.1em;color:var(--yt-dim);font-weight:700;text-transform:uppercase;}
+  #studioApp .videoframe{border-radius:12px;border:1px solid var(--yt-border);background:#000;}
+  #studioApp .livebadge{top:12px;left:12px;border-radius:4px;padding:4px 10px;font-size:11px;font-weight:700;letter-spacing:.05em;background:var(--red);}
+  #studioApp .liveinfo{border-radius:10px;padding:12px 15px;background:rgba(255,0,0,.1);border:1px solid rgba(255,0,0,.3);}
+  #studioApp .countdown{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:linear-gradient(180deg,rgba(255,0,0,.07),transparent 70%),var(--yt-surface);border:1px solid rgba(255,59,48,.3);border-radius:12px;padding:14px 18px;}
+  #studioApp .countdown .cd-info{display:flex;align-items:center;gap:12px;}
+  #studioApp .countdown .cd-icon{color:var(--red);flex:none;}
+  #studioApp .countdown .t{font-size:26px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1;}
+  #studioApp .countdown .l{font-size:12px;margin-top:3px;color:var(--yt-dim);}
+  #studioApp .countdown #upgradeBtn{white-space:nowrap;}
+  #studioApp .statgrid{gap:12px;}
+  #studioApp .stat{background:var(--yt-surface);border:1px solid var(--yt-border);border-radius:10px;padding:12px 14px;text-align:left;}
+  #studioApp .stat .k{font-size:10px;letter-spacing:.06em;color:var(--yt-dim);font-weight:700;}
+  #studioApp .stat .v{font-size:18px;font-weight:900;margin-top:4px;font-variant-numeric:tabular-nums;}
+  #studioApp .logwrap{border-radius:10px;background:var(--yt-surface);border:1px solid var(--yt-border);}
+
+  /* dock: stacked panels, one flat surface + radius throughout, spaced only by flex gap */
+  #studioApp .dock{background:transparent;border:0;padding:0;box-shadow:none;display:flex;flex-direction:column;gap:16px;align-self:start;}
+  #studioApp .authbox,#studioApp .beta,#studioApp .selslot,#studioApp details.resume{margin-bottom:0;}
+  #studioApp .beta,#studioApp .selslot,#studioApp details.resume,#studioApp #authUser{background:var(--yt-surface);border:1px solid var(--yt-border);border-radius:10px;}
+  #studioApp .beta{border-left:3px solid var(--red);}
+  #studioApp .selslot{color:var(--yt-dim);}
+  #studioApp .selslot b{color:#fff;}
+  #studioApp .selslot a{color:var(--red);font-weight:700;}
+  #studioApp .sec{background:var(--yt-surface);border:1px solid var(--yt-border);border-radius:12px;padding:20px;}
+  #studioApp .sec-head{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+  #studioApp .sec-num{width:22px;height:22px;flex:none;border-radius:6px;font-size:12px;font-weight:700;color:#fff;background:var(--red);display:flex;align-items:center;justify-content:center;}
+  #studioApp .sec-title{margin:0;font-size:16px;font-weight:700;letter-spacing:-.01em;color:#fff;text-transform:none;}
+  #studioApp .lbl-sub{color:var(--yt-dim);font-weight:400;}
+
+  /* inputs / labels */
+  #studioApp label{font-weight:700;color:#f1f1f1;font-size:12.5px;margin:16px 0 6px;}
+  #studioApp .sec > label:first-of-type{margin-top:0;}
+  #studioApp input[type=text],#studioApp input[type=email],#studioApp input[type=password]{background:var(--yt-surface-2);border:1px solid var(--yt-border-2);color:#fff;border-radius:8px;padding:12px 13px;font-size:15px;font-family:inherit;}
+  #studioApp input[type=text]:focus,#studioApp input[type=email]:focus,#studioApp input[type=password]:focus{border-color:var(--red);background:#2f2f2f;}
+  /* Chrome/Edge/Safari force a light background + dark text on autofilled fields (e.g. a saved stream
+     key) that can't be overridden via background-color. Only this inset box-shadow trick works. */
+  #studioApp input[type=text]:-webkit-autofill,#studioApp input[type=email]:-webkit-autofill,#studioApp input[type=password]:-webkit-autofill,
+  #studioApp input[type=text]:-webkit-autofill:hover,#studioApp input[type=email]:-webkit-autofill:hover,#studioApp input[type=password]:-webkit-autofill:hover,
+  #studioApp input[type=text]:-webkit-autofill:focus,#studioApp input[type=email]:-webkit-autofill:focus,#studioApp input[type=password]:-webkit-autofill:focus{
+    -webkit-box-shadow:0 0 0 1000px var(--yt-surface-2) inset;box-shadow:0 0 0 1000px var(--yt-surface-2) inset;
+    -webkit-text-fill-color:#fff;caret-color:#fff;transition:background-color 9999s ease-in-out 0s;
+  }
+
+  /* platform chips + mode tabs */
+  #studioApp .platrow{gap:8px;}
+  #studioApp .chip{border-radius:8px;padding:9px 14px;font-weight:700;background:var(--yt-surface-2);border:1px solid var(--yt-border-2);}
+  #studioApp .chip:hover{border-color:rgba(255,255,255,.32);}
+  #studioApp .chip.active{background:var(--red);border-color:var(--red);color:#fff;}
+  #studioApp .modetabs{background:var(--yt-bg);border:1px solid var(--yt-border);border-radius:10px;padding:5px;margin:0;}
+  #studioApp .modetab.active{background:var(--red);}
+  #studioApp #singleDest,#studioApp #multiDest{margin-top:16px;}
+
+  /* dropzone + loop toggle */
+  #studioApp .dropzone{background:var(--yt-surface-2);border-color:var(--yt-border-2);border-radius:10px;}
+  #studioApp .dropzone:hover{border-color:var(--red);background:#2f2f2f;}
+  #studioApp .dz-title{font-weight:700;}
+  #studioApp .dz-change{color:var(--red);font-weight:700;}
+  #studioApp .toggle-row{background:var(--yt-surface-2);border-radius:10px;margin-top:16px;}
+  #studioApp .toggle-title{font-weight:700;}
+  #studioApp .switch input:checked + .slider{background:var(--red);}
+
+  /* go-live + manage */
+  #studioApp #startBtn{padding:16px;font-size:16px;font-weight:700;background:var(--red);box-shadow:0 8px 20px rgba(255,0,0,.28);}
+  #studioApp #startBtn:hover{background:var(--red-dark);box-shadow:0 10px 24px rgba(255,0,0,.36);}
+  #studioApp .managebox{background:var(--yt-surface);border:1px solid var(--yt-border);border-radius:10px;}
+  #studioApp .ml-label{font-weight:700;}
+
+  /* responsive polish: keep Go Live reachable on phones */
+  @media(max-width:600px){
+    #studioApp .sapp-body{padding:16px 14px 92px;gap:16px;}
+    #studioApp .sec{padding:16px;}
+    #studioApp .countdown{flex-direction:column;align-items:stretch;text-align:center;}
+    #studioApp .countdown .cd-info{justify-content:center;}
+    #studioApp .countdown .t{font-size:26px;}
+    #studioApp .countdown #upgradeBtn{width:100%;justify-content:center;}
+  }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="wrap">
+      <a class="brand" href="/"><img src="logo.svg" alt="Streamza" /><span class="bname">Streamza</span><span class="bbadge">Studio</span></a>
+      <nav class="links"><a href="#slots">Slots</a><a href="#how">How it works</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a></nav>
+      <div class="hcta">
+        <div id="hdrAuth" class="hdrauth" style="display:none;"><div id="hdrGbtn"></div></div>
+        <a class="btn btn-ghost hide-sm" href="/">Main site</a>
+        <a class="btn btn-primary" href="#modes" id="headCta">Open studio</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <span class="eyebrow"><span class="live-dot"></span> <span id="heroAvail">10 live slots</span> ┬╖ free 15-min trial</span>
+        <h1>Claim a slot, stream any video <span class="red">24 hours non-stop.</span></h1>
+        <p class="lead">Grab one of 10 live slots, upload a video, paste your stream key, and Streamza broadcasts it to YouTube, Twitch, Facebook or any RTMP server. Start with a <b style="color:#fff;">free 15-minute trial</b>, then subscribe to stream 24 hours non-stop.</p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="#modes">Start streaming ΓåÆ</a>
+          <a class="btn btn-ghost" href="#slots">See live slots</a>
+        </div>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="hmock">
+          <div class="hmock-bar">
+            <div class="hmock-bar-left">
+              <span class="hdot r"></span><span class="hdot y"></span><span class="hdot g"></span>
+              <span class="hmock-url">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                streamza.live/studio
+              </span>
+            </div>
+            <span class="hmock-tag">PRO STUDIO</span>
+          </div>
+          <div class="hmock-body">
+            <div class="hmock-frame">
+              <div class="hmock-overlay-top">
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <span class="hmock-live-pill"><span class="hmock-live-dot"></span>LIVE</span>
+                  <span class="hmock-res-badge">1080p 60FPS</span>
+                </div>
+                <span class="hmock-plat-badge">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                  YouTube
+                </span>
+              </div>
+              <div class="hmock-play-btn">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              </div>
+              <div class="hmock-vu-bars">
+                <span class="hmock-vu-bar"></span>
+                <span class="hmock-vu-bar"></span>
+                <span class="hmock-vu-bar"></span>
+                <span class="hmock-vu-bar"></span>
+                <span class="hmock-vu-bar"></span>
+              </div>
+            </div>
+            <div class="hmock-stat-row">
+              <div class="hmock-stat">
+                <div class="hmock-stat-head"><span>Bitrate</span></div>
+                <b>6.4 Mbps</b>
+                <svg class="hmock-sparkline" viewBox="0 0 100 20" fill="none">
+                  <path d="M0 15 L20 12 L40 16 L60 8 L80 10 L100 4" stroke="#34c759" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="hmock-stat">
+                <div class="hmock-stat-head"><span>Health</span></div>
+                <b class="good">99.8%</b>
+                <svg class="hmock-sparkline" viewBox="0 0 100 20" fill="none">
+                  <path d="M0 10 L25 10 L50 9 L75 10 L100 10" stroke="#34c759" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="hmock-stat">
+                <div class="hmock-stat-head"><span>Engine</span></div>
+                <b>60 FPS</b>
+                <span style="font-size:9.5px;color:#a1a1aa;font-weight:600;display:block;margin-top:2px;">12ms latency</span>
+              </div>
+            </div>
+            <div class="hmock-matrix-title">
+              <span>Broadcast Rack (10 Slots)</span>
+              <b>6 AVAILABLE</b>
+            </div>
+            <div class="hmock-slots">
+              <span class="hs busy">01 <i class="hs-dot"></i></span>
+              <span class="hs busy">02 <i class="hs-dot"></i></span>
+              <span class="hs free">03 <i class="hs-dot"></i></span>
+              <span class="hs free">04 <i class="hs-dot"></i></span>
+              <span class="hs busy">05 <i class="hs-dot"></i></span>
+              <span class="hs free">06 <i class="hs-dot"></i></span>
+              <span class="hs free">07 <i class="hs-dot"></i></span>
+              <span class="hs busy">08 <i class="hs-dot"></i></span>
+              <span class="hs free">09 <i class="hs-dot"></i></span>
+              <span class="hs free">10 <i class="hs-dot"></i></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LIVE SLOTS -->
+  <section id="slots" style="padding-top:20px;">
+    <div class="wrap">
+      <div class="head"><p class="kicker">Live now</p><h2>10 streaming slots</h2><p>Each slot streams one video for 24 hours. Grab any free slot below.</p></div>
+      <div class="mylive" id="myLiveCard"></div>
+      <div class="slotboard" id="slotboard"></div>
+      <p class="availline" id="availLine">Checking availabilityΓÇª</p>
+    </div>
+  </section>
+
+  <!-- CHOOSE MODE -->
+  <section id="modes" style="padding-top:10px;">
+    <div class="wrap">
+      <div class="head"><p class="kicker">Start streaming</p><h2>Pick how you want to broadcast</h2><p>Open the studio, upload a video and go live, starting with a free 15-minute trial.</p></div>
+      <div class="modes">
+        <button type="button" class="modecard single" id="cardSingle">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M8 5v14l11-7z"/></svg></span>
+          <h3>Single stream</h3>
+          <p>Stream your video to one platform: YouTube, Twitch, Facebook, Kick or any RTMP server.</p>
+          <ul class="mc-feat">
+            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Free 15-minute trial, no card needed</li>
+            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Full 24-hour streaming once subscribed</li>
+            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Loop your video non-stop</li>
+          </ul>
+          <div class="mc-foot">
+            <span class="cardprice"><span>Free trial, then</span><span><b>$4.99</b>/mo</span></span>
+            <span class="go">Open studio<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          </div>
+        </button>
+        <span class="modes-or">or</span>
+        <button type="button" class="modecard multi" id="cardMulti">
+          <span class="cardbadge">Γÿà Most popular</span>
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8.2 10.8 15.6 7.2M8.2 13.2l7.4 3.6"/></svg></span>
+          <h3>Multistream</h3>
+          <p>Broadcast one video to up to 3 platforms at once, e.g. YouTube + Twitch + Facebook together.</p>
+          <ul class="mc-feat">
+            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Everything in Single, plus multi-platform</li>
+            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Up to 3 destinations at the same time</li>
+            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Cancel anytime</li>
+          </ul>
+          <div class="mc-foot">
+            <span class="cardprice"><span>Billed monthly</span><span><b>$9.99</b>/mo</span></span>
+            <span class="go">Open studio<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          </div>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="wrap">
+      <div class="head"><p class="kicker">How it works</p><h2>Live in 3 steps</h2></div>
+      <div class="grid3">
+        <div class="step"><div class="n">1</div><h3>Tap a free slot</h3><p>No payment needed. Every slot starts a free 15-minute trial.</p></div>
+        <div class="step"><div class="n">2</div><h3>Upload &amp; paste your key</h3><p>Pick an MP4 (H.264+AAC), choose your platform and paste your stream key.</p></div>
+        <div class="step"><div class="n">3</div><h3>Go live free for 15 min</h3><p>Your trial streams instantly. Subscribe anytime to keep streaming the full 24 hours.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FULL-SCREEN STUDIO APP (opens from the mode cards / slots) -->
+  <div id="studioApp" aria-hidden="true">
+    <div class="sapp-bar">
+      <div class="l">
+        <span class="sapp-brand" id="sappLogo" title="Back to slots"><img src="logo.svg" alt="" />Streamza Studio</span>
+        <span class="sapp-modepill" id="sappMode">Single stream</span>
+        <span id="sappProBadge" style="display:none;"></span>
+      </div>
+      <div class="sapp-r">
+        <span class="sapp-status" id="sappStatus"><span class="d"></span><span id="sappStatusTxt">Idle</span></span>
+        <button class="sapp-stop" id="sappStop" style="display:none;">Γûá Stop stream</button>
+        <button class="sapp-close" id="sappClose">ΓåÉ Back to slots</button>
+      </div>
+    </div>
+    <div class="sapp-body">
+
+      <!-- STAGE -->
+      <div class="stage">
+        <div class="head2">Program preview</div>
+        <div class="videoframe">
+          <span class="livebadge" id="liveBadge"><i></i>LIVE</span>
+          <video id="preview" controls muted playsinline></video>
+          <div class="placeholder" id="vplaceholder">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="14" height="14" rx="2"/><path d="m17 9 4-2v10l-4-2"/></svg>
+            <span>Your selected video previews here</span>
+          </div>
+        </div>
+        <div class="liveinfo" id="liveInfo" style="display:none;"></div>
+        <div class="countdown" id="cd" style="display:none;">
+          <div class="cd-info">
+            <svg class="cd-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+            <div>
+              <div class="t" id="cdTime">15:00</div>
+              <div class="l"><span id="cdLabel">remaining on your free trial</span> (Slot <span id="cdSlot">ΓÇô</span>)</div>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="upgradeBtn">Subscribe: stream 24 hours</button>
+        </div>
+        <div class="head2" style="margin-top:2px;">Broadcast health</div>
+        <div class="statgrid">
+          <div class="stat"><div class="k">Status</div><div class="v" id="sStatus">Idle</div></div>
+          <div class="stat"><div class="k">Bitrate</div><div class="v" id="sBitrate">-</div></div>
+          <div class="stat"><div class="k">FPS</div><div class="v" id="sFps">-</div></div>
+          <div class="stat"><div class="k">Dropped frames</div><div class="v" id="sDrop">-</div></div>
+          <div class="stat"><div class="k">Health</div><div class="v" id="sSpeed">-</div></div>
+        </div>
+        <details class="logwrap"><summary>Technical log</summary><div class="logbox" id="log"></div></details>
+      </div>
+
+      <!-- DOCK (controls) -->
+      <div class="dock">
+        <div id="authBox" class="authbox" style="display:none;">
+          <div id="gbtnWrap"><div id="gbtn"></div><div class="authhint">Sign in to save your videos and manage your subscription.</div></div>
+          <div id="authUser" style="display:none;"></div>
+        </div>
+        <details class="resume" id="resumeDetails">
+          <summary>Already streaming on another device? Resume it ΓåÆ</summary>
+          <div class="resume-body">
+            <input type="text" id="resumeInput" placeholder="Paste your manage link or stream code" />
+            <button class="btn btn-ghost" id="resumeBtn">Resume</button>
+          </div>
+        </details>
+        <div class="beta" id="betaNote"><span><b>Free 15-minute trial</b>, no payment needed to start. <b>Subscribe</b> to stream the full 24 hours.</span></div>
+
+        <!-- 1 ┬╖ SOURCE -->
+        <section class="sec">
+          <div class="sec-head"><span class="sec-num">1</span><h3 class="sec-title">Source</h3></div>
+          <label>Your email (for access &amp; renewal reminder)</label>
+        <input type="email" id="email" placeholder="you@example.com" />
+        <div id="recentWrap" style="display:none;margin:4px 0 10px;">
+          <label>Your recent videos <span style="color:#8a8a8a;font-weight:400;">(tap to re-stream, no re-upload)</span></label>
+          <div id="recentList"></div>
+        </div>
+        <label>Video file: MP4 (H.264 + AAC)</label>
+        <label class="dropzone" for="video" id="dropzone">
+          <input type="file" id="video" accept="video/*" />
+          <div class="dz-empty" id="dzEmpty">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M5 20h14"/></svg>
+            <span class="dz-title">Choose a video or drag it here</span>
+            <span class="dz-sub">MP4 ┬╖ H.264 + AAC</span>
+          </div>
+          <div class="dz-filled" id="dzFilled">
+            <div class="dz-thumb" id="dzThumb">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="m9 8 5 3.5L9 15z"/></svg>
+            </div>
+            <div class="dz-meta">
+              <span class="dz-filename" id="dzFilename">video.mp4</span>
+              <span class="dz-size" id="dzSize"></span>
+              <div class="dz-progress-wrap" id="dzProgressWrap" style="display:none;">
+                <div class="dz-progress-bar"><div class="dz-progress-fill" id="dzProgressFill"></div></div>
+                <span class="dz-progress-label" id="dzProgressLabel">0%</span>
+              </div>
+            </div>
+            <span class="dz-change">Change</span>
+            <button type="button" class="dz-delete" id="dzDelete" style="display:none;">Delete</button>
+          </div>
+        </label>
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-title">Loop the video</div>
+              <div class="toggle-sub">Repeats your video non-stop while you're live</div>
+            </div>
+            <label class="switch"><input type="checkbox" id="loop" checked /><span class="slider"></span></label>
+          </div>
+        </section>
+
+        <!-- 2 ┬╖ DESTINATION -->
+        <section class="sec">
+          <div class="sec-head"><span class="sec-num">2</span><h3 class="sec-title">Destination</h3></div>
+          <div class="modetabs" id="modeTabs">
+          <button type="button" class="modetab active" data-mode="single">Single stream</button>
+          <button type="button" class="modetab" data-mode="multi">Multistream <span class="mtag">$9.99/mo</span></button>
+        </div>
+        <div id="singleDest">
+          <div class="platrow" id="platrow">
+            <button type="button" class="chip" data-p="youtube">YouTube</button>
+            <button type="button" class="chip" data-p="twitch">Twitch</button>
+            <button type="button" class="chip" data-p="facebook">Facebook</button>
+            <button type="button" class="chip" data-p="kick">Kick</button>
+            <button type="button" class="chip" data-p="custom">Custom RTMP</button>
+          </div>
+          <label>RTMP server URL</label>
+          <input type="text" id="rtmpUrl" placeholder="rtmp://a.rtmp.youtube.com/live2" />
+          <label>Stream key <a href="#" id="keyHelp" class="keyhelp" target="_blank" rel="noopener" style="display:none;">Where do I get this? Γåù</a></label>
+          <div class="keywrap">
+            <input type="password" id="streamKey" placeholder="xxxx-xxxx-xxxx-xxxx" />
+            <button type="button" class="eye" id="eyeBtn" aria-label="Show stream key">show</button>
+          </div>
+        </div>
+        <div id="multiDest" style="display:none;">
+          <p class="modehint">Broadcast to up to <b>3 platforms at once</b>, the Multistream plan (<b>$9.99/mo</b>).</p>
+          <div id="destList"></div>
+          <button type="button" class="btn btn-ghost btn-block" id="addDest2">+ Add a platform</button>
+        </div>
+        </section>
+
+        <!-- 3 ┬╖ GO LIVE -->
+        <section class="sec" id="goSec">
+          <div class="sec-head"><span class="sec-num">3</span><h3 class="sec-title">Go live</h3></div>
+          <div class="selslot" id="selSlot"><span>Claiming the <b>next free slot</b>, or tap a specific slot above.</span></div>
+          <div class="checkrow"><input type="checkbox" id="agree" /><label style="margin:0;">I own or have the rights to stream this content. I've read the <a href="/copyright.html" target="_blank" rel="noopener" style="color:var(--red);font-weight:700;">Copyright &amp; DMCA Policy</a> and understand repeat infringement ends my access.</label></div>
+        <button class="btn btn-primary btn-block" id="startBtn" style="margin-top:18px;">Go Live</button>
+        <button class="btn btn-ghost btn-block" id="stopBtn" style="margin-top:18px;display:none;">Stop my stream</button>
+        <div class="managebox" id="manageBox" style="display:none;">
+          <div class="ml-label">Your manage link: control this stream from any device</div>
+          <div class="ml-row">
+            <input type="text" id="manageLink" readonly />
+            <button class="btn btn-ghost" id="copyLinkBtn">Copy</button>
+          </div>
+          <div class="ml-hint">Bookmark this. Open it on any device to return to your live stream.</div>
+        </div>
+        <p class="hint">Start the live event on your platform first, then go live here. Stream-copy only: the file must be H.264 + AAC.</p>
+        </section>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PRICING -->
+  <section id="pricing" style="background:#08080a;">
+    <div class="wrap">
+      <div class="head"><p class="kicker">Pricing</p><h2>Start free, upgrade when you need more</h2><p>Free 15-minute trial on every slot. Subscribe for full 24-hour streaming, add Multistream to broadcast to several platforms at once.</p></div>
+      <div class="price-grid price-grid-3">
+        <div class="plan">
+          <span class="tag" style="background:#2c2c33;">FREE</span>
+          <h3>Free Trial</h3>
+          <div class="pr">$0</div>
+          <ul>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>15-minute trial on any slot</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>No card needed to start</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>One platform (YouTube, TwitchΓÇª)</li>
+          </ul>
+          <a class="btn btn-ghost btn-block" href="#modes">Try it free</a>
+        </div>
+        <div class="plan feat">
+          <span class="tag" id="planTagSingle">SINGLE</span>
+          <h3>Single</h3>
+          <div class="pr" id="planPrice">$4.99 <small>/mo</small></div>
+          <ul>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Full <b>24-hour</b> streaming slots</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Stream as often as you like</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>One platform ┬╖ 24/7 looping</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Cancel anytime</li>
+          </ul>
+          <a class="btn btn-primary btn-block" href="#modes" id="planSubscribe">Subscribe</a>
+        </div>
+        <div class="plan">
+          <span class="tag" id="planTagMulti">MULTISTREAM</span>
+          <h3>Multistream</h3>
+          <div class="pr" id="planPriceMulti">$9.99 <small>/mo</small></div>
+          <ul>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Everything in Single, plus:</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Stream to <b>up to 3 platforms</b> at once</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>e.g. YouTube + Twitch + Facebook together</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>Cancel anytime</li>
+          </ul>
+          <a class="btn btn-primary btn-block" href="#modes" id="planSubscribeMulti">Go Multistream</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="wrap">
+      <div class="head"><p class="kicker">FAQ</p><h2>Questions, answered</h2></div>
+      <details class="faq" open><summary>How do the 10 slots work?</summary><p>There are 10 streaming slots. Tap any free slot to start a free 15-minute trial. To keep streaming, subscribe for full 24-hour slots. When all 10 are busy, you wait for one to free up.</p></details>
+      <details class="faq"><summary>What does it cost?</summary><p>Every slot is free for the first 15 minutes, no card needed. To stream the full 24 hours, subscribe monthly and stream as often as you like. Cancel anytime.</p></details>
+      <details class="faq"><summary>Which platforms can I stream to?</summary><p>YouTube, Twitch, Facebook, Kick, Restream, and any service with a Custom RTMP / RTMPS key.</p></details>
+      <details class="faq"><summary>What video format do I need?</summary><p>An MP4 with H.264 video + AAC audio (the default export from most tools). We stream-copy it, no re-encode, so it goes live instantly.</p></details>
+      <details class="faq"><summary>What happens after the free trial?</summary><p>At 15 minutes the stream stops and the slot frees for others. <b>Subscribe</b> while you're live to switch to a full 24-hour slot and keep streaming non-stop.</p></details>
+      <details class="faq"><summary>Can I stream a pre-recorded video using just a URL and stream key?</summary><p>Yes. Upload your video file, paste the RTMP URL and stream key from YouTube, Twitch, Facebook, Kick or any custom RTMP server, and it goes live immediately.</p></details>
+      <details class="faq"><summary>Do I need OBS or any software installed?</summary><p>No. Streamza Web Studio runs entirely in your browser and streams from the cloud. No OBS, no software install, and no PC needs to stay on.</p></details>
+      <details class="faq"><summary>Can the video loop 24/7 automatically?</summary><p>Yes. Turn on <b>Loop the video</b> and Streamza replays it seamlessly, non-stop, for as long as your slot or subscription is active.</p></details>
+      <details class="faq"><summary>Where do I get my RTMP URL and stream key?</summary><p>Every platform provides one in its live-streaming dashboard, for example YouTube Studio ΓåÆ Go Live ΓåÆ Stream, or Twitch Creator Dashboard ΓåÆ Settings ΓåÆ Stream.</p></details>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <p style="font-weight:700;color:#fff;font-size:16px;margin-bottom:6px;"><img src="logo.svg" alt="" />Stream<b style="color:#FF3B30;">za</b> Studio</p>
+      <p style="margin-bottom:10px;"><a href="/" style="color:#fff;font-weight:600;">ΓåÉ Back to Streamza.live</a> &nbsp;┬╖&nbsp; <a href="/privacy.html" style="color:#9b9ba3;">Privacy</a> &nbsp;┬╖&nbsp; <a href="/terms.html" style="color:#9b9ba3;">Terms</a> &nbsp;┬╖&nbsp; <a href="/copyright.html" style="color:#9b9ba3;">Copyright</a> &nbsp;┬╖&nbsp; <a href="/support.html" style="color:#9b9ba3;">Support</a></p>
+      <p>┬⌐ 2026 Streamza ┬╖ Probros. Not affiliated with YouTube, Twitch, Facebook, Kick or any third-party platform. You are responsible for the content you stream.</p>
+    </div>
+  </footer>
+
+  <!-- Subscribe modal (replaces the browser prompt) -->
+  <div class="modal" id="subModal">
+    <div class="box">
+      <img src="logo.svg" alt="Streamza" />
+      <h3 id="subTitle">Subscribe</h3>
+      <p id="subDesc">Enter your email to continue to secure checkout.</p>
+      <input type="email" id="subEmail" placeholder="you@example.com" autocomplete="email" />
+      <div class="mrow">
+        <button class="btn btn-ghost" id="subCancel">Cancel</button>
+        <button class="btn btn-primary" id="subGo">Continue ΓåÆ</button>
+      </div>
+      <p class="secure">≡ƒöÆ Secure checkout ┬╖ cancel anytime</p>
+    </div>
+  </div>
+
+  <!-- Mode chooser (when a slot is tapped) -->
+  <div class="modal" id="modeModal">
+    <div class="box">
+      <img src="logo.svg" alt="Streamza" />
+      <h3>Stream <span id="mmSlot">this slot</span></h3>
+      <p>How do you want to broadcast? You can switch inside the studio too.</p>
+      <button class="btn btn-primary btn-block" id="mmSingle">Single stream: one platform</button>
+      <button class="btn btn-ghost btn-block" id="mmMulti" style="margin-top:10px;">Multistream: up to 3 platforms ┬╖ $9.99/mo</button>
+      <p class="secure"><a id="mmCancel" style="cursor:pointer;">Cancel</a></p>
+    </div>
+  </div>
+
+  <!-- Trial-ended ΓåÆ subscribe prompt (shown when the free 15-min trial runs out) -->
+  <div class="modal" id="trialModal">
+    <div class="box">
+      <img src="logo.svg" alt="Streamza" />
+      <h3>Your free trial ended</h3>
+      <p>Your 15-minute trial is up and the stream stopped. <b style="color:#fff;">Subscribe to keep streaming the full 24 hours</b>, non-stop. Billed monthly, cancel anytime.</p>
+      <button class="btn btn-primary btn-block trial-btn" id="trialSubSingle"><span>Subscribe: 24-hour streaming</span><b id="trialPrice">$4.99/mo</b></button>
+      <button class="btn btn-ghost btn-block trial-btn" id="trialSubMulti" style="margin-top:10px;"><span>Multistream: up to 3 platforms</span><b id="trialPriceMulti">$9.99/mo</b></button>
+      <p class="secure"><a id="trialLater" style="cursor:pointer;">Maybe later</a> ┬╖ ≡ƒöÆ Secure checkout</p>
+    </div>
+  </div>
+
+  <!-- Choose your plan (shown when tapping Go Live, before a non-subscribed account starts streaming) -->
+  <div class="modal" id="planModal">
+    <div class="box">
+      <img src="logo.svg" alt="Streamza" />
+      <h3>Choose how to go live</h3>
+      <p>Pick a plan to start streaming, cancel anytime.</p>
+      <button class="btn btn-ghost btn-block trial-btn" id="planTrial"><span>Start free: 15-minute trial</span><b>$0</b></button>
+      <button class="btn btn-primary btn-block trial-btn" id="planSingle" style="margin-top:10px;"><span>Subscribe: 24-hour streaming</span><b id="planSinglePrice">$4.99/mo</b></button>
+      <button class="btn btn-ghost btn-block trial-btn" id="planMulti" style="margin-top:10px;"><span>Multistream: up to 3 platforms</span><b id="planMultiPrice">$9.99/mo</b></button>
+      <p class="secure"><a id="planCancel" style="cursor:pointer;">Cancel</a> ┬╖ ≡ƒöÆ Secure checkout</p>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const TKEY = "streamza_slot_token";
+    let selectedSlot = null; // which slot the user tapped to claim (null = next free)
+    let myEmail = "";        // the live stream's email (for resume + checkout)
+    let resumeOpen = false;  // open the studio app on load if arriving via a manage link
+    let _wasTrial = false;   // was the last live stream a free trial? (drives the trial-ended prompt)
+    let myLiveSlotId = null; // which slot (if any) this browser's manage token currently owns
+    // Resume via a manage link (?s=token): lets a user reclaim control from ANY device.
+    (function(){ const p=new URLSearchParams(location.search); const t=p.get("s")||p.get("token"); if(t){ localStorage.setItem(TKEY, t.replace(/[^a-f0-9]/gi,"")); resumeOpen=true; history.replaceState(null,"","/studio"); } })();
+
+    // ---- Google account sign-in ----
+    let AUTH={enabled:false};
+    (async function(){
+      try{
+        AUTH = await (await fetch("/auth/config")).json();
+        const me = await (await fetch("/auth/me")).json();
+        if(me.signedIn) showSignedIn(me);
+        else if(AUTH.enabled){ const b=$("authBox"); if(b) b.style.display="block"; const h=$("hdrAuth"); if(h) h.style.display="flex"; waitGoogle(0); }
+      }catch(_){}
+    })();
+    function escHtml(s){ return String(s||"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+    function proBadge(label){ return '<span class="pro-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.9-5 4.8 1.3 6.9L12 17.6 5.9 20.9l1.3-6.9-5-4.8 6.9-.9z"/></svg>'+(label||"PRO")+'</span>'; }
+    function waitGoogle(n){
+      if(AUTH._rendered || !AUTH.enabled) return;
+      if(window.google && google.accounts && google.accounts.id && AUTH.clientId){
+        google.accounts.id.initialize({ client_id:AUTH.clientId, callback:onGoogleCred });
+        try{ if($("hdrGbtn")){ var _sm = window.matchMedia && window.matchMedia("(max-width:600px)").matches; google.accounts.id.renderButton($("hdrGbtn"), _sm ? { type:"icon", theme:"outline", shape:"circle", size:"large" } : { theme:"outline", size:"medium", text:"signin_with", shape:"pill" }); } }catch(_){}
+        try{ if($("gbtn")) google.accounts.id.renderButton($("gbtn"), { theme:"filled_black", size:"large", text:"signin_with", shape:"pill" }); }catch(_){}
+        AUTH._rendered=true;
+      } else if(n<40) setTimeout(()=>waitGoogle(n+1), 250);
+    }
+    async function onGoogleCred(resp){
+      try{
+        const r=await fetch("/auth/google",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({credential:resp.credential})});
+        const j=await r.json();
+        if(j.signedIn){ showSignedIn(j); toast("Signed in as "+j.email); } else toast(j.error||"Sign-in failed.");
+      }catch(_){ toast("Sign-in failed."); }
+    }
+    function showSignedIn(u){
+      myEmail=u.email; window.IS_SUBSCRIBED=!!u.subscribed; try{localStorage.setItem("streamza_email",u.email);}catch(_){}
+      const b=$("authBox"); if(b) b.style.display="block";
+      const g=$("gbtnWrap"); if(g) g.style.display="none";
+      const initial=(u.email[0]||"U").toUpperCase();
+      const planTxt = u.subscribed ? (u.multi?"Multistream plan":"Subscribed") : "Free plan";
+      const a=$("authUser");
+      if(a){
+        a.style.display="flex";
+        a.innerHTML =
+          '<span class="au-av">'+escHtml(initial)+'</span>'+
+          '<span class="au-info"><span class="au-email">'+escHtml(u.email)+'</span><span class="au-plan">'+(u.subscribed?proBadge(u.multi?"Multistream":"Pro"):planTxt)+'</span></span>'+
+          '<a class="so" id="signout">Sign out</a>';
+        const so=$("signout"); if(so) so.onclick=signOut;
+      }
+      // header account chip + dropdown
+      const h=$("hdrAuth");
+      if(h){
+        h.style.display="flex";
+        const planCol = u.subscribed ? "#34C759" : "var(--sub)";
+        const live = u.slot && u.slot.live;
+        const planLine = (live?'≡ƒö┤ Live ┬╖ Slot '+u.slot.id+' ┬╖ ':'')+planTxt;
+        h.innerHTML =
+          '<div class="hdrchip" id="hdrChip" title="Account">'+
+            '<span class="av'+(live?' live':'')+'">'+escHtml(initial)+'</span>'+
+            '<span class="em">'+escHtml(u.email)+'</span>'+
+            (u.subscribed?proBadge(u.multi?"Multistream":"Pro"):"")+
+            '<span class="caret">Γû╛</span>'+
+            '<div class="hdrmenu" id="hdrMenu">'+
+              '<div class="who"><div class="e">'+escHtml(u.email)+'</div><div class="p" style="color:'+(live?'#ff3b30':planCol)+'">'+planLine+'</div></div>'+
+              (u.slot?'<a id="hdrResume">Γû╢ Resume my stream, Slot '+u.slot.id+'</a>':'')+
+              '<a id="hdrStudio">Open studio</a>'+
+              (u.subscribed?'<a id="hdrManage">Manage subscription</a>':'<a id="hdrUpgrade">Upgrade plan</a>')+
+              '<a id="hdrSignout">Sign out</a>'+
+            '</div>'+
+          '</div>';
+        const chip=$("hdrChip"), menu=$("hdrMenu");
+        if(chip&&menu){ chip.onclick=(e)=>{ e.stopPropagation(); menu.classList.toggle("show"); };
+          document.addEventListener("click", ()=>menu.classList.remove("show")); }
+        if($("hdrResume")) $("hdrResume").onclick=()=>{ if(u.slot&&u.slot.token&&typeof resumeFromToken==="function") resumeFromToken(u.slot.token); };
+        if($("hdrStudio")) $("hdrStudio").onclick=()=>{ if(typeof openStudioApp==="function") openStudioApp("single"); };
+        if($("hdrManage")) $("hdrManage").onclick=()=>{ if(u.portal) window.open(u.portal,"_blank","noopener"); else toast("To manage your subscription, email probrostraders@gmail.com"); };
+        if($("hdrUpgrade")) $("hdrUpgrade").onclick=()=>{ const t=$("subModal"); if(t) t.classList.add("show"); else location.hash="#pricing"; };
+        if($("hdrSignout")) $("hdrSignout").onclick=signOut;
+      }
+      if($("email")){ $("email").value=u.email; $("email").readOnly=true; $("email").style.opacity=".8"; $("email").dispatchEvent(new Event("input")); }
+      if($("subEmail")) $("subEmail").value=u.email;
+      if(typeof checkSub==="function") checkSub(u.email);
+      if(typeof loadRecent==="function") loadRecent(u.email);
+    }
+    async function signOut(){ try{ await fetch("/auth/logout",{method:"POST"}); }catch(_){} try{localStorage.removeItem("streamza_email");}catch(_){} location.reload(); }
+
+    // Subscription checkout: Paddle when the server has real credentials for it (the go-forward
+    // processor), Lemon Squeezy as a dormant fallback otherwise. /pay/config tells us which.
+    let PAY = { enabled:false };
+    (async function(){
+      try{
+        PAY = await (await fetch("/pay/config")).json();
+        if(PAY.priceLabel){ const el=$("planPrice"); if(el) el.textContent=PAY.priceLabel; }
+        if(PAY.priceLabelMulti){ const el=$("planPriceMulti"); if(el) el.textContent=PAY.priceLabelMulti; }
+      }catch(_){}
+    })();
+    function lsReady(){
+      if(!window.LemonSqueezy && typeof createLemonSqueezy==="function") createLemonSqueezy();
+      if(window.LemonSqueezy && !PAY._lsInited && LemonSqueezy.Setup){
+        LemonSqueezy.Setup({ eventHandler:(e)=>{ if(e && e.event==="Checkout.Success" && PAY._email){ toast("Payment received, activating your subscriptionΓÇª"); pollSubscribed(PAY._email,0); } } });
+        PAY._lsInited=true;
+      }
+      return !!window.LemonSqueezy;
+    }
+    function paddleReady(){
+      if(!window.Paddle || !PAY.paddleClientToken) return false;
+      if(!PAY._paddleInited){
+        try{
+          Paddle.Environment.set(PAY.paddleEnv==="production" ? "production" : "sandbox");
+          Paddle.Initialize({
+            token: PAY.paddleClientToken,
+            eventCallback:(e)=>{ if(e && e.name==="checkout.completed" && PAY._email){ toast("Payment received, activating your subscriptionΓÇª"); pollSubscribed(PAY._email,0); } },
+          });
+          PAY._paddleInited=true;
+        }catch(_){ return false; }
+      }
+      return true;
+    }
+    function openCheckout(email, plan){
+      if(!PAY.enabled){ toast(plan==="multi" ? "The Multistream plan isn't switched on yet." : "Subscriptions aren't switched on yet."); return; }
+      PAY._email = email;
+      try{ localStorage.setItem("streamza_email", email); }catch(_){}
+      if(PAY.provider==="paddle"){
+        const priceId = plan==="multi" ? PAY.paddlePriceIdMulti : PAY.paddlePriceId;
+        if(!priceId || !paddleReady()){ toast("Checkout isn't ready yet ΓÇö try again in a moment."); return; }
+        Paddle.Checkout.open({
+          items:[{ priceId, quantity:1 }],
+          customer:{ email },
+          customData:{ relay_email: email, tier: plan==="multi"?"multi":"single" },
+        });
+        return;
+      }
+      const url0 = plan==="multi" ? PAY.checkoutMultiUrl : PAY.checkoutUrl;
+      if(!url0){ toast(plan==="multi" ? "The Multistream plan isn't switched on yet." : "Subscriptions aren't switched on yet."); return; }
+      const url = url0 + "?embed=1&media=0&checkout[email]=" + encodeURIComponent(email) + "&checkout[custom][relay_email]=" + encodeURIComponent(email) + "&checkout[custom][tier]=" + (plan==="multi"?"multi":"single");
+      if(lsReady() && window.LemonSqueezy.Url){ LemonSqueezy.Url.Open(url); }
+      else { window.open(url, "_blank"); pollSubscribed(email,0); }
+    }
+    // Branded subscribe modal (no ugly browser prompt)
+    let _subPlan="single";
+    function subscribeModal(plan){
+      _subPlan=plan;
+      $("subTitle").textContent = plan==="multi" ? "Subscribe: Multistream" : "Subscribe: Single";
+      $("subDesc").textContent = plan==="multi"
+        ? "Stream to up to 3 platforms at once, 24/7. Enter your email to continue to secure checkout."
+        : "Full 24-hour streaming, as often as you like. Enter your email to continue to secure checkout.";
+      $("subEmail").value = ((($("email")&&$("email").value)||myEmail)||"").trim();
+      $("subModal").classList.add("show");
+      setTimeout(()=>$("subEmail").focus(),60);
+    }
+    $("subCancel").onclick=()=>$("subModal").classList.remove("show");
+    $("subModal").onclick=(e)=>{ if(e.target===$("subModal")) $("subModal").classList.remove("show"); };
+    $("subGo").onclick=()=>{
+      const em=($("subEmail").value||"").trim();
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return toast("Please enter a valid email.");
+      $("subModal").classList.remove("show");
+      openCheckout(em,_subPlan);
+    };
+    $("subEmail").addEventListener("keydown",(e)=>{ if(e.key==="Enter") $("subGo").click(); });
+    { const ps=$("planSubscribe");      if(ps) ps.addEventListener("click",(e)=>{ e.preventDefault(); PAY.enabled ? subscribeModal("single") : toast("Subscriptions aren't switched on yet."); }); }
+    { const pm=$("planSubscribeMulti"); if(pm) pm.addEventListener("click",(e)=>{ e.preventDefault(); PAY.enabled ? subscribeModal("multi") : toast("The Multistream plan isn't switched on yet."); }); }
+
+    // Prominent "your trial ended" prompt ΓåÆ subscribe (shown once the free 15-min stream stops).
+    function showTrialEnded(){
+      if(window.IS_SUBSCRIBED) return;
+      if(!PAY.enabled){ toast("Your free trial ended. Subscriptions open soon."); return; }
+      const tp=$("trialPrice"); if(tp && PAY.priceLabel) tp.textContent=PAY.priceLabel;
+      const tpm=$("trialPriceMulti"); if(tpm && PAY.priceLabelMulti) tpm.textContent=PAY.priceLabelMulti;
+      const tm=$("trialSubMulti"); if(tm) tm.style.display = PAY.multiEnabled ? "block" : "none";
+      $("trialModal").classList.add("show");
+    }
+    if($("trialSubSingle")) $("trialSubSingle").onclick=()=>{ $("trialModal").classList.remove("show"); PAY.enabled ? subscribeModal("single") : toast("Subscriptions aren't switched on yet."); };
+    if($("trialSubMulti"))  $("trialSubMulti").onclick =()=>{ $("trialModal").classList.remove("show"); PAY.enabled ? subscribeModal("multi")  : toast("The Multistream plan isn't switched on yet."); };
+    if($("trialLater"))     $("trialLater").onclick    =()=>$("trialModal").classList.remove("show");
+    if($("trialModal"))     $("trialModal").onclick    =(e)=>{ if(e.target===$("trialModal")) $("trialModal").classList.remove("show"); };
+
+    // Studio mode: Single stream vs Multistream (two clear sections, like the app)
+    let mode = "single";
+    function setMode(m){
+      mode = m;
+      document.querySelectorAll(".modetab").forEach(t=>t.classList.toggle("active", t.dataset.mode===m));
+      $("singleDest").style.display = m==="single" ? "block" : "none";
+      $("multiDest").style.display  = m==="multi"  ? "block" : "none";
+      const mp=$("sappMode"); if(mp) mp.textContent = m==="multi" ? "Multistream" : "Single stream";
+      const ub=$("upgradeBtn"); if(ub) ub.textContent = m==="multi" ? "Subscribe to Multistream: $9.99/mo" : "Subscribe: stream 24 hours";
+      if(m==="multi" && $("destList").children.length===0){ addDestCard("youtube"); addDestCard("twitch"); }
+    }
+    document.querySelectorAll(".modetab").forEach(t=>t.onclick=()=>setMode(t.dataset.mode));
+    function addDestCard(preset){
+      const list=$("destList");
+      if(list.children.length>=3) return toast("Up to 3 platforms per stream.");
+      const c=document.createElement("div"); c.className="dcard";
+      c.innerHTML='<div class="dcard-top"><select class="dPlat"><option value="">Choose platformΓÇª</option><option value="youtube">YouTube</option><option value="twitch">Twitch</option><option value="facebook">Facebook</option><option value="kick">Kick</option><option value="custom">Custom RTMP</option></select><button type="button" class="dRemove" title="Remove">&times;</button></div><input type="text" class="dUrl" placeholder="rtmp://ΓÇª server URL" /><input type="text" class="dKey" placeholder="stream key" />';
+      const sel=c.querySelector(".dPlat");
+      sel.onchange=()=>{ const p=PRESETS[sel.value]; c.querySelector(".dUrl").value=(p && sel.value!=="custom" && sel.value!=="kick") ? p.url : ""; };
+      if(preset){ sel.value=preset; sel.onchange(); }
+      c.querySelector(".dRemove").onclick=()=>c.remove();
+      list.appendChild(c);
+    }
+    $("addDest2").onclick=()=>addDestCard("");
+    function collectDests(){
+      if(mode==="multi"){
+        const list=[];
+        document.querySelectorAll("#destList .dcard").forEach(c=>{ const u=c.querySelector(".dUrl").value.trim(); if(u) list.push({url:u, key:c.querySelector(".dKey").value.trim()}); });
+        return list;
+      }
+      const u=$("rtmpUrl").value.trim();
+      return u ? [{url:u, key:$("streamKey").value.trim()}] : [];
+    }
+
+    // open/close the full-screen studio app
+    function openStudioApp(m, slotId){
+      selectedSlot = slotId || null;            // specific slot, else next free
+      setMode(m||"single");
+      updateSelLabel();
+      document.body.classList.add("studio-open");
+      const a=$("studioApp"); a.classList.add("show"); a.setAttribute("aria-hidden","false");
+      window.scrollTo(0,0);
+      loadRecent();   // show the subscriber's saved videos (if any) for one-tap re-streaming
+      if(typeof waitGoogle==="function") waitGoogle(0); // render the Google button now the dock is visible
+    }
+    function closeStudioApp(){
+      const a=$("studioApp"); a.classList.remove("show"); a.setAttribute("aria-hidden","true");
+      document.body.classList.remove("studio-open");
+    }
+    $("sappClose").onclick=closeStudioApp;
+    { const lg=$("sappLogo"); if(lg) lg.onclick=closeStudioApp; }
+    { const c=$("cardSingle"); if(c) c.onclick=()=>openStudioApp("single"); }
+    { const c=$("cardMulti");  if(c) c.onclick=()=>openStudioApp("multi"); }
+    document.addEventListener("keydown",(e)=>{ if(e.key==="Escape"){ if($("modeModal").classList.contains("show")) $("modeModal").classList.remove("show"); else if($("studioApp").classList.contains("show")) closeStudioApp(); } });
+
+    // tapping a slot ΓåÆ ask Single or Multistream, then open the studio in that mode
+    let _pendingSlot=null;
+    function chooseMode(slotId){ _pendingSlot=slotId||null; $("mmSlot").textContent = slotId ? ("Slot "+slotId) : "this slot"; $("modeModal").classList.add("show"); }
+    $("mmSingle").onclick=()=>{ $("modeModal").classList.remove("show"); openStudioApp("single", _pendingSlot); };
+    $("mmMulti").onclick =()=>{ $("modeModal").classList.remove("show"); openStudioApp("multi",  _pendingSlot); };
+    $("mmCancel").onclick=()=>$("modeModal").classList.remove("show");
+    $("modeModal").onclick=(e)=>{ if(e.target===$("modeModal")) $("modeModal").classList.remove("show"); };
+    async function pollSubscribed(email,n){
+      if(n>15){ toast("Subscription is processing. It'll unlock shortly. Tap Upgrade again in a moment."); return; }
+      try{
+        const r=await (await fetch("/subscribed?email="+encodeURIComponent(email))).json();
+        if(r.active){
+          applySubState(r);                                    // hide the Subscribe prompts right away
+          try{ localStorage.setItem(EKEY, email); }catch(_){}  // remember so it stays recognised
+          const token=localStorage.getItem(TKEY);
+          if(token){ await fetch("/upgrade",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token})}); }
+          if(PAY._autoGoLive){ PAY._autoGoLive=false; toast("Subscription active, going liveΓÇª"); beginStream(); }
+          else toast("Subscription active, you're now on a full 24-hour slot!");
+          refreshMine(); return;
+        }
+      }catch(_){}
+      setTimeout(()=>pollSubscribed(email,n+1),2000);
+    }
+    function toast(m){const t=$("toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),3400);}
+    function fmt(sec){sec=Math.max(0,sec);const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");}
+    function fmtShort(sec){const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60);return h>0?h+"h "+m+"m":m+"m";}
+
+    // video preview
+    let pUrl=null;
+    let selectedFileId = null; // a saved (reused) video chosen instead of a new upload
+    // Auto-upload state: the file starts uploading the moment it's picked, so "Go Live" doesn't have
+    // to wait through the whole transfer, it just claims a slot against the already-uploaded file.
+    let pendingUploadId=null, pendingUploadXhr=null;
+    function cancelPendingUpload(){ if(pendingUploadXhr){ try{ pendingUploadXhr.abort(); }catch(_){} } pendingUploadXhr=null; pendingUploadId=null; }
+    function startPreUpload(f){
+      const fd=new FormData(); fd.append("video",f);
+      const xhr=new XMLHttpRequest(); pendingUploadXhr=xhr;
+      const wrap=$("dzProgressWrap"), fill=$("dzProgressFill"), label=$("dzProgressLabel");
+      if(wrap) wrap.style.display="flex";
+      if(fill) fill.style.width="0%";
+      if(label) label.textContent="0%";
+      xhr.open("POST","/pending-upload"); xhr.timeout=900000;
+      xhr.upload.onprogress=(e)=>{
+        if(!e.lengthComputable || $("video").files[0]!==f) return;
+        const pct=Math.round(e.loaded/e.total*100);
+        if(fill) fill.style.width=pct+"%";
+        if(label) label.textContent="Uploading "+pct+"%";
+      };
+      xhr.onload=()=>{
+        if(pendingUploadXhr!==xhr) return; // superseded by a newer pick
+        pendingUploadXhr=null;
+        let j={}; try{ j=JSON.parse(xhr.responseText); }catch(_){}
+        if($("video").files[0]!==f) return; // user already picked something else
+        if(wrap) wrap.style.display="none";
+        if(xhr.status>=200 && xhr.status<300 && j.ok){ pendingUploadId=j.uploadId; }
+        else if(j.error) toast(j.error); // Go Live still works, falls back to uploading the file itself
+      };
+      xhr.onerror=()=>{ if(pendingUploadXhr===xhr){ pendingUploadXhr=null; if(wrap) wrap.style.display="none"; } };
+      xhr.ontimeout=()=>{ if(pendingUploadXhr===xhr){ pendingUploadXhr=null; if(wrap) wrap.style.display="none"; } };
+      xhr.send(fd);
+    }
+    // Draws the current frame of a loaded <video> onto the dropzone's thumbnail box, so a selected
+    // video reads as an actual video (a real preview frame) instead of a generic file-name row.
+    function captureThumb(videoEl,thumbEl){
+      if(!videoEl || !thumbEl) return;
+      const draw=()=>{
+        try{
+          const cw=videoEl.videoWidth, ch=videoEl.videoHeight;
+          if(!cw || !ch) return;
+          const canvas=document.createElement("canvas"); canvas.width=cw; canvas.height=ch;
+          canvas.getContext("2d").drawImage(videoEl,0,0,cw,ch);
+          thumbEl.style.backgroundImage="url("+canvas.toDataURL("image/jpeg",0.72)+")";
+          thumbEl.classList.add("has-frame");
+        }catch(_){ /* not decoded yet, or a cross-origin source, the icon stays as a fallback */ }
+      };
+      if(videoEl.readyState>=2) draw();
+      else videoEl.addEventListener("loadeddata",draw,{once:true});
+    }
+    $("video").addEventListener("change",()=>{
+      const f=$("video").files[0];
+      const dz=$("dropzone"), thumb=$("dzThumb");
+      cancelPendingUpload();
+      if(f){ selectedFileId=null; document.querySelectorAll("#recentList .recentCard").forEach(c=>c.classList.remove("sel")); } // a new upload replaces a saved pick
+      if(pUrl){ URL.revokeObjectURL(pUrl); pUrl=null; }
+      if(thumb){ thumb.classList.remove("has-frame"); thumb.style.backgroundImage=""; }
+      { const del=$("dzDelete"); if(del) del.style.display="none"; } // a fresh upload isn't a saved video yet ΓÇö nothing to delete
+      if(f){
+        pUrl=URL.createObjectURL(f); const v=$("preview"); v.src=pUrl; v.style.display="block"; $("vplaceholder").style.display="none"; v.play().catch(()=>{});
+        dz.classList.add("has-file"); $("dzFilename").textContent=f.name; $("dzSize").textContent=fmtSize(f.size);
+        captureThumb(v,thumb);
+        startPreUpload(f);
+      } else {
+        dz.classList.remove("has-file");
+      }
+    });
+    function fmtSize(b){ b=+b||0; if(b<1048576) return (b/1024).toFixed(0)+" KB"; if(b<1073741824) return (b/1048576).toFixed(1)+" MB"; return (b/1073741824).toFixed(2)+" GB"; }
+    function fmtExpiry(min){ min=Math.max(1,+min||0); if(min>=1440) return Math.ceil(min/1440)+"d"; if(min>=60) return Math.ceil(min/60)+"h"; return min+"m"; }
+    function escHtml(s){ return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+    // Saved-videos picker: list this email's reusable uploads (subscribers, or any signed-in Google account).
+    async function loadRecent(email){
+      const wrap=$("recentWrap"), list=$("recentList"); if(!wrap||!list) return;
+      email=(email||($("email")&&$("email").value)||"").trim();
+      if(!email.includes("@")){ wrap.style.display="none"; return; }
+      let r={uploads:[],subscribed:false,signedIn:false};
+      try{ r=await (await fetch("/myuploads?email="+encodeURIComponent(email))).json(); }catch(_){}
+      if(!r.uploads || !r.uploads.length){
+        if(r.subscribed || r.signedIn){ wrap.style.display="none"; }
+        else { wrap.style.display="block"; list.innerHTML='<div class="recentHint">Sign in with Google to save your videos and skip re-uploading next time.</div>'; }
+        return;
+      }
+      wrap.style.display="block"; list.innerHTML="";
+      r.uploads.forEach(u=>{
+        const card=document.createElement("div"); card.className="recentCard"+(selectedFileId===u.id?" sel":"");
+        card.dataset.name=u.name; card.dataset.size=u.size;
+        const expiry=(typeof u.expiresInMinutes==="number") ? " ┬╖ deletes in "+fmtExpiry(u.expiresInMinutes) : "";
+        card.innerHTML='<div class="rc-name">'+escHtml(u.name)+'</div><div class="rc-meta">'+fmtSize(u.size)+expiry+'</div><button class="rc-del" title="Delete">Γ£ò</button>';
+        card.onclick=()=>selectRecent(u.id,card);
+        card.querySelector(".rc-del").onclick=(e)=>{ e.stopPropagation(); deleteRecent(u.id,email); };
+        list.appendChild(card);
+      });
+    }
+    function selectRecent(id,card){
+      selectedFileId = (selectedFileId===id) ? null : id; // toggle
+      const v=$("preview"), ph=$("vplaceholder"), dz=$("dropzone"), thumb=$("dzThumb");
+      cancelPendingUpload();
+      if(pUrl){ URL.revokeObjectURL(pUrl); pUrl=null; }
+      if(thumb){ thumb.classList.remove("has-frame"); thumb.style.backgroundImage=""; }
+      const pw=$("dzProgressWrap"); if(pw) pw.style.display="none";
+      if(selectedFileId){
+        try{ $("video").value=""; }catch(_){}
+        const email=(($("email")&&$("email").value)||"").trim();
+        if(v){ v.src="/myuploads/"+encodeURIComponent(selectedFileId)+"/file?email="+encodeURIComponent(email); v.style.display="block"; v.load(); }
+        if(ph) ph.style.display="none";
+        if(dz && card){ dz.classList.add("has-file"); $("dzFilename").textContent=card.dataset.name||"video.mp4"; $("dzSize").textContent=fmtSize(card.dataset.size); captureThumb(v,thumb); }
+        const del=$("dzDelete"); if(del) del.style.display="inline";
+      } else {
+        if(v){ v.removeAttribute("src"); v.style.display="none"; }
+        if(ph) ph.style.display="";
+        if(dz) dz.classList.remove("has-file");
+        const del=$("dzDelete"); if(del) del.style.display="none";
+      }
+      document.querySelectorAll("#recentList .recentCard").forEach(c=>c.classList.remove("sel"));
+      if(selectedFileId && card) card.classList.add("sel");
+    }
+    async function deleteRecent(id,email){
+      try{ await fetch("/deleteupload",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({fileId:id,email})}); }catch(_){}
+      if(selectedFileId===id) selectedFileId=null;
+      loadRecent(email);
+    }
+    // Manual delete from the selected-video card itself, not just the recent-videos list ΓÇö same
+    // request, but also resets the dropzone back to its empty state since the video it was showing
+    // is now gone. Stops the click from reaching the dropzone's <label for="video">, which would
+    // otherwise open the file picker (see .dz-delete's pointer-events:auto in the CSS).
+    { const del=$("dzDelete"); if(del) del.onclick=async(e)=>{
+      e.preventDefault(); e.stopPropagation();
+      if(!selectedFileId) return;
+      if(!confirm("Delete this saved video? This can't be undone.")) return;
+      const id=selectedFileId, email=(($("email")&&$("email").value)||"").trim();
+      await deleteRecent(id,email);
+      const v=$("preview"), ph=$("vplaceholder"), dz=$("dropzone"), thumb=$("dzThumb");
+      if(v){ v.removeAttribute("src"); v.style.display="none"; }
+      if(ph) ph.style.display="";
+      if(dz) dz.classList.remove("has-file");
+      if(thumb){ thumb.classList.remove("has-frame"); thumb.style.backgroundImage=""; }
+      del.style.display="none";
+      toast("Video deleted.");
+    }; }
+
+    // platform presets: auto-fill the RTMP URL + key help
+    const PRESETS={
+      youtube :{url:"rtmp://a.rtmp.youtube.com/live2", help:"https://youtube.com/livestreaming", keyph:"From YouTube Studio ΓåÆ Go Live ΓåÆ Stream key"},
+      twitch  :{url:"rtmp://live.twitch.tv/app", help:"https://dashboard.twitch.tv/settings/stream", keyph:"From Twitch Dashboard ΓåÆ Settings ΓåÆ Stream key"},
+      facebook:{url:"rtmps://live-api-s.facebook.com:443/rtmp/", help:"https://www.facebook.com/live/producer", keyph:"From Facebook Live Producer ΓåÆ Stream key"},
+      kick    :{url:"", help:"https://kick.com/dashboard/settings/stream", keyph:"Kick gives a unique URL + key, paste the URL above"},
+      custom  :{url:"", help:"", keyph:"xxxx-xxxx-xxxx-xxxx"}
+    };
+    function pickPlatform(p){
+      document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c.getAttribute('data-p')===p));
+      const pr=PRESETS[p]; if(!pr) return;
+      if(p==='custom'||p==='kick'){ $("rtmpUrl").value=""; } else { $("rtmpUrl").value=pr.url; }
+      $("streamKey").placeholder=pr.keyph||"xxxx-xxxx-xxxx-xxxx";
+      const kh=$("keyHelp");
+      if(pr.help){ kh.href=pr.help; kh.style.display="inline"; } else { kh.style.display="none"; }
+    }
+    document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>pickPlatform(c.getAttribute('data-p')));
+    pickPlatform('youtube'); // sensible default
+
+    // stream key show / hide
+    $("eyeBtn").onclick=()=>{ const k=$("streamKey"); const showing=k.type==="text"; k.type=showing?"password":"text"; $("eyeBtn").textContent=showing?"show":"hide"; };
+
+    // live slot board: free slots are clickable to start claiming that exact slot
+    async function refreshSlots(){
+      try{
+        const d=await (await fetch("/slots")).json();
+        $("slotboard").innerHTML = d.slots.map(s=>{
+          const mine = s.id===myLiveSlotId;
+          return `
+          <div class="slot ${s.busy?'busy':'free'}${(!s.busy&&s.id===selectedSlot)?' sel':''}${mine?' mine':''}" ${s.busy?'':`data-claim="${s.id}"`}>
+            <div class="sid">Slot ${s.id}</div>
+            <div class="ring">${s.busy?'ΓùÅ':'Γùï'}</div>
+            <div class="st">${mine?'Yours':(s.busy?'In use':'Free')}</div>
+            <div class="left">${s.busy?(s.secondsLeft?fmtShort(s.secondsLeft)+' left':''):'Tap to claim'}</div>
+          </div>`;
+        }).join("");
+        document.querySelectorAll('#slotboard [data-claim]').forEach(el=>el.onclick=()=>selectSlot(+el.getAttribute('data-claim')));
+        document.querySelectorAll('#slotboard .slot.mine').forEach(el=>el.onclick=()=>resumeFromToken(localStorage.getItem(TKEY)));
+        $("availLine").innerHTML = d.free>0 ? `<b>${d.free}</b> of ${d.total} slots free, tap a free slot to claim it` : `All ${d.total} slots are busy, check back soon`;
+        $("heroAvail").textContent = `${d.free}/${d.total} slots free`;
+        // if the slot we had selected just got taken, fall back to "next free"
+        const sel=d.slots.find(x=>x.id===selectedSlot);
+        if(selectedSlot && sel && sel.busy){ selectedSlot=null; updateSelLabel(); }
+      }catch(_){}
+    }
+
+    // tapping a free slot asks for the mode, then opens the studio with that slot
+    function selectSlot(id){ chooseMode(id); }
+    function updateSelLabel(){
+      const el=$("selSlot"); if(!el) return;
+      if(selectedSlot){
+        el.innerHTML = `<span>Claiming <b>Slot ${selectedSlot}</b>, fill the form &amp; go live. <a id="clearSel">Change</a></span>`;
+        const c=$("clearSel"); if(c) c.onclick=()=>{ selectedSlot=null; updateSelLabel(); refreshSlots(); };
+      } else {
+        el.innerHTML = `<span>Claiming the <b>next free slot</b>, or tap a specific slot above.</span>`;
+      }
+    }
+
+    // ffmpeg's own "speed=" is a CUMULATIVE average since the process started, so it always begins at
+    // 0x and takes ~10-15s to climb near 1x on every single stream ΓÇö falsely reading as "Weak" right
+    // after going live even when nothing is wrong. liveSpeed instead compares the last two progress
+    // lines' encoded-time delta against their real elapsed-time delta, giving the actual current pace.
+    // dropDelta (recent dropped frames) is the real, standard health signal ΓÇö the same thing YouTube/
+    // Twitch's own dashboards surface ΓÇö rather than a single early drop permanently flagging "Weak".
+    function parseStats(log){
+      const rows=[];
+      for(let i=log.length-1;i>=0 && rows.length<2;i--){
+        const l=log[i];
+        if(!l.includes("bitrate=")) continue;
+        const br=l.match(/bitrate=\s*([\d.]+)\s*kbits\/s/i);
+        const sp=l.match(/speed=\s*([\d.]+)\s*x/i);
+        const fps=l.match(/fps=\s*([\d.]+)/i);
+        const drop=l.match(/drop=\s*(\d+)/i);
+        const tm=l.match(/(?:^|\s)time=\s*(\d+):(\d+):(\d+\.?\d*)/i);
+        const el=l.match(/elapsed=\s*(\d+):(\d+):(\d+\.?\d*)/i);
+        rows.push({
+          br: br?+br[1]:null, speed: sp?+sp[1]:null, fps: fps?+fps[1]:null, drop: drop?+drop[1]:null,
+          timeSec: tm ? (+tm[1]*3600 + +tm[2]*60 + +tm[3]) : null,
+          elapsedSec: el ? (+el[1]*3600 + +el[2]*60 + +el[3]) : null,
+        });
+      }
+      if(!rows.length) return null;
+      const latest=rows[0];
+      let liveSpeed=latest.speed, dropDelta=null;
+      if(rows.length===2){
+        if(rows[0].timeSec!=null && rows[1].timeSec!=null && rows[0].elapsedSec!=null && rows[1].elapsedSec!=null){
+          const dElapsed=rows[0].elapsedSec-rows[1].elapsedSec;
+          if(dElapsed>0.05) liveSpeed=(rows[0].timeSec-rows[1].timeSec)/dElapsed;
+        }
+        if(rows[0].drop!=null && rows[1].drop!=null) dropDelta=rows[0].drop-rows[1].drop;
+      }
+      return { br:latest.br, fps:latest.fps, drop:latest.drop, speed:latest.speed, liveSpeed, dropDelta };
+    }
+    // Shared health classification, used by both the studio's Broadcast Health panel and the landing
+    // page's "your live stream" card: a short grace period right after going live (the connection is
+    // still ramping up, not actually unhealthy), "Weak" only when frames are dropping right now or the
+    // encoder can't currently keep pace, "Good" otherwise.
+    function computeHealth(st,uptime){
+      if(!st) return {label:"-",ok:null};
+      if(uptime!=null && uptime<8) return {label:"ConnectingΓÇª",ok:null};
+      const dropping = st.dropDelta!=null && st.dropDelta>0;
+      const slow = st.liveSpeed!=null && st.liveSpeed<0.9;
+      return (dropping||slow) ? {label:"Weak",ok:false} : {label:"Good",ok:true};
+    }
+    function applyHealth(el,st,uptime){
+      if(!el) return;
+      const h=computeHealth(st,uptime);
+      el.textContent=h.label;
+      el.className="v"+(h.ok===true?" green":h.ok===false?" warn":(h.label==="ConnectingΓÇª"?" dim":""));
+    }
+
+    // owner's slot monitor (token)
+    async function refreshMine(){
+      const token=localStorage.getItem(TKEY);
+      if(!token){ setLive(false); myLiveSlotId=null; renderMyLiveCard(null); return; }
+      try{
+        const s=await (await fetch("/status?token="+token)).json();
+        if(!s.running){ // trial ended, stopped, or the connection failed
+          if(localStorage.getItem(TKEY)){
+            localStorage.removeItem(TKEY);
+            // A connection failure (bad RTMP URL/key, or the destination rejected us) is not a trial
+            // ending, say so plainly instead of pushing a subscribe card that wouldn't fix anything.
+            if(s.endReason==="connection_failed") toast(s.endMessage || "Stream disconnected, couldn't reach your destination. Check the RTMP URL and stream key, then try again.");
+            else if(_wasTrial && !window.IS_SUBSCRIBED) showTrialEnded();
+            else toast("Your stream stopped.");
+          }
+          _wasTrial=false;
+          setLive(false); myLiveSlotId=null; renderMyLiveCard(null); return;
+        }
+        setLive(true);
+        myEmail = s.email || myEmail;
+        _wasTrial = !!s.trial;   // remember so we can prompt to subscribe when this trial ends
+        myLiveSlotId = s.slot;
+        const n=(s.dests&&s.dests.length)||1;
+        $("liveInfo").style.display="block";
+        $("liveInfo").innerHTML='<b>LIVE</b> ┬╖ streaming to '+n+' platform'+(n>1?'s':'')+' ┬╖ live for <b>'+fmt(s.uptime)+'</b>';
+        $("cdSlot").textContent=s.slot;
+        $("cdTime").textContent=fmt(s.secondsLeft);
+        $("cdLabel").textContent = s.trial ? "remaining on your free trial" : "remaining on your 24-hour slot";
+        // Only show "Subscribe: stream 24 hours" to non-subscribers on a trial.
+        $("upgradeBtn").style.display = (s.trial && !window.IS_SUBSCRIBED) ? "flex" : "none";
+        $("log").textContent=(s.log||[]).join("\n"); $("log").scrollTop=$("log").scrollHeight;
+        const st=parseStats(s.log||[]);
+        $("sBitrate").textContent = st&&st.br!=null ? (st.br/1000).toFixed(2)+" Mbps":"-";
+        $("sFps").textContent = st&&st.fps!=null ? st.fps.toFixed(0) : "-";
+        $("sDrop").textContent = st&&st.drop!=null ? st.drop : "-";
+        applyHealth($("sSpeed"), st, s.uptime);
+        renderMyLiveCard(s);
+      }catch(_){}
+    }
+    function setLive(on){
+      $("liveBadge").className="livebadge"+(on?" on":"");
+      $("cd").style.display=on?"block":"none";
+      $("manageBox").style.display=on?"block":"none";
+      $("sStatus").textContent=on?"LIVE":"Idle";
+      const ss=$("sappStatus"), stx=$("sappStatusTxt");
+      if(ss) ss.className="sapp-status"+(on?" on":""); if(stx) stx.textContent=on?"LIVE":"Idle";
+      const sp=$("sappStop"); if(sp) sp.style.display=on?"inline-flex":"none";
+      $("startBtn").style.display=on?"none":"flex";
+      $("stopBtn").style.display=on?"flex":"none";
+      // These three only make sense before going live (which slot you're about to claim, the free-trial
+      // pitch, resuming a DIFFERENT stream), once this tab is already live they're just noise stacked
+      // above the controls, so fold them away instead of leaving dead prompts next to a Stop button.
+      const bn=$("betaNote"); if(bn) bn.style.display=on?"none":"";
+      const ssEl=$("selSlot"); if(ssEl) ssEl.style.display=on?"none":"";
+      const rd=$("resumeDetails"); if(rd) rd.style.display=on?"none":"";
+      if(on){ const tok=localStorage.getItem(TKEY)||""; $("manageLink").value=location.origin+"/studio?s="+tok; }
+      else{ $("sBitrate").textContent="-"; $("sFps").textContent="-"; $("sDrop").textContent="-"; $("sSpeed").textContent="-"; $("sSpeed").className="v"; const li=$("liveInfo"); if(li) li.style.display="none"; }
+    }
+
+    // "Your live stream" hero card on the landing page: a bigger, prominent readout of the browser's
+    // own active stream (live/not, uptime, time left, health) so it's obvious at a glance even before
+    // opening the studio, and one tap gets back in with everything restored.
+    function renderMyLiveCard(s){
+      const card=$("myLiveCard"); if(!card) return;
+      if(!s){ card.style.display="none"; card.innerHTML=""; return; }
+      const st=parseStats(s.log||[]);
+      const h=computeHealth(st,s.uptime);
+      const health=h.label;
+      const healthCls = h.ok===true?"good":h.ok===false?"weak":"";
+      const n=(s.dests&&s.dests.length)||1;
+      card.style.display="flex";
+      card.innerHTML =
+        '<span class="mlc-badge"><span class="dot"></span>LIVE</span>'+
+        '<div class="mlc-main">'+
+          '<div class="mlc-title">Your stream, Slot '+s.slot+'</div>'+
+          '<div class="mlc-sub">'+escHtml(s.file||"video.mp4")+' ┬╖ streaming to '+n+' platform'+(n>1?'s':'')+' ┬╖ '+(s.trial?'free trial':'24-hour slot')+'</div>'+
+          '<div class="mlc-stats">'+
+            '<span>Live for <b>'+fmt(s.uptime)+'</b></span>'+
+            '<span><b>'+fmt(s.secondsLeft)+'</b> left</span>'+
+            '<span>Health: <b class="'+healthCls+'">'+health+'</b></span>'+
+          '</div>'+
+        '</div>'+
+        '<button class="btn btn-primary mlc-btn" id="mlcOpen">Manage stream ΓåÆ</button>';
+      const btn=$("mlcOpen"); if(btn) btn.onclick=()=>resumeFromToken(localStorage.getItem(TKEY));
+    }
+    // Best-effort match of a destination URL back to a known platform chip, so resuming re-selects the
+    // right one instead of leaving every chip unselected.
+    function guessPlatform(url){
+      const u=(url||"").toLowerCase();
+      for(const k of ["youtube","twitch","facebook"]){ if(PRESETS[k].url && u.startsWith(PRESETS[k].url.toLowerCase())) return k; }
+      return "custom";
+    }
+    // Rebuilds the studio exactly as the user left it: email, destinations (URL + key), loop toggle,
+    // and a live preview of the video that's actually streaming right now, instead of opening to a
+    // blank form with just a LIVE badge. Used by the landing-page card, the header's "Resume my
+    // stream", the paste-a-manage-link box, and arriving via a ?s= manage link.
+    function resumeIntoStudio(s){
+      const token=localStorage.getItem(TKEY);
+      const multi = s.destsFull && s.destsFull.length>1;
+      openStudioApp(multi?"multi":"single");
+      if($("email")) $("email").value = s.email||"";
+      const loopEl=$("loop"); if(loopEl) loopEl.checked = !!s.loop;
+      if(multi){
+        $("destList").innerHTML="";
+        s.destsFull.forEach(d=>{
+          addDestCard("");
+          const c=$("destList").lastElementChild; if(!c) return;
+          const plat=guessPlatform(d.url);
+          const sel=c.querySelector(".dPlat"); if(sel) sel.value=plat;
+          const uEl=c.querySelector(".dUrl"); if(uEl) uEl.value=d.url;
+          const kEl=c.querySelector(".dKey"); if(kEl) kEl.value=d.key||"";
+        });
+      } else if(s.destsFull && s.destsFull.length===1){
+        const d=s.destsFull[0];
+        pickPlatform(guessPlatform(d.url));
+        $("rtmpUrl").value=d.url;
+        $("streamKey").value=d.key||"";
+      }
+      if(s.fileId && token){
+        const v=$("preview");
+        if(v){ v.removeAttribute("src"); v.src="/live-preview?token="+encodeURIComponent(token); v.style.display="block"; v.muted=true; v.play().catch(()=>{}); }
+        const ph=$("vplaceholder"); if(ph) ph.style.display="none";
+        const dz=$("dropzone"); if(dz) dz.classList.add("has-file");
+        if($("dzFilename")) $("dzFilename").textContent = s.file||"video.mp4";
+        if($("dzSize")) $("dzSize").textContent = "";
+      }
+      setLive(true);
+      refreshMine();
+      if(s.email) loadRecent(s.email);
+      toast("Resumed, everything's exactly as you left it.");
+    }
+    // Looks up a manage token and, if it's still live, restores it into the studio. Shared by every
+    // "resume" entry point (landing card, header menu, pasted manage link, ?s= link on load).
+    async function resumeFromToken(token){
+      if(!token) return false;
+      try{
+        const s=await (await fetch("/status?token="+encodeURIComponent(token))).json();
+        if(s.running){ localStorage.setItem(TKEY,token); resumeIntoStudio(s); return true; }
+      }catch(_){}
+      toast("Couldn't find that stream, it may have already ended.");
+      return false;
+    }
+
+    // Actually claims a slot and goes live: used both for a direct trial start and after a plan is
+    // chosen/subscription confirmed. Uses the auto-uploaded file (pendingUploadId) when one's ready,
+    // so this is instant instead of re-uploading; falls back to uploading the raw file if it isn't.
+    async function beginStream(){
+      const f=$("video").files[0];
+      const fd=new FormData();
+      fd.append("email",$("email").value);
+      if(pendingUploadId) fd.append("pendingUploadId",pendingUploadId);
+      else if(f) fd.append("video",f);
+      else fd.append("fileId",selectedFileId);   // reuse a saved video ΓåÆ no upload
+      fd.append("dests",JSON.stringify(collectDests()));
+      fd.append("loop",$("loop").checked); fd.append("agree",$("agree").checked);
+      if(selectedSlot) fd.append("slot",selectedSlot);
+      const usingPending=!!pendingUploadId;
+      const btn=$("startBtn"); btn.disabled=true; btn.textContent = (f && !usingPending) ? "UploadingΓÇª 0%" : "StartingΓÇª";
+      const done=(label)=>{ btn.disabled=false; btn.textContent=label||"Go Live"; };
+      const xhr=new XMLHttpRequest();
+      xhr.open("POST","/start"); xhr.timeout=900000; // 15 min
+      xhr.upload.onprogress=(e)=>{ if(e.lengthComputable && !usingPending){ const pct=Math.round(e.loaded/e.total*100); btn.textContent = pct<100 ? ("UploadingΓÇª "+pct+"%") : "ProcessingΓÇª"; } };
+      xhr.onload=()=>{
+        let j={}; try{ j=JSON.parse(xhr.responseText); }catch(_){}
+        if(xhr.status>=200 && xhr.status<300 && j.ok){
+          done("Go Live");
+          pendingUploadId=null;
+          localStorage.setItem(TKEY,j.token); localStorage.setItem("streamza_email",($("email").value||"").trim()); selectedSlot=null; updateSelLabel();
+          if(j.multistreamLimited) toast("Multistream is the $9.99 plan, going live to your first platform only. Subscribe to add more.");
+          else toast("Slot "+j.slot+" claimed, live"+(j.destinations>1?(" to "+j.destinations+" platforms"):"")+"!");
+        } else { done("Go Live"); toast(j.error || ("Couldn't start (error "+xhr.status+"). Make sure the file is an MP4 with H.264 video + AAC audio.")); }
+        refreshMine(); refreshSlots(); loadRecent($("email").value);
+      };
+      xhr.onerror=()=>{ done("Go Live"); toast("Upload failed, check your internet connection and try again."); };
+      xhr.ontimeout=()=>{ done("Go Live"); toast("Upload timed out, try a smaller file or a better connection."); };
+      xhr.send(fd);
+    }
+    // "Choose how to go live": shown to non-subscribed accounts on tapping Go Live, offering the free
+    // trial (only if not already used) alongside both paid plans, instead of silently defaulting to trial.
+    function openPlanModal(trialAvailable){
+      const t=$("planTrial"); if(t) t.style.display = trialAvailable ? "flex" : "none";
+      const tm=$("planMulti"); if(tm) tm.style.display = PAY.multiEnabled ? "flex" : "none";
+      if(PAY.priceLabel){ const el=$("planSinglePrice"); if(el) el.textContent=PAY.priceLabel; }
+      if(PAY.priceLabelMulti){ const el=$("planMultiPrice"); if(el) el.textContent=PAY.priceLabelMulti; }
+      $("planModal").classList.add("show");
+    }
+    $("planTrial").onclick=()=>{ $("planModal").classList.remove("show"); beginStream(); };
+    $("planSingle").onclick=()=>{
+      $("planModal").classList.remove("show");
+      if(!PAY.enabled) return toast("Subscriptions aren't switched on yet.");
+      PAY._autoGoLive=true; openCheckout(($("email").value||"").trim(),"single");
+    };
+    $("planMulti").onclick=()=>{
+      $("planModal").classList.remove("show");
+      if(!PAY.enabled) return toast("The Multistream plan isn't switched on yet.");
+      PAY._autoGoLive=true; openCheckout(($("email").value||"").trim(),"multi");
+    };
+    $("planCancel").onclick=()=>$("planModal").classList.remove("show");
+    $("planModal").onclick=(e)=>{ if(e.target===$("planModal")) $("planModal").classList.remove("show"); };
+
+    $("startBtn").onclick=async()=>{
+      const f=$("video").files[0];
+      if(!$("email").value) return toast("Enter your email.");
+      if(!f && !selectedFileId && !pendingUploadId) return toast("Choose a video file (or tap one of your recent videos).");
+      if(f && pendingUploadXhr && !pendingUploadId) return toast("Your video is still uploading, one moment, then try again.");
+      const dests=collectDests();
+      if(!dests.length){ return toast(mode==="multi" ? "Add at least one platform (URL + key)." : "Enter your RTMP server URL."); }
+      if(!$("agree").checked) return toast("Confirm you have the rights to this content.");
+      if(window.IS_SUBSCRIBED) return beginStream();
+      const email=$("email").value.trim();
+      try{
+        const r=await (await fetch("/subscribed?email="+encodeURIComponent(email))).json();
+        if(r.active){ window.IS_SUBSCRIBED=true; return beginStream(); }
+        openPlanModal(!r.trialUsed);
+      }catch(_){ beginStream(); } // couldn't check status, don't block going live over a network hiccup
+    };
+    async function stopStream(){
+      const token=localStorage.getItem(TKEY); if(!token) return;
+      if(!confirm("Stop your stream now? This ends the broadcast and frees the slot.")) return;
+      try{ await fetch("/stop",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token})}); }catch(_){}
+      localStorage.removeItem(TKEY); toast("Stream stopped, slot freed."); setLive(false); refreshSlots();
+    }
+    $("stopBtn").onclick=stopStream;
+    $("sappStop").onclick=stopStream;
+    $("upgradeBtn").onclick=async()=>{
+      const token=localStorage.getItem(TKEY); if(!token) return;
+      const email=($("email").value||"").trim()||myEmail;
+      try{
+        const r=await fetch("/upgrade",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token})});
+        const j=await r.json();
+        if(j.ok){ toast("Upgraded to 24 hours, your stream stays live!"); refreshMine(); }
+        else if(j.needsCheckout){ if(!email) return toast("Enter your email above first, then tap Upgrade."); openCheckout(email, mode==="multi"?"multi":"single"); }
+        else if(j.comingSoon){ toast("Paid plans are coming very soon, we saved your interest. Your trial keeps running."); }
+        else { toast(j.error||"Couldn't upgrade right now."); }
+      }catch(e){ toast("Something went wrong."); }
+    };
+    $("copyLinkBtn").onclick=()=>{
+      const v=$("manageLink"); v.select(); v.setSelectionRange(0,300);
+      try{ navigator.clipboard.writeText(v.value); }catch(_){ try{document.execCommand("copy");}catch(_){} }
+      toast("Manage link copied, save it to resume on any device.");
+    };
+    $("resumeBtn").onclick=async()=>{
+      const raw=$("resumeInput").value.trim(); if(!raw) return toast("Paste your manage link or stream code.");
+      const m=raw.match(/[?&](?:s|token)=([a-f0-9]+)/i); const tok=m?m[1]:raw.replace(/[^a-f0-9]/gi,"");
+      if(!tok) return toast("That doesn't look like a valid code.");
+      await resumeFromToken(tok);
+    };
+    if($("waitBtn")) $("waitBtn").onclick=async()=>{
+      const email=$("waitEmail").value; if(!email) return toast("Enter your email.");
+      try{const r=await fetch("/waitlist",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,source:"pro-waitlist"})});
+        if(r.ok){toast("You're on the list!");$("waitEmail").value="";}else toast("Enter a valid email.");}catch(e){toast("Something went wrong.");}
+    };
+
+    // remember the user's email so returning subscribers are recognised instantly
+    const EKEY="streamza_email";
+    const savedEmail=localStorage.getItem(EKEY);
+    if(savedEmail){ if($("email")&&!$("email").value)$("email").value=savedEmail; if($("subEmail"))$("subEmail").value=savedEmail; myEmail=savedEmail; checkSub(savedEmail); loadRecent(savedEmail); }
+    // Reflect the subscription state across the whole studio UI (called on load, on email entry, and the
+    // moment a fresh checkout is detected), so the "Subscribe" prompts actually disappear once active.
+    function applySubState(r){
+      const active = !!(r && r.active);
+      window.IS_SUBSCRIBED = active;
+      if(!active) return;
+      const bn=$("betaNote");
+      if(bn){ bn.classList.add("is-sub"); bn.innerHTML='<span>'+proBadge(r.multi?"Multistream":"Pro")+' Claim any free slot for a full <b>24-hour</b> stream'+(r.multi?" to up to 3 platforms":"")+', stream as often as you like.</span>'; }
+      const ub=$("upgradeBtn"); if(ub) ub.style.display="none";           // in-stream upgrade CTA
+      const ps=$("planSubscribe"); if(ps){ ps.textContent="Γ£ô Subscribed"; ps.style.pointerEvents="none"; ps.style.opacity=".7"; }
+      if(r.multi){ const pm=$("planSubscribeMulti"); if(pm){ pm.textContent="Γ£ô Subscribed ┬╖ Multistream"; pm.style.pointerEvents="none"; pm.style.opacity=".7"; } }
+      // Mark the actual active plan's card as "YOUR PLAN" in gold, instead of just fading the button.
+      const activeTagId = r.multi ? "planTagMulti" : "planTagSingle";
+      const tag=$(activeTagId);
+      if(tag){ tag.textContent="YOUR PLAN"; const card=tag.closest(".plan"); if(card) card.classList.add("your-plan"); }
+      const spb=$("sappProBadge"); if(spb){ spb.style.display="inline-flex"; spb.innerHTML=proBadge(r.multi?"Multistream":"Pro"); }
+    }
+    async function checkSub(email){
+      if(!email) return;
+      try{ const r=await (await fetch("/subscribed?email="+encodeURIComponent(email))).json(); applySubState(r); }catch(_){}
+    }
+    // Recognise a returning subscriber the moment they type their email (not only the saved one on load).
+    function watchEmail(id){ const el=$(id); if(!el) return; el.addEventListener("change",()=>{ const v=(el.value||"").trim(); if(v.includes("@")){ try{ localStorage.setItem(EKEY,v); }catch(_){} checkSub(v); loadRecent(v); } }); }
+    watchEmail("email"); watchEmail("subEmail");
+
+    updateSelLabel(); refreshSlots(); refreshMine();
+    // arrived via a manage link (?s=) ΓåÆ resume straight into the studio with everything restored,
+    // not just an empty form with a LIVE badge
+    if(resumeOpen){ const tok=localStorage.getItem(TKEY); if(tok) resumeFromToken(tok); else openStudioApp("single"); }
+    // poll only while the tab is visible: saves network/CPU and keeps it snappy
+    setInterval(()=>{ if(!document.hidden) refreshSlots(); },5000);
+    setInterval(()=>{ if(!document.hidden) refreshMine(); },2500);
+    document.addEventListener("visibilitychange",()=>{ if(!document.hidden){ refreshSlots(); refreshMine(); } });
+  </script>
+</body>
+</html>
