@@ -43,6 +43,7 @@ try {
 
 const PORT = process.env.PORT || 3000;
 const ADMIN_KEY = process.env.ADMIN_KEY || "streamza-admin";
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "").toLowerCase().split(",").map(e => e.trim()).filter(Boolean);
 const SLOT_COUNT = Number(process.env.SLOT_COUNT) || 10; // max safe on the free 1GB micro (-c copy is light; RAM + outbound bandwidth are the limit). Raise via env on a bigger instance.
 const SLOT_MS = 24 * 60 * 60 * 1000;  // every claim streams for this long, then the slot frees up
 // Streamza Loop app only (identified by the X-Streamza-Client header the app sends on every request —
@@ -128,6 +129,7 @@ function saveSubs() { try { fs.writeFileSync(SUBS_FILE, JSON.stringify(Object.fr
 function tierOf(email) {
   const norm = (email || "").trim().toLowerCase();
   if (!norm) return null;
+  if (ADMIN_EMAILS.includes(norm)) return "multi";
   const sub = subscribers.get(norm);
   if (sub) {
     if (typeof sub === "number") return sub > 1 ? "multi" : "single";
@@ -144,7 +146,9 @@ function canMultistream(email) { return tierOf(email) === "multi"; } // multi ti
 // Streamza Loop app's REAL entitlement — number of destination slots this email has actually purchased via Play
 // Billing, or 0 if none.
 function loopSlotsFor(email) {
-  const n = subscribers.get((email || "").trim().toLowerCase());
+  const norm = (email || "").trim().toLowerCase();
+  if (ADMIN_EMAILS.includes(norm)) return 3;
+  const n = subscribers.get(norm);
   if (typeof n === "number" && n > 0) return n;
   if (n === "multi") return 3;
   if (n === "single") return 1;
