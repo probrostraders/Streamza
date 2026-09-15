@@ -646,6 +646,95 @@ app.post("/pending-upload", rateLimit(15, 60000), upload.single("video"), async 
   res.json({ ok: true, uploadId, name: file.originalname, size: file.size });
 });
 
+// Chunked upload for large video files (bypasses Cloudflare's 100MB body limit by uploading in safe 15MB chunks)
+app.post("/upload-chunk", rateLimit(600, 60000), upload.single("chunk"), async (req, res) => {
+  const chunk = req.file;
+  if (!chunk) return res.status(400).json({ error: "Missing chunk data." });
+
+  const rawId = (req.body.uploadId || "").toString().replace(/[^a-zA-Z0-9_-]/g, "");
+  const uploadId = rawId.slice(0, 64);
+  const chunkIndex = Number(req.body.chunkIndex);
+  const totalChunks = Number(req.body.totalChunks);
+  const fileName = (req.body.fileName || "video.mp4").toString().slice(0, 255);
+  const fileSize = Number(req.body.fileSize) || 0;
+
+  if (!uploadId || isNaN(chunkIndex) || isNaN(totalChunks) || totalChunks <= 0 || chunkIndex < 0 || chunkIndex >= totalChunks) {
+    rm(chunk.path);
+    return res.status(400).json({ error: "Invalid upload chunk parameters." });
+  }
+
+  const tempFilePath = path.join(UPLOAD_DIR, `temp-${uploadId}`);
+  try {
+    const chunkBuf = fs.readFileSync(chunk.path);
+    if (chunkIndex === 0) {
+      fs.writeFileSync(tempFilePath, chunkBuf);
+    } else {
+      fs.appendFileSync(tempFilePath, chunkBuf);
+    }
+  } catch (err) {
+    rm(chunk.path);
+    return res.status(500).json({ error: "Failed to write chunk: " + err.message });
+  } finally {
+    rm(chunk.path);
+  }
+
+  // Not the final chunk yet — acknowledge receipt
+  if (chunkIndex < totalChunks - 1) {
+    return res.json({ ok: true, chunkReceived: chunkIndex });
+  }
+
+  // Final chunk received — assemble and validate the full file
+  const finalPath = path.join(UPLOAD_DIR, uploadId);
+  try {
+    if (fs.existsSync(finalPath)) rm(finalPath);
+    fs.renameSync(tempFilePath, finalPath);
+  } catch (err) {
+    rm(tempFilePath);
+    return res.status(500).json({ error: "Failed to assemble video file: " + err.message });
+  }
+
+  try {
+    const stat = fs.statSync(finalPath);
+    const codecs = await probeCodecs(finalPath);
+    if (codecs.video && codecs.video !== "h264") {
+      rm(finalPath);
+      return res.status(400).json({ error: `Your video is ${codecs.video.toUpperCase()} — please export as MP4 with H.264 video so it can stream instantly (no re-encode).` });
+    }
+    if (codecs.audio && codecs.audio !== "aac") {
+      rm(finalPath);
+      return res.status(400).json({ error: `Your audio is ${codecs.audio.toUpperCase()} — please use AAC audio (MP4 = H.264 + AAC).` });
+    }
+    const canCopy = await canStreamCopy(finalPath, codecs);
+
+    if (r2HasBudget(stat.size)) {
+      try {
+        await r2.uploadFile(uploadId, fs.createReadStream(finalPath), stat.size, "video/mp4");
+        rm(finalPath);
+        r2UsedBytes += stat.size;
+        pendingUploads.set(uploadId, { r2Key: uploadId, storage: "r2", name: fileName, size: stat.size, createdAt: Date.now(), canCopy });
+        return res.json({ ok: true, uploadId, name: fileName, size: stat.size });
+      } catch (_) {
+        // Fall back to local copy
+      }
+    }
+
+    pendingUploads.set(uploadId, { path: finalPath, storage: "local", name: fileName, size: stat.size, createdAt: Date.now(), canCopy });
+    return res.json({ ok: true, uploadId, name: fileName, size: stat.size });
+  } catch (err) {
+    rm(finalPath);
+    return res.status(500).json({ error: "Failed to process video: " + err.message });
+  }
+});
+
+app.post("/upload-abort", (req, res) => {
+  const uploadId = (req.body && req.body.uploadId || "").toString().replace(/[^a-zA-Z0-9_-]/g, "");
+  if (uploadId) {
+    rm(path.join(UPLOAD_DIR, `temp-${uploadId}`));
+    rm(path.join(UPLOAD_DIR, uploadId));
+  }
+  res.json({ ok: true });
+});
+
 // ---- R2 chunked/resumable upload (Streamza Loop) — bytes go phone -> R2 directly via presigned URLs;
 // the Oracle VM only ever orchestrates these three calls, never touches the video bytes. Web Studio is
 // untouched — it keeps using the local-disk /pending-upload above. See r2.js for the S3-client details.

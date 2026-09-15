@@ -1597,35 +1597,123 @@
     let pUrl=null;
     let selectedFileId = null; // a saved (reused) video chosen instead of a new upload
     // Auto-upload state: the file starts uploading the moment it's picked, so "Go Live" doesn't have
-    // to wait through the whole transfer, it just claims a slot against the already-uploaded file.
-    let pendingUploadId=null, pendingUploadXhr=null;
-    function cancelPendingUpload(){ if(pendingUploadXhr){ try{ pendingUploadXhr.abort(); }catch(_){} } pendingUploadXhr=null; pendingUploadId=null; }
-    function startPreUpload(f){
-      const fd=new FormData(); fd.append("video",f);
-      const xhr=new XMLHttpRequest(); pendingUploadXhr=xhr;
+    // Auto-upload state: the file starts uploading in 15MB chunks the moment it's picked,
+    // which bypasses Cloudflare's 100MB body limit, handles network retries, and allows "Go Live"
+    // to claim a slot instantly against the pre-uploaded file.
+    let pendingUploadId=null, pendingUploadXhr=null, pendingUploadAborted=false;
+    let pendingUploadInProgress=false, pendingUploadPct=0;
+    function cancelPendingUpload(){
+      pendingUploadAborted=true;
+      if(pendingUploadXhr){ try{ pendingUploadXhr.abort(); }catch(_){} pendingUploadXhr=null; }
+      if(pendingUploadId && pendingUploadInProgress){
+        try{
+          fetch("/upload-abort",{
+            method:"POST",headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({uploadId:pendingUploadId})
+          });
+        }catch(_){}
+      }
+      pendingUploadInProgress=false; pendingUploadId=null; pendingUploadPct=0;
+    }
+    async function startPreUpload(f){
+      cancelPendingUpload();
+      pendingUploadAborted=false;
+      pendingUploadInProgress=true;
+      pendingUploadPct=0;
+
       const wrap=$("dzProgressWrap"), fill=$("dzProgressFill"), label=$("dzProgressLabel");
       if(wrap) wrap.style.display="flex";
-      if(fill) fill.style.width="0%";
-      if(label) label.textContent="0%";
-      xhr.open("POST","/pending-upload"); xhr.timeout=900000;
-      xhr.upload.onprogress=(e)=>{
-        if(!e.lengthComputable || $("video").files[0]!==f) return;
-        const pct=Math.round(e.loaded/e.total*100);
-        if(fill) fill.style.width=pct+"%";
-        if(label) label.textContent="Uploading "+pct+"%";
-      };
-      xhr.onload=()=>{
-        if(pendingUploadXhr!==xhr) return; // superseded by a newer pick
-        pendingUploadXhr=null;
-        let j={}; try{ j=JSON.parse(xhr.responseText); }catch(_){}
-        if($("video").files[0]!==f) return; // user already picked something else
-        if(wrap) wrap.style.display="none";
-        if(xhr.status>=200 && xhr.status<300 && j.ok){ pendingUploadId=j.uploadId; }
-        else if(j.error) toast(j.error); // Go Live still works, falls back to uploading the file itself
-      };
-      xhr.onerror=()=>{ if(pendingUploadXhr===xhr){ pendingUploadXhr=null; if(wrap) wrap.style.display="none"; } };
-      xhr.ontimeout=()=>{ if(pendingUploadXhr===xhr){ pendingUploadXhr=null; if(wrap) wrap.style.display="none"; } };
-      xhr.send(fd);
+      if(fill){ fill.style.width="0%"; fill.style.backgroundColor=""; }
+      if(label) label.textContent="Uploading 0%";
+
+      const CHUNK_SIZE = 15 * 1024 * 1024; // 15MB chunks safely under Cloudflare's 100MB limit
+      const totalChunks = Math.max(1, Math.ceil(f.size / CHUNK_SIZE));
+      const uploadId = (typeof crypto!=="undefined" && crypto.randomUUID)
+        ? crypto.randomUUID().replace(/-/g,"")
+        : (Date.now().toString(36)+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2));
+
+      for(let i=0; i<totalChunks; i++){
+        if(pendingUploadAborted || $("video").files[0]!==f){ pendingUploadInProgress=false; return; }
+
+        const start = i * CHUNK_SIZE;
+        const end = Math.min(f.size, start + CHUNK_SIZE);
+        const chunkBlob = f.slice(start, end);
+
+        let success = false;
+        let lastError = null;
+
+        for(let attempt=1; attempt<=3; attempt++){
+          if(pendingUploadAborted || $("video").files[0]!==f){ pendingUploadInProgress=false; return; }
+
+          try {
+            const res = await new Promise((resolve, reject)=>{
+              const fd = new FormData();
+              fd.append("chunk", chunkBlob, f.name);
+              fd.append("uploadId", uploadId);
+              fd.append("chunkIndex", i);
+              fd.append("totalChunks", totalChunks);
+              fd.append("fileName", f.name);
+              fd.append("fileSize", f.size);
+
+              const xhr = new XMLHttpRequest();
+              pendingUploadXhr = xhr;
+              xhr.open("POST", "/upload-chunk");
+              xhr.timeout = 240000; // 4 min per chunk
+
+              xhr.upload.onprogress = (e)=>{
+                if(pendingUploadAborted || $("video").files[0]!==f) return;
+                const chunkLoaded = e.lengthComputable ? e.loaded : 0;
+                const totalLoaded = start + chunkLoaded;
+                const pct = Math.min(99, Math.round((totalLoaded / f.size) * 100));
+                pendingUploadPct = pct;
+                if(fill) fill.style.width = pct + "%";
+                if(label) label.textContent = "Uploading " + pct + "%";
+              };
+
+              xhr.onload = ()=>{
+                pendingUploadXhr = null;
+                let j = {};
+                try { j = JSON.parse(xhr.responseText); }catch(_){}
+                if(xhr.status>=200 && xhr.status<300 && j.ok){
+                  resolve(j);
+                } else {
+                  reject(new Error(j.error || ("Chunk upload failed with status " + xhr.status)));
+                }
+              };
+
+              xhr.onerror = ()=>{ pendingUploadXhr=null; reject(new Error("Network connection error")); };
+              xhr.ontimeout = ()=>{ pendingUploadXhr=null; reject(new Error("Upload timed out")); };
+              xhr.send(fd);
+            });
+
+            success = true;
+            if(i === totalChunks - 1 && res.uploadId){
+              if($("video").files[0]!==f || pendingUploadAborted) return;
+              pendingUploadId = res.uploadId;
+              pendingUploadInProgress = false;
+              pendingUploadPct = 100;
+              if(fill) fill.style.width = "100%";
+              if(label) label.textContent = "Ready to stream";
+              return;
+            }
+            break;
+          } catch(err){
+            lastError = err;
+            if(attempt < 3){
+              if(label) label.textContent = "Retrying... " + pendingUploadPct + "%";
+              await new Promise(r => setTimeout(r, 1500));
+            }
+          }
+        }
+
+        if(!success){
+          pendingUploadInProgress = false;
+          if(label) label.textContent = "Upload failed";
+          if(fill) fill.style.backgroundColor = "#ef4444";
+          toast((lastError && lastError.message) || "Upload failed. Check your internet connection.");
+          return;
+        }
+      }
     }
     // Draws the current frame of a loaded <video> onto the dropzone's thumbnail box, so a selected
     // video reads as an actual video (a real preview frame) instead of a generic file-name row.
@@ -1989,8 +2077,12 @@
       const fd=new FormData();
       fd.append("email",$("email").value);
       if(pendingUploadId) fd.append("pendingUploadId",pendingUploadId);
-      else if(f) fd.append("video",f);
-      else fd.append("fileId",selectedFileId);   // reuse a saved video → no upload
+      else if(selectedFileId) fd.append("fileId",selectedFileId);   // reuse a saved video → no upload
+      else if(f && f.size <= 50 * 1024 * 1024) fd.append("video",f);
+      else if(f) {
+        toast("Please wait for your video to finish uploading (" + (pendingUploadPct||0) + "%).");
+        return;
+      }
       fd.append("dests",JSON.stringify(collectDests()));
       fd.append("loop",$("loop").checked); fd.append("agree",$("agree").checked);
       if(selectedSlot) fd.append("slot",selectedSlot);
@@ -2019,7 +2111,11 @@
       const f=$("video").files[0];
       if(!$("email").value) return toast("Enter your email.");
       if(!f && !selectedFileId && !pendingUploadId) return toast("Choose a video file (or tap one of your recent videos).");
-      if(f && pendingUploadXhr && !pendingUploadId) return toast("Your video is still uploading, one moment, then try again.");
+      if(f && pendingUploadInProgress && !pendingUploadId) return toast("Your video is still uploading (" + (pendingUploadPct || 0) + "%), please wait a moment.");
+      if(f && !pendingUploadId && !selectedFileId && f.size > 50 * 1024 * 1024) {
+        startPreUpload(f);
+        return toast("Starting video upload, please wait for it to complete.");
+      }
       const dests=collectDests();
       if(!dests.length){ return toast(mode==="multi" ? "Add at least one platform (URL + key)." : "Enter your RTMP server URL."); }
       if(!$("agree").checked) return toast("Confirm you have the rights to this content.");
