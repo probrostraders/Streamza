@@ -807,6 +807,11 @@
   .dz-progress-bar{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,.14);overflow:hidden;}
   .dz-progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--red),#ff7a5c);border-radius:3px;transition:width .2s ease;}
   .dz-progress-label{font-size:11px;color:var(--sub);white-space:nowrap;flex:none;}
+  /* upload spinner */
+  .dz-spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.15);border-top-color:var(--red);border-radius:50%;animation:dz-spin .7s linear infinite;flex:none;}
+  @keyframes dz-spin{to{transform:rotate(360deg);}}
+  .dz-progress-fill.striped{background-image:linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);background-size:20px 20px;animation:dz-stripes .6s linear infinite;}
+  @keyframes dz-stripes{0%{background-position:0 0;}100%{background-position:20px 0;}}
   .dz-change{font-size:12px;font-weight:700;color:var(--red);flex:none;}
   /* the dropzone label sets pointer-events:none on its contents so any click opens the file picker;
      Delete needs to opt back in and stop that click reaching the label (see the JS handler). */
@@ -1203,6 +1208,7 @@
               <span class="dz-filename" id="dzFilename">video.mp4</span>
               <span class="dz-size" id="dzSize"></span>
               <div class="dz-progress-wrap" id="dzProgressWrap" style="display:none;">
+                <div class="dz-spinner" id="dzSpinner"></div>
                 <div class="dz-progress-bar"><div class="dz-progress-fill" id="dzProgressFill"></div></div>
                 <span class="dz-progress-label" id="dzProgressLabel">0%</span>
               </div>
@@ -1621,10 +1627,11 @@
       pendingUploadInProgress=true;
       pendingUploadPct=0;
 
-      const wrap=$("dzProgressWrap"), fill=$("dzProgressFill"), label=$("dzProgressLabel");
+      const wrap=$("dzProgressWrap"), fill=$("dzProgressFill"), label=$("dzProgressLabel"), spinner=$("dzSpinner");
       if(wrap) wrap.style.display="flex";
-      if(fill){ fill.style.width="0%"; fill.style.backgroundColor=""; }
+      if(fill){ fill.style.width="0%"; fill.style.backgroundColor=""; fill.classList.add("striped"); }
       if(label) label.textContent="Uploading 0%";
+      if(spinner) spinner.style.display="block";
 
       const CHUNK_SIZE = 15 * 1024 * 1024; // 15MB chunks safely under Cloudflare's 100MB limit
       const totalChunks = Math.max(1, Math.ceil(f.size / CHUNK_SIZE));
@@ -1692,8 +1699,9 @@
               pendingUploadId = res.uploadId;
               pendingUploadInProgress = false;
               pendingUploadPct = 100;
-              if(fill) fill.style.width = "100%";
-              if(label) label.textContent = "Ready to stream";
+              if(fill){ fill.style.width = "100%"; fill.classList.remove("striped"); }
+              if(label) label.textContent = "✓ Ready to stream";
+              if(spinner) spinner.style.display = "none";
               return;
             }
             break;
@@ -1708,8 +1716,9 @@
 
         if(!success){
           pendingUploadInProgress = false;
-          if(label) label.textContent = "Upload failed";
-          if(fill) fill.style.backgroundColor = "#ef4444";
+          if(label) label.textContent = "Upload failed — tap Change to retry";
+          if(fill){ fill.style.backgroundColor = "#ef4444"; fill.classList.remove("striped"); }
+          if(spinner) spinner.style.display = "none";
           toast((lastError && lastError.message) || "Upload failed. Check your internet connection.");
           return;
         }
@@ -1830,16 +1839,36 @@
       kick    :{url:"", help:"https://kick.com/dashboard/settings/stream", keyph:"Kick gives a unique URL + key, paste the URL above"},
       custom  :{url:"", help:"", keyph:"xxxx-xxxx-xxxx-xxxx"}
     };
-    function pickPlatform(p){
+    function pickPlatform(p, skipRestore){
       document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c.getAttribute('data-p')===p));
       const pr=PRESETS[p]; if(!pr) return;
-      if(p==='custom'||p==='kick'){ $("rtmpUrl").value=""; } else { $("rtmpUrl").value=pr.url; }
+      if(!skipRestore){
+        // Restore saved key for this platform, or clear
+        const savedKey = localStorage.getItem('sz_key_'+p) || '';
+        const savedUrl = localStorage.getItem('sz_url_'+p) || '';
+        if(p==='custom'||p==='kick'){ $("rtmpUrl").value=savedUrl; } else { $("rtmpUrl").value=pr.url; }
+        $("streamKey").value=savedKey;
+      } else {
+        if(p==='custom'||p==='kick'){ $("rtmpUrl").value=""; } else { $("rtmpUrl").value=pr.url; }
+      }
       $("streamKey").placeholder=pr.keyph||"xxxx-xxxx-xxxx-xxxx";
       const kh=$("keyHelp");
       if(pr.help){ kh.href=pr.help; kh.style.display="inline"; } else { kh.style.display="none"; }
+      localStorage.setItem('sz_lastPlatform', p);
     }
+    // Save RTMP URL and stream key on change
+    $("rtmpUrl").addEventListener('input',()=>{
+      const p=document.querySelector('.chip.active');
+      if(p) localStorage.setItem('sz_url_'+p.getAttribute('data-p'), $("rtmpUrl").value);
+    });
+    $("streamKey").addEventListener('input',()=>{
+      const p=document.querySelector('.chip.active');
+      if(p) localStorage.setItem('sz_key_'+p.getAttribute('data-p'), $("streamKey").value);
+    });
     document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>pickPlatform(c.getAttribute('data-p')));
-    pickPlatform('youtube'); // sensible default
+    // Restore last used platform + key, or default to youtube
+    const lastPlat = localStorage.getItem('sz_lastPlatform') || 'youtube';
+    pickPlatform(lastPlat);
 
     // stream key show / hide
     $("eyeBtn").onclick=()=>{ const k=$("streamKey"); const showing=k.type==="text"; k.type=showing?"password":"text"; $("eyeBtn").textContent=showing?"show":"hide"; };
