@@ -1665,16 +1665,22 @@
               const xhr = new XMLHttpRequest();
               pendingUploadXhr = xhr;
               xhr.open("POST", "/upload-chunk");
-              xhr.timeout = 240000; // 4 min per chunk
+              // Last chunk needs extra time for server-side ffprobe validation
+              xhr.timeout = (i === totalChunks - 1) ? 600000 : 240000;
 
               xhr.upload.onprogress = (e)=>{
                 if(pendingUploadAborted || $("video").files[0]!==f) return;
                 const chunkLoaded = e.lengthComputable ? e.loaded : 0;
                 const totalLoaded = start + chunkLoaded;
-                const pct = Math.min(99, Math.round((totalLoaded / f.size) * 100));
+                const pct = Math.round((totalLoaded / f.size) * 100);
                 pendingUploadPct = pct;
-                if(fill) fill.style.width = pct + "%";
-                if(label) label.textContent = "Uploading " + pct + "%";
+                if(fill) fill.style.width = Math.min(pct, 100) + "%";
+                // Once all bytes of the last chunk are sent, show "Processing" while server validates
+                if(i === totalChunks - 1 && e.lengthComputable && e.loaded >= e.total){
+                  if(label) label.textContent = "Processing video...";
+                } else {
+                  if(label) label.textContent = "Uploading " + Math.min(pct, 99) + "%";
+                }
               };
 
               xhr.onload = ()=>{

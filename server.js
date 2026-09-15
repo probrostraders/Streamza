@@ -706,20 +706,23 @@ app.post("/upload-chunk", rateLimit(600, 60000), upload.single("chunk"), async (
     }
     const canCopy = await canStreamCopy(finalPath, codecs);
 
-    if (r2HasBudget(stat.size)) {
-      try {
-        await r2.uploadFile(uploadId, fs.createReadStream(finalPath), stat.size, "video/mp4");
-        rm(finalPath);
-        r2UsedBytes += stat.size;
-        pendingUploads.set(uploadId, { r2Key: uploadId, storage: "r2", name: fileName, size: stat.size, createdAt: Date.now(), canCopy });
-        return res.json({ ok: true, uploadId, name: fileName, size: stat.size });
-      } catch (_) {
-        // Fall back to local copy
-      }
-    }
-
+    // Register the upload on local disk FIRST and respond immediately — the browser has been
+    // waiting since the last chunk was sent, and re-uploading hundreds of MBs to R2 here would
+    // freeze the progress bar at 99% for minutes. R2 promotion happens in the background below.
     pendingUploads.set(uploadId, { path: finalPath, storage: "local", name: fileName, size: stat.size, createdAt: Date.now(), canCopy });
-    return res.json({ ok: true, uploadId, name: fileName, size: stat.size });
+    res.json({ ok: true, uploadId, name: fileName, size: stat.size });
+
+    // Background: opportunistically promote to R2 if there's budget — frees local disk without
+    // blocking the browser. If it fails, the local copy is still perfectly usable.
+    if (r2HasBudget(stat.size) && fs.existsSync(finalPath)) {
+      r2.uploadFile(uploadId, fs.createReadStream(finalPath), stat.size, "video/mp4")
+        .then(() => {
+          rm(finalPath);
+          r2UsedBytes += stat.size;
+          pendingUploads.set(uploadId, { r2Key: uploadId, storage: "r2", name: fileName, size: stat.size, createdAt: Date.now(), canCopy });
+        })
+        .catch(() => { /* local copy stays — no problem */ });
+    }
   } catch (err) {
     rm(finalPath);
     return res.status(500).json({ error: "Failed to process video: " + err.message });
