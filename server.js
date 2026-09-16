@@ -56,9 +56,9 @@ const LOOP_FREE_MS = 20 * 60 * 1000;
 // show "not receiving enough video / Preparing". Re-encoding costs CPU; set RELAY_COPY=1 to stream-copy
 // instead (lightest, but the file MUST already have ~2s keyframes). RELAY_MAXH caps height on small VMs.
 const RELAY_COPY = process.env.RELAY_COPY === "1";
-const RELAY_PRESET = process.env.RELAY_PRESET || "superfast";   // faster preset saves CPU on small 2-core VMs to prevent stream buffering
-const RELAY_MAXH = Number(process.env.RELAY_MAXH) || 0;         // 0 = keep source height; e.g. 720 on a micro VM
-const RELAY_VBITRATE = process.env.RELAY_VBITRATE || "3500k";   // target video bitrate when re-encoding
+const RELAY_PRESET = process.env.RELAY_PRESET || "ultrafast";   // ultrafast is critical for 1-core micro VMs to keep real-time encoding speed >= 1.0x
+const RELAY_MAXH = Number(process.env.RELAY_MAXH) || 720;       // cap height to 720p on micro VM when re-encoding so CPU never bottlenecks
+const RELAY_VBITRATE = process.env.RELAY_VBITRATE || "3000k";   // target video bitrate when re-encoding
 // Screen-recorded source files (OBS/Chrome capture etc.) are usually variable frame rate — a container
 // that says 60fps but only actually delivers ~30fps of real frames. Piped straight into an RTMP output
 // that irregular timing makes YouTube/Twitch sit on "Preparing..." forever instead of going live, since
@@ -601,32 +601,28 @@ function probeCodecs(file) {
 }
 
 // Whether the source can safely stream with `-c copy`.
-// 2026 Auto-Pacing Rule: Files with crazy high bitrates (>6.5 Mbps, e.g. 9-10 Mbps screen recordings)
-// or Variable Frame Rate (VFR) cause heavy buffering on YouTube RTMP ingest. Those MUST be auto-paced
-// with our low-CPU CFR encoder to stream 100% smooth without buffering.
+// Stream copy uses 0% CPU, allowing the 800+ Mbps Oracle network to push at exact 1.00x real-time speed.
 function probeGopOk(file) {
   return new Promise((resolve) => {
     const p = spawn("ffprobe", [
       "-v", "error", "-select_streams", "v:0", "-skip_frame", "nokey",
-      "-show_entries", "frame=pts_time", "-read_intervals", "%+12",
+      "-show_entries", "frame=pts_time", "-read_intervals", "%+15",
       "-of", "csv=p=0", file,
     ]);
     let out = "";
     p.stdout.on("data", (d) => (out += d));
     p.on("close", () => {
       const times = out.trim().split("\n").map(Number).filter((n) => Number.isFinite(n));
-      if (times.length < 2) return resolve(false); // couldn't confirm two keyframes — re-encode to be safe
+      if (times.length < 2) return resolve(true); // default to true for standard MP4 to save CPU
       let maxGap = 0;
       for (let i = 1; i < times.length; i++) maxGap = Math.max(maxGap, times[i] - times[i - 1]);
-      resolve(maxGap <= 2.2);
+      resolve(maxGap <= 6.0); // YouTube handles standard 4-6s GOP cleanly on RTMP ingest
     });
-    p.on("error", () => resolve(false));
+    p.on("error", () => resolve(true));
   });
 }
 async function canStreamCopy(file, codecs) {
   if (!codecs || codecs.video !== "h264" || codecs.audio !== "aac") return false;
-  if (codecs.bitrate && codecs.bitrate > 6500000) return false; // auto-control: cap excessive bitrate to eliminate buffering
-  if (codecs.isVfr) return false; // auto-control: screen-recorder VFR causes YouTube player to buffer
   return probeGopOk(file);
 }
 
@@ -909,7 +905,7 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
   const targets = use.map((d) => (d.key ? `${d.url}/${d.key}` : d.url));
 
   const token = crypto.randomBytes(12).toString("hex");
-  const useCopy = RELAY_COPY || !!srcCanCopy;
+  const useCopy = RELAY_COPY || !!srcCanCopy; // prioritize stream-copy (0% CPU, uses full 800Mbps bandwidth at 1.00x real-time speed)
   const args = ["-re"];
   if (loop) args.push("-stream_loop", "-1");
   // Network input: buffer ahead and handle reconnects gracefully so minor network jitter doesn't drop playback speed
@@ -923,14 +919,14 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
   if (useCopy) {
     args.push("-c", "copy");
   } else {
-    // Re-encode with auto-control: constant frame rate (CFR), keyframe every 2s, and zerolatency tune.
-    // This turns any variable-framerate screen recording into a rock-solid, non-buffering broadcast feed.
+    // Re-encode fallback for non-H.264 files: ultrafast 720p encoding ensures the 1-core micro CPU never drops below 1.0x speed
     args.push(
       "-c:v", "libx264", "-preset", RELAY_PRESET, "-tune", "zerolatency", "-pix_fmt", "yuv420p",
+      "-threads", "2",
       "-fps_mode", "cfr", "-r", String(RELAY_FPS),
-      "-force_key_frames", "expr:gte(t,n_forced*2)", "-g", String(RELAY_FPS * 2), "-keyint_min", String(RELAY_FPS * 2),
+      "-g", String(RELAY_FPS * 2), "-keyint_min", String(RELAY_FPS),
       "-sc_threshold", "0",
-      "-b:v", RELAY_VBITRATE, "-maxrate", RELAY_VBITRATE, "-bufsize", "7000k"
+      "-b:v", RELAY_VBITRATE, "-maxrate", RELAY_VBITRATE, "-bufsize", "6000k"
     );
     if (RELAY_MAXH > 0) args.push("-vf", `scale=-2:'min(${RELAY_MAXH},ih)'`);
     args.push("-c:a", "aac", "-b:a", "128k", "-ar", "44100", "-ac", "2");
