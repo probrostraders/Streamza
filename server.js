@@ -567,10 +567,14 @@ app.get("/slots", (req, res) => {
   });
 });
 
-// Probe the uploaded file's codecs (ffprobe) — `-c copy` needs H.264 video + AAC audio.
+// Probe the uploaded file's codecs (ffprobe) — `-c copy` needs H.264 video + AAC audio, normal bitrate (<=6.5M), and CFR.
 function probeCodecs(file) {
   return new Promise((resolve) => {
-    const p = spawn("ffprobe", ["-v", "error", "-show_entries", "stream=codec_type,codec_name", "-of", "json", file]);
+    const p = spawn("ffprobe", [
+      "-v", "error",
+      "-show_entries", "format=bit_rate:stream=codec_type,codec_name,r_frame_rate,avg_frame_rate,bit_rate",
+      "-of", "json", file
+    ]);
     let out = "";
     p.stdout.on("data", (d) => (out += d));
     p.on("close", () => {
@@ -578,18 +582,28 @@ function probeCodecs(file) {
         const j = JSON.parse(out);
         const v = j.streams.find((s) => s.codec_type === "video");
         const a = j.streams.find((s) => s.codec_type === "audio");
-        resolve({ video: v ? v.codec_name : null, audio: a ? a.codec_name : null });
-      } catch (_) { resolve({ video: null, audio: null }); }
+        const br = Number((v && v.bit_rate) || (j.format && j.format.bit_rate)) || 0;
+        let isVfr = false;
+        if (v && v.r_frame_rate && v.avg_frame_rate) {
+          const parseFps = (s) => {
+            const parts = s.split("/");
+            return parts.length === 2 && Number(parts[1]) ? Number(parts[0]) / Number(parts[1]) : Number(s);
+          };
+          const rFps = parseFps(v.r_frame_rate);
+          const aFps = parseFps(v.avg_frame_rate);
+          if (rFps && aFps && Math.abs(rFps - aFps) > 1.5) isVfr = true;
+        }
+        resolve({ video: v ? v.codec_name : null, audio: a ? a.codec_name : null, bitrate: br, isVfr });
+      } catch (_) { resolve({ video: null, audio: null, bitrate: 0, isVfr: false }); }
     });
-    p.on("error", () => resolve({ video: null, audio: null }));
+    p.on("error", () => resolve({ video: null, audio: null, bitrate: 0, isVfr: false }));
   });
 }
 
-// Whether the source's own keyframe spacing is already tight enough (~2.2s or less) to go out with
-// -c copy instead of being re-encoded. This is the single biggest lever for quality on this box: a
-// compliant file streams at its ORIGINAL resolution/bitrate — true 4K stays 4K — for close to zero CPU,
-// instead of always being downscaled to fit what this VM's 2 vCPUs can re-encode in real time. Only
-// looks at the first ~12s of keyframes so it stays fast even on a large 4K file.
+// Whether the source can safely stream with `-c copy`.
+// 2026 Auto-Pacing Rule: Files with crazy high bitrates (>6.5 Mbps, e.g. 9-10 Mbps screen recordings)
+// or Variable Frame Rate (VFR) cause heavy buffering on YouTube RTMP ingest. Those MUST be auto-paced
+// with our low-CPU CFR encoder to stream 100% smooth without buffering.
 function probeGopOk(file) {
   return new Promise((resolve) => {
     const p = spawn("ffprobe", [
@@ -611,6 +625,8 @@ function probeGopOk(file) {
 }
 async function canStreamCopy(file, codecs) {
   if (!codecs || codecs.video !== "h264" || codecs.audio !== "aac") return false;
+  if (codecs.bitrate && codecs.bitrate > 6500000) return false; // auto-control: cap excessive bitrate to eliminate buffering
+  if (codecs.isVfr) return false; // auto-control: screen-recorder VFR causes YouTube player to buffer
   return probeGopOk(file);
 }
 
@@ -634,9 +650,8 @@ app.post("/pending-upload", rateLimit(15, 60000), upload.single("video"), async 
   if (r2HasBudget(file.size)) {
     try {
       await r2.uploadFile(uploadId, fs.createReadStream(file.path), file.size, file.mimetype);
-      rm(file.path);
       r2UsedBytes += file.size;
-      pendingUploads.set(uploadId, { r2Key: uploadId, storage: "r2", name: file.originalname, size: file.size, createdAt: Date.now(), canCopy });
+      pendingUploads.set(uploadId, { path: file.path, r2Key: uploadId, storage: "local", name: file.originalname, size: file.size, createdAt: Date.now(), canCopy });
       return res.json({ ok: true, uploadId, name: file.originalname, size: file.size });
     } catch (_) {
       // R2 upload failed — fall through and keep using the local copy, which is still safely on disk.
@@ -712,14 +727,13 @@ app.post("/upload-chunk", rateLimit(600, 60000), upload.single("chunk"), async (
     pendingUploads.set(uploadId, { path: finalPath, storage: "local", name: fileName, size: stat.size, createdAt: Date.now(), canCopy });
     res.json({ ok: true, uploadId, name: fileName, size: stat.size });
 
-    // Background: opportunistically promote to R2 if there's budget — frees local disk without
-    // blocking the browser. If it fails, the local copy is still perfectly usable.
+    // Background: backup to R2 if there's budget, but keep the local file for ultra-fast SSD streaming
     if (r2HasBudget(stat.size) && fs.existsSync(finalPath)) {
       r2.uploadFile(uploadId, fs.createReadStream(finalPath), stat.size, "video/mp4")
         .then(() => {
-          rm(finalPath);
           r2UsedBytes += stat.size;
-          pendingUploads.set(uploadId, { r2Key: uploadId, storage: "r2", name: fileName, size: stat.size, createdAt: Date.now(), canCopy });
+          const p = pendingUploads.get(uploadId);
+          if (p) { p.r2Key = uploadId; }
         })
         .catch(() => { /* local copy stays — no problem */ });
     }
@@ -909,18 +923,20 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
   if (useCopy) {
     args.push("-c", "copy");
   } else {
-    // Re-encode so YouTube gets a keyframe every 2s (the #1 cause of "not receiving enough video") and a
-    // constant frame rate (the #1 cause of a screen-recorded source getting stuck on "Preparing...").
+    // Re-encode with auto-control: constant frame rate (CFR), keyframe every 2s, and zerolatency tune.
+    // This turns any variable-framerate screen recording into a rock-solid, non-buffering broadcast feed.
     args.push(
-      "-c:v", "libx264", "-preset", RELAY_PRESET, "-pix_fmt", "yuv420p", "-r", String(RELAY_FPS),
-      "-force_key_frames", "expr:gte(t,n_forced*2)", "-g", String(RELAY_FPS * 2), "-sc_threshold", "0",
+      "-c:v", "libx264", "-preset", RELAY_PRESET, "-tune", "zerolatency", "-pix_fmt", "yuv420p",
+      "-fps_mode", "cfr", "-r", String(RELAY_FPS),
+      "-force_key_frames", "expr:gte(t,n_forced*2)", "-g", String(RELAY_FPS * 2), "-keyint_min", String(RELAY_FPS * 2),
+      "-sc_threshold", "0",
       "-b:v", RELAY_VBITRATE, "-maxrate", RELAY_VBITRATE, "-bufsize", "7000k"
     );
     if (RELAY_MAXH > 0) args.push("-vf", `scale=-2:'min(${RELAY_MAXH},ih)'`);
     args.push("-c:a", "aac", "-b:a", "128k", "-ar", "44100", "-ac", "2");
   }
   // Muxing queue buffer prevents dropped packets during transient network bursts
-  args.push("-max_muxing_queue_size", "2048");
+  args.push("-max_muxing_queue_size", "4096");
   if (targets.length === 1) args.push("-flvflags", "no_duration_filesize", "-f", "flv", targets[0]);
   else args.push("-f", "tee", targets.map((t) => `[f=flv:flvflags=no_duration_filesize:onfail=ignore]${t}`).join("|")); // fan out to all platforms
 
