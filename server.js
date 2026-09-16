@@ -58,7 +58,7 @@ const LOOP_FREE_MS = 20 * 60 * 1000;
 // show "not receiving enough video / Preparing". Re-encoding costs CPU; set RELAY_COPY=1 to stream-copy
 // instead (lightest, but the file MUST already have ~2s keyframes). RELAY_MAXH caps height on small VMs.
 const RELAY_COPY = process.env.RELAY_COPY === "1";
-const RELAY_PRESET = process.env.RELAY_PRESET || "veryfast";    // x264 speed/CPU trade-off
+const RELAY_PRESET = process.env.RELAY_PRESET || "superfast";   // faster preset saves CPU on small 2-core VMs to prevent stream buffering
 const RELAY_MAXH = Number(process.env.RELAY_MAXH) || 0;         // 0 = keep source height; e.g. 720 on a micro VM
 const RELAY_VBITRATE = process.env.RELAY_VBITRATE || "3500k";   // target video bitrate when re-encoding
 // Screen-recorded source files (OBS/Chrome capture etc.) are usually variable frame rate — a container
@@ -898,8 +898,13 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
   const useCopy = RELAY_COPY || !!srcCanCopy;
   const args = ["-re"];
   if (loop) args.push("-stream_loop", "-1");
-  // R2 input needs explicit reconnect handling — a local file read never drops, but a network GET can.
-  if (srcStorage === "r2") args.push("-reconnect", "1", "-reconnect_streamed", "1", "-reconnect_delay_max", "2", "-reconnect_at_eof", "1");
+  // Network input: buffer ahead and handle reconnects gracefully so minor network jitter doesn't drop playback speed
+  if (srcStorage === "r2") {
+    args.push(
+      "-reconnect", "1", "-reconnect_streamed", "1", "-reconnect_delay_max", "5", "-reconnect_at_eof", "1",
+      "-buffer_size", "10M"
+    );
+  }
   args.push("-i", srcPath, "-map", "0:v:0", "-map", "0:a:0?");
   if (useCopy) {
     args.push("-c", "copy");
@@ -914,8 +919,10 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
     if (RELAY_MAXH > 0) args.push("-vf", `scale=-2:'min(${RELAY_MAXH},ih)'`);
     args.push("-c:a", "aac", "-b:a", "128k", "-ar", "44100", "-ac", "2");
   }
-  if (targets.length === 1) args.push("-f", "flv", targets[0]);
-  else args.push("-f", "tee", targets.map((t) => `[f=flv:onfail=ignore]${t}`).join("|")); // fan out to all platforms
+  // Muxing queue buffer prevents dropped packets during transient network bursts
+  args.push("-max_muxing_queue_size", "2048");
+  if (targets.length === 1) args.push("-flvflags", "no_duration_filesize", "-f", "flv", targets[0]);
+  else args.push("-f", "tee", targets.map((t) => `[f=flv:flvflags=no_duration_filesize:onfail=ignore]${t}`).join("|")); // fan out to all platforms
 
   // Signed in via Google (session cookie matches the claimed email), not just typed into the form —
   // this, or an active subscription, is what earns the video a spot in "Your recent videos".
