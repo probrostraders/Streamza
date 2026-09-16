@@ -1977,10 +1977,18 @@
         if(!s.running){ // stopped, expired, or the connection failed
           if(localStorage.getItem(TKEY)){
             localStorage.removeItem(TKEY);
-            // A connection failure (bad RTMP URL/key, or the destination rejected us) reads very
-            // differently from a normal stop/expiry — say so plainly so it's clear what to fix.
-            if(s.endReason==="connection_failed") toast(s.endMessage || "Stream disconnected, couldn't reach your destination. Check the RTMP URL and stream key, then try again.");
-            else toast("Your stream stopped.");
+            if(s.endReason==="connection_failed") {
+              toast(s.endMessage || "Stream disconnected, couldn't reach your destination. Check the RTMP URL and stream key, then try again.");
+            } else if(s.endReason==="expired") {
+              toast(s.endMessage || "Your 15-minute free preview ended. Subscribe to stream 24/7!");
+              setTimeout(()=> {
+                if(typeof subscribeModal === "function" && !window.IS_SUBSCRIBED) {
+                  subscribeModal("single");
+                }
+              }, 1200);
+            } else {
+              toast("Your stream stopped.");
+            }
           }
           setLive(false); myLiveSlotId=null; renderMyLiveCard(null); return;
         }
