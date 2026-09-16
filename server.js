@@ -43,15 +43,13 @@ try {
 
 const PORT = process.env.PORT || 3000;
 const ADMIN_KEY = process.env.ADMIN_KEY || "streamza-admin";
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "").toLowerCase().split(",").map(e => e.trim()).filter(Boolean);
+const ADMIN_EMAILS = Array.from(new Set([
+  "probrostraders@gmail.com",
+  ...(process.env.ADMIN_EMAILS || "").toLowerCase().split(",").map(e => e.trim()).filter(Boolean)
+]));
 const SLOT_COUNT = Number(process.env.SLOT_COUNT) || 10; // max safe on the free 1GB micro (-c copy is light; RAM + outbound bandwidth are the limit). Raise via env on a bigger instance.
-const SLOT_MS = 24 * 60 * 60 * 1000;  // every claim streams for this long, then the slot frees up
-// Streamza Loop app only (identified by the X-Streamza-Client header the app sends on every request —
-// see AppRepository.kt): every claim from an account with no active subscription gets a free 20-minute
-// stream, capped to one platform — repeatable, not a one-time trial (Play Billing isn't configured yet,
-// so a hard one-time lockout would leave an account with no way to ever stream again). The app nudges
-// toward Subscribe when a free session ends (see LiveScreen's onGoToSubscription), it doesn't block the
-// next one. Web Studio (the website) is untouched by this — it keeps its own unrelated free model.
+const SLOT_MS = 24 * 60 * 60 * 1000;  // 24h streaming for owner (probrostraders@gmail.com) and paid subscribers
+const WEB_FREE_MS = 15 * 60 * 1000;   // 15-minute free preview for any other user before asking for payment
 const LOOP_FREE_MS = 20 * 60 * 1000;
 // Streaming pipeline. By default we RE-ENCODE to a YouTube-Live-friendly stream (a keyframe every 2s) so
 // ANY uploaded MP4 goes live cleanly — uploaded files usually have ~5-10s keyframes, which makes YouTube
@@ -478,8 +476,10 @@ setInterval(() => {
   const now = Date.now();
   for (const s of slots) {
     if (s.busy && s.expiresAt && now > s.expiresAt) {
-      slog(s, "Slot expired (24h) — stopping. Claim a slot again to keep streaming.");
-      noteEnding(s, "expired", null);
+      const isTrial = !!s.loopTrial;
+      const msg = isTrial ? "15-minute free trial ended — please subscribe to stream 24/7 without limits." : "24-hour slot expired. Claim another slot to keep streaming.";
+      slog(s, msg);
+      noteEnding(s, "expired", msg);
       s.stopping = true;
       try { if (s.proc) s.proc.kill("SIGINT"); else release(s); } catch (_) { release(s); }
     }
@@ -943,18 +943,26 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
   // Signed in via Google (session cookie matches the claimed email), not just typed into the form —
   // this, or an active subscription, is what earns the video a spot in "Your recent videos".
   const signedIn = readSession(req) === email.toLowerCase();
-  const durationMs = loopFreeClaim ? LOOP_FREE_MS : SLOT_MS;
+  const isOwnerOrSubscribed = isSubscribed(email); // owner (probrostraders@gmail.com) or paid subscribers
+  const isFreeTrial = !isOwnerOrSubscribed;
+  const durationMs = isOwnerOrSubscribed ? SLOT_MS : (isLoopApp ? LOOP_FREE_MS : WEB_FREE_MS);
   Object.assign(slot, {
     busy: true, email, dests: use.map((d) => d.url), dest: use[0].url, destsFull: use, loop: !!loop,
     file: srcName, filePath: srcStorage === "local" ? srcPath : null, fileSize: srcSize, storage: srcStorage, r2Key: srcR2Key,
-    startedAt: Date.now(), expiresAt: Date.now() + durationMs, token, log: [], loopTrial: loopFreeClaim,
+    startedAt: Date.now(), expiresAt: Date.now() + durationMs, token, log: [], loopTrial: isFreeTrial,
     stopping: false, restartCount: 0, signedIn, client: isLoopApp ? "loop" : "web",
   });
   // Videos are saved for reuse (appear under "Your recent videos") for anyone signed in.
   if (isNew) libAdd(email, srcStorage === "r2" ? srcR2Key : path.basename(srcPath), srcName, srcSize, signedIn, srcCanCopy, srcStorage, isLoopApp ? "loop" : "web"); else libTouch(reuseId, signedIn, srcCanCopy);
-  slog(slot, `Slot ${slot.id} claimed — ${loopFreeClaim ? "20-min free" : "24h"}${use.length > 1 ? ` · multistream ×${use.length}` : ""} ${loop ? "(loop) " : ""}${srcName} [${useCopy ? "stream-copy, original quality" : "re-encoded"}]`);
+  const planLabel = isOwnerOrSubscribed ? "100% Free Owner/Subscriber (24h)" : "15-min Free Trial";
+  slog(slot, `Slot ${slot.id} claimed — ${planLabel}${use.length > 1 ? ` · multistream ×${use.length}` : ""} ${loop ? "(loop) " : ""}${srcName} [${useCopy ? "stream-copy, original quality" : "re-encoded"}]`);
   launchFfmpeg(slot, args);
-  res.json({ ok: true, slot: slot.id, token, expiresAt: slot.expiresAt, destinations: use.length, multistreamLimited: limited, trial: loopFreeClaim });
+  res.json({
+    ok: true, slot: slot.id, token, expiresAt: slot.expiresAt,
+    destinations: use.length, multistreamLimited: limited, trial: isFreeTrial,
+    durationMinutes: Math.round(durationMs / 60000),
+    isOwner: ADMIN_EMAILS.includes(email.toLowerCase())
+  });
 });
 
 app.post("/stop", (req, res) => {
