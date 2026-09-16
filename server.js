@@ -607,9 +607,10 @@ function probeCodecs(file) {
 // The ONLY thing that causes "not receiving enough video" is frames arriving slower than real-time,
 // which is exactly what happens when a stolen-CPU VM tries to software-encode.
 async function canStreamCopy(file, codecs) {
-  // H.264 video + AAC audio = always stream-copy. No keyframe/bitrate/VFR checks needed.
+  // H.264 video + AAC (or silent/no audio) = always stream-copy.
   // Re-encoding on this VM will ALWAYS produce "Poor" due to Oracle's aggressive CPU steal.
-  if (!codecs || codecs.video !== "h264" || codecs.audio !== "aac") return false;
+  if (!codecs || codecs.video !== "h264") return false;
+  if (codecs.audio && codecs.audio !== "aac") return false;
   return true;
 }
 
@@ -846,9 +847,17 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
     const u = libFor(email).find((x) => x.id === reuseId);
     if (!u) return res.status(400).json({ error: "That saved video is no longer available — please upload it again." });
     srcName = u.name; srcSize = u.size;
-    srcCanCopy = typeof u.canCopy === "boolean" ? u.canCopy : null; // null = saved before this existed — probe once below
+    srcCanCopy = u.canCopy === true; // only trust true; if false or unprobed, re-verify below
     if (u.storage === "r2") { srcStorage = "r2"; srcR2Key = u.id; srcPath = await r2.presignGetUrl(u.id); }
     else { srcPath = libPath(u.id); }
+    if (!srcCanCopy) {
+      const c = await probeCodecs(srcPath);
+      srcCanCopy = await canStreamCopy(srcPath, c);
+      if (srcCanCopy) {
+        u.canCopy = true;
+        saveLib();
+      }
+    }
   } else {
     return res.status(400).json({ error: "No video file uploaded." });
   }
