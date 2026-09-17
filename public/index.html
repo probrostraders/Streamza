@@ -1954,18 +1954,19 @@
     // page's "your live stream" card: a short grace period right after going live (the connection is
     // still ramping up, not actually unhealthy), "Weak" only when frames are dropping right now or the
     // encoder can't currently keep pace, "Good" otherwise.
-    function computeHealth(st,uptime){
+    function computeHealth(st,uptime,s){
+      if(s && s.stalled) return {label:"Reconnecting…",ok:false};
       if(!st) return {label:"-",ok:null};
       if(uptime!=null && uptime<8) return {label:"Connecting…",ok:null};
       const dropping = st.dropDelta!=null && st.dropDelta>0;
       const slow = st.liveSpeed!=null && st.liveSpeed<0.9;
       return (dropping||slow) ? {label:"Weak",ok:false} : {label:"Good",ok:true};
     }
-    function applyHealth(el,st,uptime){
+    function applyHealth(el,st,uptime,s){
       if(!el) return;
-      const h=computeHealth(st,uptime);
+      const h=computeHealth(st,uptime,s);
       el.textContent=h.label;
-      el.className="v"+(h.ok===true?" green":h.ok===false?" warn":(h.label==="Connecting…"?" dim":""));
+      el.className="v"+(h.ok===true?" green":h.ok===false?" warn":(h.label==="Connecting…"||h.label==="Reconnecting…"?" dim":""));
     }
 
     // owner's slot monitor (token)
@@ -1997,7 +1998,8 @@
         myLiveSlotId = s.slot;
         const n=(s.dests&&s.dests.length)||1;
         $("liveInfo").style.display="block";
-        $("liveInfo").innerHTML='<b>LIVE</b> · streaming to '+n+' platform'+(n>1?'s':'')+' · live for <b>'+fmt(s.uptime)+'</b>';
+        const statusText = s.stalled ? '<b>LIVE (Reconnecting…)</b>' : '<b>LIVE</b>';
+        $("liveInfo").innerHTML=statusText+' · streaming to '+n+' platform'+(n>1?'s':'')+' · live for <b>'+fmt(s.uptime)+'</b>';
         $("cdSlot").textContent=s.slot;
         $("cdTime").textContent=fmt(s.secondsLeft);
         $("log").textContent=(s.log||[]).join("\n"); $("log").scrollTop=$("log").scrollHeight;
@@ -2005,7 +2007,7 @@
         $("sBitrate").textContent = st&&st.br!=null ? (st.br/1000).toFixed(2)+" Mbps":"-";
         $("sFps").textContent = st&&st.fps!=null ? st.fps.toFixed(0) : "-";
         $("sDrop").textContent = st&&st.drop!=null ? st.drop : "-";
-        applyHealth($("sSpeed"), st, s.uptime);
+        applyHealth($("sSpeed"), st, s.uptime, s);
         renderMyLiveCard(s);
       }catch(_){}
     }
@@ -2036,7 +2038,7 @@
       const card=$("myLiveCard"); if(!card) return;
       if(!s){ card.style.display="none"; card.innerHTML=""; return; }
       const st=parseStats(s.log||[]);
-      const h=computeHealth(st,s.uptime);
+      const h=computeHealth(st,s.uptime,s);
       const health=h.label;
       const healthCls = h.ok===true?"good":h.ok===false?"weak":"";
       const n=(s.dests&&s.dests.length)||1;

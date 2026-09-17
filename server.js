@@ -397,7 +397,8 @@ const slots = Array.from({ length: SLOT_COUNT }, (_, i) => ({
   id: i + 1, busy: false, email: null, dest: null, dests: [], destsFull: [], loop: true,
   file: null, filePath: null, fileSize: 0, storage: "local", r2Key: null,
   startedAt: 0, expiresAt: 0, proc: null, token: null, log: [],
-  stopping: false, restartCount: 0, ffmpegArgs: null, signedIn: false, everStreamed: false,
+  stopping: false, restartCount: 0, lastRestartAt: 0, ffmpegArgs: null, signedIn: false, everStreamed: false,
+  lastProgressAt: 0,
 }));
 function slog(s, line) { if (!line) return; s.log.push(line); if (s.log.length > 60) s.log.shift(); }
 
@@ -428,7 +429,8 @@ function release(s) {
     busy: false, email: null, dest: null, dests: [], destsFull: [], loop: true,
     file: null, filePath: null, fileSize: 0, storage: "local", r2Key: null,
     startedAt: 0, expiresAt: 0, proc: null, token: null, log: [],
-    stopping: false, restartCount: 0, ffmpegArgs: null, signedIn: false, everStreamed: false, client: null,
+    stopping: false, restartCount: 0, lastRestartAt: 0, ffmpegArgs: null, signedIn: false, everStreamed: false, client: null,
+    lastProgressAt: 0,
   });
 }
 // Spawns (or re-spawns) the ffmpeg relay process for a slot. If it dies unexpectedly mid-stream — an RTMP
@@ -438,6 +440,7 @@ function release(s) {
 // burns time on a doomed connection — fail fast instead and say so clearly.
 function launchFfmpeg(slot, args) {
   slot.ffmpegArgs = args;
+  slot.lastProgressAt = Date.now();
   const proc = spawn("ffmpeg", args);
   slot.proc = proc;
   proc.on("error", (e) => {
@@ -448,17 +451,26 @@ function launchFfmpeg(slot, args) {
   });
   proc.stderr.on("data", (d) => {
     const text = d.toString();
-    if (/bitrate=/.test(text)) slot.everStreamed = true; // real encode progress = the connection is actually up
+    if (/bitrate=|fps=|frame=|time=/.test(text)) {
+      slot.everStreamed = true; // real encode progress = the connection is actually up
+      slot.lastProgressAt = Date.now();
+      // Heal restartCount after 5 minutes of continuous successful streaming
+      if (slot.restartCount > 0 && slot.lastRestartAt && Date.now() - slot.lastRestartAt > 5 * 60 * 1000) {
+        slot.restartCount = 0;
+      }
+    }
     slog(slot, text.trim().split("\n").pop());
   });
-  proc.on("exit", (code) => {
-    slog(slot, `FFmpeg stopped (exit ${code}).`);
-    if (code) console.log(`[slot ${slot.id}] ffmpeg exit ${code} → ${slot.log.slice(-5).join(" | ")}`);
+  proc.on("exit", (code, signal) => {
+    const reason = code != null ? `exit ${code}` : `signal ${signal || "killed"}`;
+    slog(slot, `FFmpeg stopped (${reason}).`);
+    console.log(`[slot ${slot.id}] ffmpeg ${reason} → ${slot.log.slice(-5).join(" | ")}`);
     const expired = slot.expiresAt && Date.now() >= slot.expiresAt;
     const retryBudget = slot.everStreamed ? FFMPEG_MAX_RESTARTS : 2; // never connected once → fail fast
     const canReconnect = !slot.stopping && slot.busy && !expired && slot.restartCount < retryBudget;
     if (canReconnect) {
       slot.restartCount++;
+      slot.lastRestartAt = Date.now();
       slog(slot, `Reconnecting… (attempt ${slot.restartCount}/${retryBudget})`);
       setTimeout(() => { if (slot.busy && !slot.stopping) launchFfmpeg(slot, slot.ffmpegArgs); }, FFMPEG_RESTART_DELAY_MS);
     } else {
@@ -470,6 +482,22 @@ function launchFfmpeg(slot, args) {
     }
   });
 }
+
+// stall watchdog: detects hung/frozen FFmpeg processes (e.g. stalled RTMP TCP connection) and auto-reconnects
+setInterval(() => {
+  const now = Date.now();
+  for (const s of slots) {
+    if (s.busy && s.proc && !s.stopping) {
+      const timeSinceProgress = now - (s.lastProgressAt || s.startedAt || now);
+      const stallLimit = s.everStreamed ? 25000 : 35000;
+      if (timeSinceProgress > stallLimit) {
+        console.log(`[slot ${s.id}] Stream stalled (no progress for ${Math.round(timeSinceProgress / 1000)}s) — killing FFmpeg to auto-reconnect.`);
+        slog(s, `Stream stalled — auto-reconnecting (attempt ${s.restartCount + 1}/${s.everStreamed ? FFMPEG_MAX_RESTARTS : 2})...`);
+        try { s.proc.kill("SIGKILL"); } catch (_) {}
+      }
+    }
+  }
+}, 5000);
 
 // expiry watchdog: stop+free any slot past its 24h
 setInterval(() => {
@@ -903,7 +931,9 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
   const token = crypto.randomBytes(12).toString("hex");
   const useCopy = RELAY_COPY || !!srcCanCopy; // prioritize stream-copy (0% CPU, uses full 800Mbps bandwidth at 1.00x real-time speed)
   const args = ["-re"];
-  if (loop) args.push("-stream_loop", "-1");
+  if (loop) {
+    args.push("-stream_loop", "-1", "-fflags", "+genpts", "-avoid_negative_ts", "make_zero");
+  }
   // Network input: buffer ahead and handle reconnects gracefully so minor network jitter doesn't drop playback speed
   if (srcStorage === "r2") {
     args.push(
@@ -929,6 +959,9 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
   }
   // Muxing queue buffer prevents dropped packets during transient network bursts
   args.push("-max_muxing_queue_size", "4096");
+  // 15-second I/O socket timeout prevents FFmpeg from hanging indefinitely if network drops or RTMP server closes
+  args.push("-rw_timeout", "15000000");
+  args.push("-tcp_nodelay", "1");
   if (targets.length === 1) args.push("-flvflags", "no_duration_filesize", "-f", "flv", targets[0]);
   else args.push("-f", "tee", targets.map((t) => `[f=flv:flvflags=no_duration_filesize:onfail=ignore]${t}`).join("|")); // fan out to all platforms
 
@@ -1115,13 +1148,18 @@ app.get("/status", (req, res) => {
     const r = recentEndings.get(token);
     return res.json({ running: false, endReason: r ? r.reason : null, endMessage: r ? r.message : null });
   }
+  const now = Date.now();
+  const lastProgressAgo = Math.floor((now - (s.lastProgressAt || s.startedAt || now)) / 1000);
+  const stalled = s.everStreamed ? lastProgressAgo > 20 : lastProgressAgo > 35;
   res.json({
     running: true, slot: s.id, file: s.file, fileId: s.filePath ? path.basename(s.filePath) : (s.r2Key || null),
     dest: s.dest, dests: s.dests, destsFull: s.destsFull, loop: !!s.loop, email: s.email,
-    uptime: Math.floor((Date.now() - s.startedAt) / 1000),
-    secondsLeft: Math.max(0, Math.floor((s.expiresAt - Date.now()) / 1000)),
+    uptime: Math.floor((now - s.startedAt) / 1000),
+    secondsLeft: Math.max(0, Math.floor((s.expiresAt - now) / 1000)),
     log: s.log.slice(-14),
     trial: !!s.loopTrial,
+    lastProgressAgoSec: lastProgressAgo,
+    stalled,
   });
 });
 
