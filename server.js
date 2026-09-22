@@ -398,7 +398,7 @@ const slots = Array.from({ length: SLOT_COUNT }, (_, i) => ({
   file: null, filePath: null, fileSize: 0, storage: "local", r2Key: null,
   startedAt: 0, expiresAt: 0, proc: null, token: null, log: [],
   stopping: false, restartCount: 0, lastRestartAt: 0, ffmpegArgs: null, signedIn: false, everStreamed: false,
-  lastProgressAt: 0,
+  lastProgressAt: 0, useCopy: false,
 }));
 function slog(s, line) { if (!line) return; s.log.push(line); if (s.log.length > 60) s.log.shift(); }
 
@@ -430,7 +430,7 @@ function release(s) {
     file: null, filePath: null, fileSize: 0, storage: "local", r2Key: null,
     startedAt: 0, expiresAt: 0, proc: null, token: null, log: [],
     stopping: false, restartCount: 0, lastRestartAt: 0, ffmpegArgs: null, signedIn: false, everStreamed: false, client: null,
-    lastProgressAt: 0,
+    lastProgressAt: 0, useCopy: false,
   });
 }
 // Spawns (or re-spawns) the ffmpeg relay process for a slot. If it dies unexpectedly mid-stream — an RTMP
@@ -472,7 +472,22 @@ function launchFfmpeg(slot, args) {
       slot.restartCount++;
       slot.lastRestartAt = Date.now();
       slog(slot, `Reconnecting… (attempt ${slot.restartCount}/${retryBudget})`);
-      setTimeout(() => { if (slot.busy && !slot.stopping) launchFfmpeg(slot, slot.ffmpegArgs); }, FFMPEG_RESTART_DELAY_MS);
+      setTimeout(async () => {
+        if (!slot.busy || slot.stopping) return;
+        // Refresh presigned URL for R2-backed sources — the old URL may be stale after hours
+        if (slot.r2Key && slot.ffmpegArgs) {
+          try {
+            const freshUrl = await r2.presignGetUrl(slot.r2Key);
+            const iIdx = slot.ffmpegArgs.indexOf("-i");
+            if (iIdx !== -1 && iIdx + 1 < slot.ffmpegArgs.length) {
+              slot.ffmpegArgs[iIdx + 1] = freshUrl;
+            }
+          } catch (e) {
+            slog(slot, "Warning: couldn't refresh R2 URL — retrying with existing URL.");
+          }
+        }
+        launchFfmpeg(slot, slot.ffmpegArgs);
+      }, FFMPEG_RESTART_DELAY_MS);
     } else {
       if (!slot.stopping) {
         if (expired) noteEnding(slot, "expired", null);
@@ -483,15 +498,42 @@ function launchFfmpeg(slot, args) {
   });
 }
 
-// stall watchdog: detects hung/frozen FFmpeg processes (e.g. stalled RTMP TCP connection) and auto-reconnects
+// stall watchdog: detects hung/frozen FFmpeg processes (e.g. stalled RTMP TCP connection) and auto-reconnects.
+// Uses loop/storage/useCopy-aware stall limits so loop-seam seeks and stream-copy's sparse progress
+// output aren't mistaken for a dead connection. Also heals restartCount reliably on a timer (the
+// stderr-based heal in launchFfmpeg is kept as a fast-path, but this interval is the authoritative one).
 setInterval(() => {
   const now = Date.now();
   for (const s of slots) {
     if (s.busy && s.proc && !s.stopping) {
       const timeSinceProgress = now - (s.lastProgressAt || s.startedAt || now);
-      const stallLimit = s.everStreamed ? 25000 : 35000;
+
+      // Reliably heal restartCount after 5 minutes of continuous successful streaming
+      if (s.restartCount > 0 && s.lastRestartAt && now - s.lastRestartAt > 5 * 60 * 1000 && timeSinceProgress < 25000) {
+        s.restartCount = 0;
+      }
+
+      // Stall limits tuned per stream type:
+      // - Looping R2 streams: 90s (HTTP seek back to frame 0 is slow over the network)
+      // - Looping local streams: 60s (disk seek at loop boundary)
+      // - Stream-copy (non-looping): 45s (sparse progress output with -c copy)
+      // - Re-encode (non-looping): 25s (continuous progress output)
+      // - Never connected yet: 35s (initial connection attempt)
+      let stallLimit;
+      if (!s.everStreamed) {
+        stallLimit = 35000;
+      } else if (s.loop && s.storage === "r2") {
+        stallLimit = 90000;
+      } else if (s.loop) {
+        stallLimit = 60000;
+      } else if (s.useCopy) {
+        stallLimit = 45000;
+      } else {
+        stallLimit = 25000;
+      }
+
       if (timeSinceProgress > stallLimit) {
-        console.log(`[slot ${s.id}] Stream stalled (no progress for ${Math.round(timeSinceProgress / 1000)}s) — killing FFmpeg to auto-reconnect.`);
+        console.log(`[slot ${s.id}] Stream stalled (no progress for ${Math.round(timeSinceProgress / 1000)}s, limit ${Math.round(stallLimit / 1000)}s) — killing FFmpeg to auto-reconnect.`);
         slog(s, `Stream stalled — auto-reconnecting (attempt ${s.restartCount + 1}/${s.everStreamed ? FFMPEG_MAX_RESTARTS : 2})...`);
         try { s.proc.kill("SIGKILL"); } catch (_) {}
       }
@@ -976,6 +1018,7 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
     file: srcName, filePath: srcStorage === "local" ? srcPath : null, fileSize: srcSize, storage: srcStorage, r2Key: srcR2Key,
     startedAt: Date.now(), expiresAt: Date.now() + durationMs, token, log: [], loopTrial: isFreeTrial,
     stopping: false, restartCount: 0, signedIn, client: isLoopApp ? "loop" : "web",
+    useCopy,
   });
   // Videos are saved for reuse (appear under "Your recent videos") for anyone signed in.
   if (isNew) libAdd(email, srcStorage === "r2" ? srcR2Key : path.basename(srcPath), srcName, srcSize, signedIn, srcCanCopy, srcStorage, isLoopApp ? "loop" : "web"); else libTouch(reuseId, signedIn, srcCanCopy);
