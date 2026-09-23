@@ -441,6 +441,7 @@ function release(s) {
 function launchFfmpeg(slot, args) {
   slot.ffmpegArgs = args;
   slot.lastProgressAt = Date.now();
+  console.log(`[slot ${slot.id}] Launching ffmpeg: ffmpeg ${args.join(" ").replace(/rtmp[s]?:\/\/[^\s]+/g, "rtmp://***").replace(/\/[a-f0-9]{16,}[?][^\s]*/g, "/***")}`);
   const proc = spawn("ffmpeg", args);
   slot.proc = proc;
   proc.on("error", (e) => {
@@ -466,7 +467,7 @@ function launchFfmpeg(slot, args) {
     slog(slot, `FFmpeg stopped (${reason}).`);
     console.log(`[slot ${slot.id}] ffmpeg ${reason} → ${slot.log.slice(-5).join(" | ")}`);
     const expired = slot.expiresAt && Date.now() >= slot.expiresAt;
-    const retryBudget = slot.everStreamed ? FFMPEG_MAX_RESTARTS : 2; // never connected once → fail fast
+    const retryBudget = slot.everStreamed ? FFMPEG_MAX_RESTARTS : 5; // never connected once → a few more retries (Oracle VM can be slow to handshake)
     const canReconnect = !slot.stopping && slot.busy && !expired && slot.restartCount < retryBudget;
     if (canReconnect) {
       slot.restartCount++;
@@ -513,28 +514,30 @@ setInterval(() => {
         s.restartCount = 0;
       }
 
-      // Stall limits tuned per stream type:
-      // - Looping R2 streams: 90s (HTTP seek back to frame 0 is slow over the network)
-      // - Looping local streams: 60s (disk seek at loop boundary)
-      // - Stream-copy (non-looping): 45s (sparse progress output with -c copy)
-      // - Re-encode (non-looping): 25s (continuous progress output)
-      // - Never connected yet: 35s (initial connection attempt)
+      // Stall limits tuned per stream type — generous enough that normal loop seams, stream-copy
+      // progress gaps, and initial RTMP handshakes on Oracle's throttled CPU never trip the watchdog
+      // under normal conditions, but tight enough that a truly dead connection is caught within minutes.
+      // - Never connected yet: 90s (RTMP handshake + CPU steal on Oracle micro = slow start)
+      // - Looping R2 streams: 120s (HTTP seek back to frame 0 is slow over the network)
+      // - Looping local streams: 90s (disk seek + remux at loop boundary with -c copy)
+      // - Stream-copy (non-looping): 60s (sparse progress output with -c copy)
+      // - Re-encode (non-looping): 30s (continuous progress output)
       let stallLimit;
       if (!s.everStreamed) {
-        stallLimit = 35000;
-      } else if (s.loop && s.storage === "r2") {
         stallLimit = 90000;
+      } else if (s.loop && s.storage === "r2") {
+        stallLimit = 120000;
       } else if (s.loop) {
-        stallLimit = 60000;
+        stallLimit = 90000;
       } else if (s.useCopy) {
-        stallLimit = 45000;
+        stallLimit = 60000;
       } else {
-        stallLimit = 25000;
+        stallLimit = 30000;
       }
 
       if (timeSinceProgress > stallLimit) {
         console.log(`[slot ${s.id}] Stream stalled (no progress for ${Math.round(timeSinceProgress / 1000)}s, limit ${Math.round(stallLimit / 1000)}s) — killing FFmpeg to auto-reconnect.`);
-        slog(s, `Stream stalled — auto-reconnecting (attempt ${s.restartCount + 1}/${s.everStreamed ? FFMPEG_MAX_RESTARTS : 2})...`);
+        slog(s, `Stream stalled — auto-reconnecting (attempt ${s.restartCount + 1}/${s.everStreamed ? FFMPEG_MAX_RESTARTS : 5})...`);
         try { s.proc.kill("SIGKILL"); } catch (_) {}
       }
     }
@@ -1017,8 +1020,8 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
     busy: true, email, dests: use.map((d) => d.url), dest: use[0].url, destsFull: use, loop: !!loop,
     file: srcName, filePath: srcStorage === "local" ? srcPath : null, fileSize: srcSize, storage: srcStorage, r2Key: srcR2Key,
     startedAt: Date.now(), expiresAt: Date.now() + durationMs, token, log: [], loopTrial: isFreeTrial,
-    stopping: false, restartCount: 0, signedIn, client: isLoopApp ? "loop" : "web",
-    useCopy,
+    stopping: false, restartCount: 0, lastRestartAt: 0, everStreamed: false, signedIn, client: isLoopApp ? "loop" : "web",
+    lastProgressAt: 0, useCopy,
   });
   // Videos are saved for reuse (appear under "Your recent videos") for anyone signed in.
   if (isNew) libAdd(email, srcStorage === "r2" ? srcR2Key : path.basename(srcPath), srcName, srcSize, signedIn, srcCanCopy, srcStorage, isLoopApp ? "loop" : "web"); else libTouch(reuseId, signedIn, srcCanCopy);
