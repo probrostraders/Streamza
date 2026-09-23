@@ -989,6 +989,10 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
   args.push("-i", srcPath, "-map", "0:v:0", "-map", "0:a:0?");
   if (useCopy) {
     args.push("-c", "copy");
+    // Repeat H.264 SPS/PPS at every keyframe — essential for RTMP ingest (YouTube/Twitch) with
+    // stream-copy, because the receiver needs in-band parameter sets to recover from any dropped
+    // frame or reconnect without waiting for the next keyframe with headers.
+    args.push("-bsf:v", "dump_extra");
   } else {
     // Re-encode fallback for non-H.264 files: ultrafast 720p encoding ensures the 1-core micro CPU never drops below 1.0x speed
     args.push(
@@ -1004,9 +1008,11 @@ app.post("/start", rateLimit(8, 60000), upload.single("video"), async (req, res)
   }
   // Muxing queue buffer prevents dropped packets during transient network bursts
   args.push("-max_muxing_queue_size", "4096");
-  // 15-second I/O socket timeout prevents FFmpeg from hanging indefinitely if network drops or RTMP server closes
-  args.push("-rw_timeout", "15000000");
-  args.push("-tcp_nodelay", "1");
+  // 30-second I/O socket timeout — long enough to ride out brief RTMP network hiccups without
+  // aborting, short enough that a truly dead connection is caught before the stall watchdog.
+  args.push("-rw_timeout", "30000000");
+  // Flush packets immediately so frames reach YouTube's ingest without batching delay
+  args.push("-flush_packets", "1");
   if (targets.length === 1) args.push("-flvflags", "no_duration_filesize", "-f", "flv", targets[0]);
   else args.push("-f", "tee", targets.map((t) => `[f=flv:flvflags=no_duration_filesize:onfail=ignore]${t}`).join("|")); // fan out to all platforms
 
